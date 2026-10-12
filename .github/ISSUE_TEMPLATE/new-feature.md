@@ -1,7 +1,7 @@
 ---
 name: New Feature
 about: New feature template
-title: ''
+title: feat/ [feature name]
 labels: Feature
 assignees: ''
 
