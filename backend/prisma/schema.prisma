@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// The only allowed values for an item's status. The database rejects anything else.
+enum Status {
+  planned
+  in_progress
+  done
+}
+
+// A project is the top level. The planned website or app.
+// Everything else (items, relationships, tasks, sprints) belongs to a project.
+model Project {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @map("user_id") @db.Uuid
+  name          String
+  // Key for the project template in code ex "web"
+  template      String
+  createdAt     DateTime       @default(now()) @map("created_at")
+  items         Item[]
+  relationships Relationship[]
+  tasks         Task[]
+  sprints       Sprint[]
+
+  @@map("projects")
+}
+
+// An item are all the building blocks. a page, component, function, data...
+model Item {
+  id          String         @id @default(uuid()) @db.Uuid
+  projectId   String         @map("project_id") @db.Uuid
+  type        String
+  title       String
+  description String?
+  status      Status         @default(planned)
+  isMvp       Boolean        @default(false) @map("is_mvp")
+  positionX   Float          @default(0) @map("position_x")
+  positionY   Float          @default(0) @map("position_y")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  // Deleting the project deletes its items
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Two named relations because Relationship points at Item twice:
+  // outgoing = connections starting here, incoming = connections ending here
+  outgoing    Relationship[] @relation("source")
+  incoming    Relationship[] @relation("target")
+  tasks       Task[]
+
+  @@map("items")
+}
+
+// A typed connection between two items (the arrows on the map),
+// e.g. "page uses component".
+model Relationship {
+  id           String  @id @default(uuid()) @db.Uuid
+  projectId    String  @map("project_id") @db.Uuid
+  // The item the arrow starts from
+  sourceItemId String  @map("source_item_id") @db.Uuid
+  // The item the arrow points to
+  targetItemId String  @map("target_item_id") @db.Uuid
+  // What kind of connection it is, ex "uses"
+  type         String
+
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Deleting an item deletes the connections that start or end at it
+  source       Item    @relation("source", fields: [sourceItemId], references: [id], onDelete: Cascade)
+  target       Item    @relation("target", fields: [targetItemId], references: [id], onDelete: Cascade)
+
+  // The same two items can't be connected twice with the same type.
+  // (The "no connection to itself" rule is added later in the migration SQL.)
+  @@unique([sourceItemId, targetItemId, type])
+  @@map("relationships")
+}
+
+// A task is a to-do in the sprint planning.
+model Task {
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  // Optional. a task can be linked to an item, or stand on its own
+  itemId    String? @map("item_id") @db.Uuid
+  title     String
+  done      Boolean @default(false)
+  // Optional. a task may not be in a sprint yet
+  sprintId  String? @map("sprint_id") @db.Uuid
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  item      Item?   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  sprint    Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+
+  @@map("tasks")
+}
+
+// A sprint groups tasks into a time period, ex "Sprint 1".
+model Sprint {
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  name      String
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@map("sprints")
+}
