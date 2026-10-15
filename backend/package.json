@@ -7,7 +7,7 @@
     "test": "vitest run",
     "postinstall": "prisma skills sync || exit 0",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
