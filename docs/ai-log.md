@@ -21,4 +21,4 @@
 
 **What I changed or corrected:** I created the first RLS migration (`20261015090145_enable_rls`) myself, using the SQL from the AI explanation. The AI review pointed out that `_prisma_migrations` was not covered, because Prisma creates that table itself in the `public` schema.
 
-**What went wrong:** Nothing.
+**What went wrong:** The AI created and committed the `_prisma_migrations` migration before it had been tested against a database. `npx prisma migrate dev` failed with P3006 / `42P01: relation "_prisma_migrations" does not exist`. The reason: `migrate dev` first replays all migrations in an empty shadow database, and Prisma doesn't create its history table there. The AI had assumed the table always exists. Supabase was not affected, because Prisma stopped before applying anything. Fixed by changing the statement to `ALTER TABLE IF EXISTS`, which skips the statement in the shadow database. Lesson: run the migration before committing it.
