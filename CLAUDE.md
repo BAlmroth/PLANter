@@ -41,7 +41,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 2. Every API route except a health check uses the `requireAuth` middleware. The user id comes from the verified token, never from the request body.
 3. Prisma connects directly to Postgres and bypasses Row Level Security. Therefore every route that touches a project, item, relationship, task or sprint must check that the logged-in user owns it, using one shared helper. When a user does not own a resource, respond as if it does not exist (404).
 4. All input is validated with Zod before it is used. Schemas live in `backend/src/schemas/`.
-5. Row Level Security is enabled on every table with ownership policies, as a safety net. Never disable it.
+5. Row Level Security is enabled on every table in `public` (including Prisma's `_prisma_migrations`) with no policies (deny-all), as a safety net: the Supabase Data API can neither read nor write any table, only Express through Prisma can. Never disable it, and every migration that creates a table must also enable RLS on it. This differs on purpose from the original plan (ownership policies), see `docs/ai-log.md` (2026-10-15).
 6. Secrets only in environment variables. The Supabase service role key and any AI API key exist only in the backend. Never put secrets in variables starting with `VITE_`.
 7. Do not write own cryptography. Password handling stays in Supabase Auth.
 
@@ -101,6 +101,7 @@ planter/
       components/       shared UI components
       types/
   backend/
+    tests/
     prisma/             schema.prisma, migrations/
     src/
       app.ts            Express app (exported, used by Supertest)
@@ -112,7 +113,6 @@ planter/
       schemas/          Zod schemas
       templates/        web.ts, index.ts
       lib/              prisma.ts, supabase.ts
-      tests/
 ```
 
 ## Conventions
@@ -143,7 +143,7 @@ Never commit `.env` files. Keep `.env.example` files with the names below and no
 - All Must items work, including both the File view and the map, which show the same data
 - Frontend and backend are deployed and tested end to end from another device
 - Automated tests pass for relationship rules, progress calculation and ownership (including a test with two users)
-- Security check done: RLS policies work, ownership is checked on every route, all input goes through Zod, no secrets in the repo
+- Security check done: RLS is enabled on every table (no rows from `select tablename from pg_tables where schemaname = 'public' and not rowsecurity;`, and a Data API request with the anon key returns nothing), ownership is checked on every route, all input goes through Zod, no secrets in the repo
 - README explains how to install, configure and run the project
 - AI use is documented in `docs/ai-log.md` and in the thesis
 - Each feature validates its input, shows loading and error states, and has been reviewed
