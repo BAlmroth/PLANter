@@ -50,6 +50,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - Never hard-code item types or relationship rules in route logic. Read them from the template.
 - To create a relationship: look up the type of the source and target items in the database, then check with Zod and the template that the combination is allowed.
+- Never take `projectId` from the request body for relationships. Load both items in one query filtered on the owner (`project: { userId }`). If not exactly two items are found, or their `projectId`s differ, respond 404. Use the items' `projectId` for the new row. The same applies to `itemId` and `sprintId` on tasks: they must belong to the task's project. Composite foreign keys enforce this in the database for relationships and `tasks.item_id`, but not for `tasks.sprint_id`, so the service check is required.
 - Users can name items freely, but the category (item type) is fixed by the template.
 - A game template (Could) is added as another template definition, with no change to the rest of the code.
 
