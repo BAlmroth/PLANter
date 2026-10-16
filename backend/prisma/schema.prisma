@@ -26,6 +26,8 @@ model Project {
   id            String         @id @default(uuid()) @db.Uuid
   userId        String         @map("user_id") @db.Uuid
   name          String
+  // Optional free text about the project (max length is checked by Zod)
+  description   String?
   // Key for the project template in code ex "web"
   template      String
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -33,6 +35,7 @@ model Project {
   relationships Relationship[]
   tasks         Task[]
   sprints       Sprint[]
+  inspirations  ProjectInspiration[]
 
   // Fast lookup of a user's projects (also used by every ownership check)
   @@index([userId])
@@ -59,6 +62,7 @@ model Item {
   outgoing    Relationship[] @relation("source")
   incoming    Relationship[] @relation("target")
   tasks       Task[]
+  details     ItemDetail[]
 
   // Lets relationships and tasks point at (id, projectId) together,
   // so the database can check that they are in the same project as the item.
@@ -131,4 +135,40 @@ model Sprint {
 
   @@index([projectId])
   @@map("sprints")
+}
+
+// A detail row on an item, ex a link and a note on the tech stack item "Prisma".
+// No projectId: a detail always belongs to one item, and its project is the item's project.
+// Ownership is checked through the item (item -> project -> userId).
+model ItemDetail {
+  id        String   @id @default(uuid()) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  title     String
+  // Both optional: a row can be created with only a title and filled in later
+  url       String?
+  text      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  // Deleting the item deletes its details
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@map("item_details")
+}
+
+// Inspiration for the whole project (links and notes). Not part of progress.
+model ProjectInspiration {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  title     String
+  url       String?
+  text      String?
+  //room for images later?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  // Deleting the project deletes its inspiration
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_inspirations")
 }

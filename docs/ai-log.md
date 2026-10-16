@@ -114,3 +114,26 @@
 **What I changed or corrected:** Nothing.
 
 **What went wrong:** Nothing.
+
+## 2026-10-16: Schema for project description, item details and project inspiration
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To implement the schema for point 10 from the project review (branch `feature/insp-detailsSchema`), after first going through the table design.
+
+**Design decisions (mine, after the AI described the alternatives):**
+- **Two tables** (`item_details`, `project_inspirations`) instead of one shared table with both `item_id` and `project_id`. Each table means one thing and has a simple foreign key.
+- **Columns:** `title` is required. `url` and `text` are optional, with no "at least one" rule, so a row can be created with only a title and filled in later. No ordering column: rows are shown in `created_at` order.
+- **Project description:** optional plain text, max 500 characters.
+- **Length limits in Zod only, not in the database:** description 500, title 100, url 2000, text 2000. `url` must be `http://` or `https://` (blocks `javascript:` links, an XSS risk).
+- **No `project_id` on `item_details` (the AI's recommendation, which I accepted).** Ownership is checked through the item in one Prisma query (`item: { project: { userId } }`). Storing `project_id` as well would duplicate data and need another composite foreign key to stay consistent. Relationships need `project_id` because they connect two items. A detail row belongs to exactly one item.
+
+**What was generated:**
+- In `schema.prisma`: `Project.description`, the models `ItemDetail` and `ProjectInspiration` (cascade delete and an index on the foreign key), and the back-relations `Item.details` and `Project.inspirations`.
+- In `CLAUDE.md`: the two tables, the Zod limits and the URL rule.
+
+**Migration:** `20261016095142_item_details_and_inspirations`, created with `prisma migrate dev --create-only`, so that RLS could be added before it was applied (rule 5: every new table gets RLS in the same migration). I added the two `ENABLE ROW LEVEL SECURITY` lines myself and applied the migration to Supabase and the local test database. The RLS check found no unprotected tables in either.
+
+**What went wrong:** The AI ran `prisma format`, which re-aligned many existing lines in `schema.prisma` (only whitespace). That made the diff noisy and was not asked for. The AI restored the file and applied only the real changes.
+
+**What I changed or corrected:** I added the RLS lines to the migration myself, instead of waiting for the AI.

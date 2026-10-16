@@ -64,13 +64,15 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 ### Data model (starting point, refine in sprint 1)
 
-- `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (not yet in the schema), template, created_at
+- `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (optional), template, created_at
 - `items`: id, project_id, type, title, description, status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, created_at
 - `relationships`: id, project_id, source_item_id, target_item_id, type. Unique on (source, target, type). An item cannot be connected to itself.
 - `tasks`: id, project_id, item_id (optional), title, done, sprint_id (optional)
 - `sprints`: id, project_id, name
-- Item details (not yet designed): a generic child table of an item with detail rows (a URL and/or text), for example the links and notes of a tech stack item.
-- Project inspiration (not yet designed): the same kind of rows, but belonging to a project (`project_id`) instead of an item. Not part of progress.
+- `item_details`: id, item_id, title, url (optional), text (optional), created_at. Detail rows of an item, for example the links and notes of a tech stack item. No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order.
+- `project_inspirations`: id, project_id, title, url (optional), text (optional), created_at. Inspiration for the whole project. Not part of progress.
+
+Length limits are enforced by Zod only (not in the database): project description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
 
 Use database constraints, foreign keys (with cascade delete) and enums in addition to Zod.
 
