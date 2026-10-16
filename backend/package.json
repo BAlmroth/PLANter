@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "test:db:migrate": "DIRECT_URL=postgresql://postgres@localhost:5432/planter_test prisma migrate deploy",
+    "typecheck": "tsc",
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node dist/server.js"
   },
   "keywords": [],
