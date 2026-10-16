@@ -67,3 +67,25 @@
 ### What went wrong
 - The AI created the `_prisma_migrations` migration folder by hand with a **local-time** timestamp, while Prisma names migrations in **UTC**. The migration created afterwards (`20261015114942_same_project_foreign_keys`) therefore sorts before it. This is harmless, because the two migrations are independent, and it was not renamed, because renaming applied migrations breaks Prisma's history. Lesson: always create migrations with `prisma migrate dev --create-only`.
 - The first `_prisma_migrations` migration was committed before it was tested (see the entry above).
+
+## 2026-10-16: timestamptz and foreign key indexes
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To implement two schema points from the project review (point 14) on the branch `feature/keyIndexes`, and to explain why the indexes are useful.
+
+**What was generated:** Changes to `schema.prisma`. I created migration `20261016091829_timestamptz_and_indexes` with `prisma migrate dev` and applied it to Supabase and the local test database.
+- `created_at` on `projects` and `items` changed from `timestamp` to `timestamptz(3)`. The database stores an exact moment, and the frontend will show it in the user's local time. The application code is unchanged (Prisma still returns a `Date`).
+- 8 indexes on foreign key columns: `projects.user_id`, `items.project_id`, `relationships.project_id`, `relationships.target_item_id`, `tasks.project_id`, `tasks.item_id`, `tasks.sprint_id`, `sprints.project_id`.
+
+**Decisions:**
+- Postgres does not index foreign keys automatically. They are the columns PLANter searches by on almost every request (the ownership check, the File view, the map, "used by"), and Postgres uses them itself when it cascades deletes or sets values to null.
+- `relationships.source_item_id` gets no extra index, because it is the first column of the unique `(source_item_id, target_item_id, type)`, which already covers it. `items.project_id` does need one, because the unique `(id, project_id)` starts with `id`.
+- Only foreign key columns are indexed. Each index costs space and makes writes slightly slower.
+- At the current data size the speed difference is not noticeable. It is done now because it is correct design and cheapest while the tables are empty.
+
+**Verification:** `prisma validate`, an offline `prisma migrate diff` preview, `prisma migrate dev` (Supabase) and `npm run test:db:migrate` (local). Checked in the test database: 8 indexes, and `created_at` is `timestamp with time zone`.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing.
