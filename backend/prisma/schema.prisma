@@ -28,12 +28,14 @@ model Project {
   name          String
   // Key for the project template in code ex "web"
   template      String
-  createdAt     DateTime       @default(now()) @map("created_at")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   items         Item[]
   relationships Relationship[]
   tasks         Task[]
   sprints       Sprint[]
 
+  // Fast lookup of a user's projects (also used by every ownership check)
+  @@index([userId])
   @@map("projects")
 }
 
@@ -48,7 +50,7 @@ model Item {
   isMvp       Boolean        @default(false) @map("is_mvp")
   positionX   Float          @default(0) @map("position_x")
   positionY   Float          @default(0) @map("position_y")
-  createdAt   DateTime       @default(now()) @map("created_at")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
   // Deleting the project deletes its items
   project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -61,6 +63,8 @@ model Item {
   // Lets relationships and tasks point at (id, projectId) together,
   // so the database can check that they are in the same project as the item.
   @@unique([id, projectId])
+  // The unique above starts with id, so it doesn't help lookups by projectId
+  @@index([projectId])
   @@map("items")
 }
 
@@ -85,6 +89,9 @@ model Relationship {
   // The same two items can't be connected twice with the same type.
   // (The "no connection to itself" rule is added later in the migration SQL.)
   @@unique([sourceItemId, targetItemId, type])
+  // sourceItemId is covered by the unique above (first column). These are not.
+  @@index([projectId])
+  @@index([targetItemId])
   @@map("relationships")
 }
 
@@ -107,6 +114,9 @@ model Task {
   // The service checks that the sprint is in the same project.
   sprint    Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
 
+  @@index([projectId])
+  @@index([itemId])
+  @@index([sprintId])
   @@map("tasks")
 }
 
@@ -119,5 +129,6 @@ model Sprint {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks     Task[]
 
+  @@index([projectId])
   @@map("sprints")
 }
