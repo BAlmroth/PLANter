@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase } from "./supabaseClient";
 import { env } from "../config/env";
 
 // Used instead of fetch() for all calls to backend.
