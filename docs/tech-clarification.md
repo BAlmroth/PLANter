@@ -20,7 +20,7 @@ Supabase holds the database and the login system, and does five jobs in PLANter.
 | Auth | Register, log in and log out. It stores and hashes passwords, so you write no cryptography (rule 7). The frontend talks to it directly and gets back the token (JWT). |
 | PostgreSQL | Stores projects, items, relationships, tasks and sprints. |
 | Constraints | The database refuses bad data: NOT NULL, enums for status, foreign keys with cascade delete, UNIQUE(source, target, type), and no item connected to itself. The last line of defence if a bug gets past Zod. |
-| Row Level Security | Ownership policies on every table. A safety net for anything that reaches the database through Supabase's own API, such as someone using your public anon key. It does not protect Prisma queries. |
+| Row Level Security | Enabled on every table with no policies (deny-all). Blocks everything that reaches the database through Supabase's own API, such as someone using your public anon key, including logged-in users. It does not affect Prisma queries. |
 | Storage | Files and images later, for example inspiration images per item. |
 
 ## Prisma

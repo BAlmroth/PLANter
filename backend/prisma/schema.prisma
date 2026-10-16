@@ -58,6 +58,9 @@ model Item {
   incoming    Relationship[] @relation("target")
   tasks       Task[]
 
+  // Lets relationships and tasks point at (id, projectId) together,
+  // so the database can check that they are in the same project as the item.
+  @@unique([id, projectId])
   @@map("items")
 }
 
@@ -74,9 +77,10 @@ model Relationship {
   type         String
 
   project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  // Deleting an item deletes the connections that start or end at it
-  source       Item    @relation("source", fields: [sourceItemId], references: [id], onDelete: Cascade)
-  target       Item    @relation("target", fields: [targetItemId], references: [id], onDelete: Cascade)
+  // Deleting an item deletes the connections that start or end at it.
+  // projectId is part of both keys, so both items must be in the same project as the relationship.
+  source       Item    @relation("source", fields: [sourceItemId, projectId], references: [id, projectId], onDelete: Cascade)
+  target       Item    @relation("target", fields: [targetItemId, projectId], references: [id, projectId], onDelete: Cascade)
 
   // The same two items can't be connected twice with the same type.
   // (The "no connection to itself" rule is added later in the migration SQL.)
@@ -96,7 +100,11 @@ model Task {
   sprintId  String? @map("sprint_id") @db.Uuid
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  item      Item?   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  // projectId is part of the key, so a linked item must be in the same project as the task.
+  // When itemId is null the database skips the check.
+  item      Item?   @relation(fields: [itemId, projectId], references: [id, projectId], onDelete: Cascade)
+  // Plain key on purpose: SetNull on a composite key would also null projectId (which is required).
+  // The service checks that the sprint is in the same project.
   sprint    Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
 
   @@map("tasks")

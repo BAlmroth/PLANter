@@ -41,7 +41,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 2. Every API route except a health check uses the `requireAuth` middleware. The user id comes from the verified token, never from the request body.
 3. Prisma connects directly to Postgres and bypasses Row Level Security. Therefore every route that touches a project, item, relationship, task or sprint must check that the logged-in user owns it, using one shared helper. When a user does not own a resource, respond as if it does not exist (404).
 4. All input is validated with Zod before it is used. Schemas live in `backend/src/schemas/`.
-5. Row Level Security is enabled on every table with ownership policies, as a safety net. Never disable it.
+5. Row Level Security is enabled on every table in `public` (including Prisma's `_prisma_migrations`) with no policies (deny-all), as a safety net: the Supabase Data API can neither read nor write any table, only Express through Prisma can. Never disable it, and every migration that creates a table must also enable RLS on it. This differs on purpose from the original plan (ownership policies), see `docs/ai-log.md` (2026-10-15).
 6. Secrets only in environment variables. The Supabase service role key and any AI API key exist only in the backend. Never put secrets in variables starting with `VITE_`.
 7. Do not write own cryptography. Password handling stays in Supabase Auth.
 
@@ -50,6 +50,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - Never hard-code item types or relationship rules in route logic. Read them from the template.
 - To create a relationship: look up the type of the source and target items in the database, then check with Zod and the template that the combination is allowed.
+- Never take `projectId` from the request body for relationships. Load both items in one query filtered on the owner (`project: { userId }`). If not exactly two items are found, or their `projectId`s differ, respond 404. Use the items' `projectId` for the new row. The same applies to `itemId` and `sprintId` on tasks: they must belong to the task's project. Composite foreign keys enforce this in the database for relationships and `tasks.item_id`, but not for `tasks.sprint_id`, so the service check is required.
 - Users can name items freely, but the category (item type) is fixed by the template.
 - A game template (Could) is added as another template definition, with no change to the rest of the code.
 
@@ -101,6 +102,7 @@ planter/
       components/       shared UI components
       types/
   backend/
+    tests/
     prisma/             schema.prisma, migrations/
     src/
       app.ts            Express app (exported, used by Supertest)
@@ -112,7 +114,6 @@ planter/
       schemas/          Zod schemas
       templates/        web.ts, index.ts
       lib/              prisma.ts, supabase.ts
-      tests/
 ```
 
 ## Conventions
@@ -128,7 +129,8 @@ planter/
 ## Commands (fill in as they are set up)
 
 - Frontend (`frontend/`): `npm run dev` (Vite, port 5173), `npm test`, `npm run build`
-- Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`
+- Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`, `npm run typecheck` (src, tests and configs)
+- Test database: Postgres.app (PostgreSQL, port 5432) must be running, with a database `planter_test`. `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
 - Prisma (`backend/`): `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
 
 ## Environment variables
@@ -143,7 +145,7 @@ Never commit `.env` files. Keep `.env.example` files with the names below and no
 - All Must items work, including both the File view and the map, which show the same data
 - Frontend and backend are deployed and tested end to end from another device
 - Automated tests pass for relationship rules, progress calculation and ownership (including a test with two users)
-- Security check done: RLS policies work, ownership is checked on every route, all input goes through Zod, no secrets in the repo
+- Security check done: RLS is enabled on every table (no rows from `select tablename from pg_tables where schemaname = 'public' and not rowsecurity;`, and a Data API request with the anon key returns nothing), ownership is checked on every route, all input goes through Zod, no secrets in the repo
 - README explains how to install, configure and run the project
 - AI use is documented in `docs/ai-log.md` and in the thesis
 - Each feature validates its input, shows loading and error states, and has been reviewed
