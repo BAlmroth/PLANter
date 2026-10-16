@@ -89,3 +89,28 @@
 **What I changed or corrected:** Nothing.
 
 **What went wrong:** Nothing.
+
+## 2026-10-16: CLAUDE.md updated with decisions from the project review
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To update `CLAUDE.md` with the decisions from the project review that were not yet documented (branch `feature/updateDocs`). `docs/project-plan.md` stays unchanged.
+
+**What was generated:** Changes to `CLAUDE.md` only.
+- **MVP:** removed as an item type (in the intro and in the Must list). MVP is the `is_mvp` flag on items.
+- **Project description:** a column on `projects`, not an item type.
+- **Templates:** a template is plain data. Item types have `key`, `label` and whether they count toward progress. Relationship types have `key`, `label`, `inverseLabel` and `allowCycles`.
+- **Keys vs labels:** keys are permanent and stored in the database, labels are only shown in the UI. Renaming a key needs a data migration, and an unknown key is shown as "Unknown".
+- **`GET /api/templates/:key`:** the frontend gets the template from the API (with `requireAuth`) instead of keeping its own copy.
+- **Relationships:** one direction, shown from both sides (`label` on the source, `inverseLabel` on the target). Cycle check with a graph search when `allowCycles` is false.
+- **Data model:** tech stack and design stay item types (no separate tables). Item details and project inspiration are listed as tables still to be designed. Images are postponed (they need Storage). The schema decisions already made are documented: composite foreign keys, cascade-deleting tasks with their item (the delete confirmation must say so), `timestamptz`, and foreign key indexes.
+- **Progress:** `done / (planned + in_progress + done)`, only for item types that count toward progress, and 0% when there are no items.
+- **Should list:** "inspiration links and images per item" changed to item details (links and text) and project-level inspiration, with images later.
+
+**Confirmed by me:**
+- Cycle rule: only cycles of the **same** relationship type are checked (A → B is rejected if A can be reached from B through relationships of that type), because `allowCycles` is a property per relationship type. Cycles across different types are allowed.
+- `is_mvp` stays a **Should** and stays on the cut line. It is not core to the product, but should be implemented if there is time. (The AI had pointed out that cutting it leaves the product with no MVP feature. I accept that.)
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing.

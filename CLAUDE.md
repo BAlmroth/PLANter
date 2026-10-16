@@ -1,6 +1,6 @@
 # PLANter
 
-PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack, MVP) that are connected with typed relationships ("belongs to", "triggers", "uses", "depends on"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
+PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "depends on"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
 
 This is a thesis project (examensarbete) for a web developer education. Full plan: `docs/project-plan.md`.
 
@@ -48,7 +48,15 @@ Login, registration and logout are done in the frontend directly against Supabas
 ### Templates and relationship rules
 
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
+- A template is plain data (strings, arrays, objects, no functions), so it can be sent as JSON. It contains:
+  - item types: `key`, `label`, and whether the type counts toward progress
+  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), and `allowCycles`
+  - the allowed combinations of source type, relationship type and target type
+- Keys are permanent, labels are free. The database stores only keys (`items.type`, `relationships.type`, `projects.template`). The UI only shows labels, so a label can be changed at any time. A key is never renamed or removed in code alone: that needs a data migration (`UPDATE ... SET type = ...`) in a Prisma migration. If the frontend meets an unknown key, it shows it as "Unknown" instead of crashing.
+- The frontend gets the template from `GET /api/templates/:key` (uses `requireAuth` like every other route). The template is never copied into the frontend.
 - Never hard-code item types or relationship rules in route logic. Read them from the template.
+- Relationships have one direction (for example "page uses component"). They are shown from both sides: the source item shows the `label` ("uses: Button") and the target item shows the `inverseLabel` ("used by: LoginPage").
+- When a relationship type has `allowCycles: false`, creating A → B is rejected (400) if A can already be reached from B by following outgoing relationships of that type (a graph search in the relationship service).
 - To create a relationship: look up the type of the source and target items in the database, then check with Zod and the template that the combination is allowed.
 - Never take `projectId` from the request body for relationships. Load both items in one query filtered on the owner (`project: { userId }`). If not exactly two items are found, or their `projectId`s differ, respond 404. Use the items' `projectId` for the new row. The same applies to `itemId` and `sprintId` on tasks: they must belong to the task's project. Composite foreign keys enforce this in the database for relationships and `tasks.item_id`, but not for `tasks.sprint_id`, so the service check is required.
 - Users can name items freely, but the category (item type) is fixed by the template.
@@ -56,19 +64,35 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 ### Data model (starting point, refine in sprint 1)
 
-- `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, template, created_at
+- `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (not yet in the schema), template, created_at
 - `items`: id, project_id, type, title, description, status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, created_at
 - `relationships`: id, project_id, source_item_id, target_item_id, type. Unique on (source, target, type). An item cannot be connected to itself.
 - `tasks`: id, project_id, item_id (optional), title, done, sprint_id (optional)
 - `sprints`: id, project_id, name
+- Item details (not yet designed): a generic child table of an item with detail rows (a URL and/or text), for example the links and notes of a tech stack item.
+- Project inspiration (not yet designed): the same kind of rows, but belonging to a project (`project_id`) instead of an item. Not part of progress.
 
 Use database constraints, foreign keys (with cascade delete) and enums in addition to Zod.
 
+- The project description is a column on `projects`, not an item type. MVP is the `is_mvp` flag on items, not an item type.
+- Tech stack and design are ordinary item types: they have a status, count toward progress, can have relationships and appear on the map. No separate tables per category (that would hard-code types outside the template).
+- Images (for item details and inspiration) are postponed. They need Supabase Storage.
+- Composite foreign keys `(item_id, project_id)` make sure relationships and tasks point at items in the same project.
+- Deleting an item also deletes its relationships and tasks (cascade). The delete confirmation must say so (for example "This also deletes 3 tasks and 5 connections").
+- Timestamps are `timestamptz`. The API sends ISO strings, and the frontend shows them in the user's local time.
+- Every foreign key column that is not the first column of another index has its own index.
+
+### Progress
+
+- Completion = `done / (planned + in_progress + done)`, per item type and in total. In-progress items count as not finished.
+- Only item types that count toward progress in the template are included. Project inspiration and item details are not items and never count.
+- A project or category with no items is 0%, never a division by zero.
+
 ## Scope (MoSCoW)
 
-**Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack, MVP, project description); items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
+**Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
 
-**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP; inspiration links and images per item; link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
+**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (images later, they need Storage); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
 
 **Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode.
 
