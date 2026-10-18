@@ -9,6 +9,9 @@ export default defineConfig({
     env: {
       FRONTEND_URL: "http://localhost:5173",
       DATABASE_URL: "postgresql://postgres@localhost:5432/planter_test",
+      // Fake values: tests mock Supabase and never make a real call
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
     },
     // Runs before every test file (safety guard against the wrong database)
     setupFiles: ["./tests/setup.ts"],

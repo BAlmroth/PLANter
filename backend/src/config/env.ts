@@ -9,6 +9,8 @@ const schema = z.object({
   PORT: z.coerce.number().default(3000),
   FRONTEND_URL: z.url(),
   DATABASE_URL: z.string().min(1),
+  SUPABASE_URL: z.url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 });
 
 // Check process.env against the schema (safeParse doesn't throw, it returns a result)
