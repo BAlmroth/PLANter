@@ -10,7 +10,7 @@ export const app = express();
 app.use(cors({ origin: env.FRONTEND_URL }));
 app.use(express.json());
 
-// Health check: confirms the server is up and responding, checks so all env are correct
+// Health check: confirms the server is up and responding
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
