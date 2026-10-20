@@ -3,6 +3,7 @@ import cors from "cors";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { testRouter } from "./routes/testRoute.js";
+import { templatesRouter } from "./routes/templates.js";
 
 export const app = express();
 
@@ -17,6 +18,8 @@ app.get("/health", (_req, res) => {
 
 // TEMPORARY test route, delete when real routes exist
 app.use("/api/_test", testRouter);
+
+app.use("/api/templates", templatesRouter);
 
 // Must be last: unknown routes get a 404, and every error gets the same response shape
 app.use(notFoundHandler);
