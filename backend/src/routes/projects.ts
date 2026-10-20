@@ -1,8 +1,9 @@
 import { Router } from "express";
+import type { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
-import { createProjectSchema } from "../schemas/projects.js";
-import { createProject, listProjects } from "../services/projects.js";
+import { createProjectSchema, projectIdSchema } from "../schemas/projects.js";
+import { createProject, getOwnedProject, listProjects } from "../services/projects.js";
 
 export const projectsRouter = Router();
 
@@ -18,3 +19,14 @@ projectsRouter.post("/", validate(createProjectSchema), async (req, res) => {
 projectsRouter.get("/", async (req, res) => {
   res.json(await listProjects(req.userId!));
 });
+
+// Get one project
+projectsRouter.get("/:id", validate(projectIdSchema, "params"), async (req, res) => {
+  // Express types params as string | string[]. validate() has already checked it is a uuid string.
+  const { id } = req.params as z.infer<typeof projectIdSchema>;
+  res.json(await getOwnedProject(id, req.userId!));
+});
+
+//update project
+
+//delete
