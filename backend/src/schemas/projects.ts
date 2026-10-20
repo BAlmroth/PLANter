@@ -12,3 +12,7 @@ export const createProjectSchema = z.object({
 
 // The TypeScript type of a validated request body, derived from the schema
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+
+
+// check that projects id is uuid
+export const projectIdSchema = z.object({ id: z.uuid() });
