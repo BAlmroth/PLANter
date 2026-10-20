@@ -4,6 +4,7 @@ import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { testRouter } from "./routes/testRoute.js";
 import { templatesRouter } from "./routes/templates.js";
+import { projectsRouter } from "./routes/projects.js";
 
 export const app = express();
 
@@ -20,6 +21,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/_test", testRouter);
 
 app.use("/api/templates", templatesRouter);
+app.use("/api/projects", projectsRouter);
 
 // Must be last: unknown routes get a 404, and every error gets the same response shape
 app.use(notFoundHandler);
