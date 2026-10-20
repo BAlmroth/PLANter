@@ -1,6 +1,6 @@
 # PLANter
 
-PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "depends on"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
+PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "reads from", "protects", "tests"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
 
 This is a thesis project (examensarbete) for a web developer education. Full plan: `docs/project-plan.md`.
 
@@ -10,6 +10,7 @@ This is a thesis project (examensarbete) for a web developer education. Full pla
 - If something in my plan is unclear, wrong or risky, say so before building it.
 - Do not add features, libraries or tools that are not in this file or in the plan without asking first. This includes state management, UI and CSS.
 - All AI use must be documented for the thesis. After a significant session, add an entry to `docs/ai-log.md`: date, what I asked, what was generated, what I changed or corrected, and anything that went wrong.
+- Read `docs/tech-clarification.md` and `docs/project-plan.md` on each user request.
 
 ## Tech stack
 
@@ -108,7 +109,7 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 4. Progress and finished MVP: progress overview, polish and deploy the MVP, tests for progress, then start Should (create from map, todo list, sprints).
 5. Understanding the plan, quality and finishing: impact view, warnings, remaining Should items, error and loading states, security review, README, AI-use documentation.
 
-Current sprint: **1** (update this line when the sprint changes).
+Current sprint: **2** (update this line when the sprint changes).
 
 Cut line if time runs short: Could first, then search, filter, MVP marking and responsive layout. Tests and the security check are never cut. Tests are written in the same sprint as the logic.
 
