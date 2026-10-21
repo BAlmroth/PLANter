@@ -4,10 +4,12 @@ import type { CreateProjectInput, UpdateProjectInput } from "../schemas/projects
 
 //CREATE PROJECT
 export function createProject(userId: string, input: CreateProjectInput) {
+  const { name, template, description } = input;
   return prisma.project.create({
-    data: { ...input, userId },
+    data: { name, template, userId, ...(description !== undefined && { description }) },
   });
 }
+
 // LIST USER PROJECTS 
 export function listProjects(userId: string) {
   return prisma.project.findMany({
