@@ -43,10 +43,16 @@ export function useProject(id: string) {
     setReloadCount((count) => count + 1);
   }
 
+  // Used after an edit: the API returns the updated project, so show it without asking again
+  function setProject(project: Project) {
+    setResult({ id, project, error: null });
+  }
+
   return {
     project: loading ? null : result.project,
     error: loading ? null : result.error,
     loading,
     refetch,
+    setProject,
   };
 }
