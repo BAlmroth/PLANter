@@ -21,5 +21,5 @@ export const projectIdSchema = z.object({ id: z.uuid() });
 export const updateProjectSchema = createProjectSchema
   .omit({ template: true })
   .partial()
-  .refine((body) => Object.keys(body).length > 0, "Send at least one field to update");
+  .refine((body) => Object.keys(body).length > 0, "edit at least one field to update");
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

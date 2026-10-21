@@ -73,7 +73,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - `item_details`: id, item_id, title, url (optional), text (optional), created_at. Detail rows of an item, for example the links and notes of a tech stack item. No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order.
 - `project_inspirations`: id, project_id, title, url (optional), text (optional), created_at. Inspiration for the whole project. Not part of progress.
 
-Length limits are enforced by Zod only (not in the database): project description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
+Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
 
 Use database constraints, foreign keys (with cascade delete) and enums in addition to Zod.
 
@@ -121,7 +121,7 @@ planter/
   README.md
   docs/                 project-plan.md, ai-log.md
   frontend/
-    src/
+    src/                tests live next to the code they test (api.test.ts next to api.ts)
       lib/              supabaseClient.ts, api.ts (fetch wrapper that adds the token)
       auth/             AuthProvider, Login, Register, ProtectedRoute
       pages/            top-level pages
