@@ -2,8 +2,18 @@ import { Router } from "express";
 import type { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
-import { createProjectSchema, projectIdSchema } from "../schemas/projects.js";
-import { createProject, getOwnedProject, listProjects } from "../services/projects.js";
+import {
+  createProjectSchema,
+  projectIdSchema,
+  updateProjectSchema,
+} from "../schemas/projects.js";
+import {
+  createProject,
+  deleteProject,
+  getOwnedProject,
+  listProjects,
+  updateProject,
+} from "../services/projects.js";
 
 export const projectsRouter = Router();
 
@@ -27,6 +37,22 @@ projectsRouter.get("/:id", validate(projectIdSchema, "params"), async (req, res)
   res.json(await getOwnedProject(id, req.userId!));
 });
 
-//update project
 
-//delete
+
+// Update name and/or description
+projectsRouter.patch(
+  "/:id",
+  validate(projectIdSchema, "params"),
+  validate(updateProjectSchema),
+  async (req, res) => {
+    const { id } = req.params as z.infer<typeof projectIdSchema>;
+    res.json(await updateProject(id, req.userId!, req.body));
+  },
+);
+
+// delete project
+projectsRouter.delete("/:id", validate(projectIdSchema, "params"), async (req, res) => {
+  const { id } = req.params as z.infer<typeof projectIdSchema>;
+  await deleteProject(id, req.userId!);
+  res.status(204).end();
+});
