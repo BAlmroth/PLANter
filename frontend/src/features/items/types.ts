@@ -23,3 +23,22 @@ export type CreateItemInput = {
 };
 
 export type UpdateItemInput = Partial<CreateItemInput>;
+
+// The shape of what GET /api/templates/:key returns
+export type Template = {
+  key: string;
+  label: string;
+  itemTypes: {
+    key: string;
+    label: string;
+    pluralLabel: string;
+    countsTowardProgress: boolean;
+  }[];
+  relationshipTypes: {
+    key: string;
+    label: string;
+    inverseLabel: string;
+    allowCycles: boolean;
+  }[];
+  allowedCombinations: { source: string; relationship: string; target: string }[];
+};

@@ -1,7 +1,13 @@
 import { apiRequest } from "../../lib/api";
-import type { CreateItemInput, Item, UpdateItemInput } from "./types";
+import type { CreateItemInput, Item, UpdateItemInput, Template } from "./types";
+
 
 // One function per backend route. Each one throws an ApiError when the request fails.
+
+//get the labels for intended template
+export function getTemplate(key: string) {
+    return apiRequest<Template>(`/api/templates/${key}`)
+}
 
 export function listItems(projectId:string) {
     return apiRequest<Item[]>(`/api/projects/${projectId}/items`);
