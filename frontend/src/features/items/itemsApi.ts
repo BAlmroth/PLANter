@@ -21,14 +21,14 @@ export function createItem(projectId: string, input: CreateItemInput) {
         body: JSON.stringify( input),
     });
 }
-export function UpdateItem(id: string, input: UpdateItemInput) {
+export function updateItem(id: string, input: UpdateItemInput) {
     return apiRequest<Item>(`/api/items/${id}`, {
         method: "PATCH",
         body: JSON.stringify(input),
     });
 }
 
-export function DeleteItem(id: string) {
+export function deleteItem(id: string) {
     return apiRequest<void>(`/api/items/${id}`, {
         method: "DELETE"
     });

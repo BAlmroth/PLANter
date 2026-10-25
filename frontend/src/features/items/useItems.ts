@@ -40,9 +40,17 @@ export function useItems(projectId: string) {
     setReloadCount((count) => count + 1);
   }
 
-  // Used after create, edit and delete: the page passes in the new list
-  function setItems(items: Item[]) {
-    setResult({ projectId, items, error: null });
+  // Used after create, edit and delete: the page passes in the new list,
+  // or a function that gets the current list and returns the new one
+  function setItems(next: Item[] | ((current: Item[]) => Item[])) {
+    setResult((previous) => {
+      const current = previous?.projectId === projectId ? previous.items : [];
+      return {
+        projectId,
+        items: typeof next === "function" ? next(current) : next,
+        error: null,
+      };
+    });
   }
 
   return {
