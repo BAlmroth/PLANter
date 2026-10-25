@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
 
-export type ItemFormValues = { title: string; description: string; type: string };
+export type ItemFormValues = { title: string; description: string; type: string; isMvp: boolean };
 
 type Props = {
   initialValues?: Partial<ItemFormValues>;
-  // When given, the form shows a type dropdown (used when adding). Left out when editing.
+  // When given, the form shows a type dropdown (used when adding).
+  // Left out when editing, and then the form shows the MVP checkbox instead.
   types?: { key: string; label: string }[];
   submitLabel: string;
   onSubmit: (values: ItemFormValues) => Promise<string | null>;
@@ -21,6 +22,7 @@ export function ItemForm({
 }: Props) {
   const [title, setTitle] = useState(initialValues.title ?? "");
   const [description, setDescription] = useState(initialValues.description ?? "");
+  const [isMvp, setIsMvp] = useState(initialValues.isMvp ?? false);
   // Starts on the first type in the list, or on the item's own type when editing
   const [type, setType] = useState(initialValues.type ?? types?.[0]?.key ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function ItemForm({
     setSubmitting(true);
     // onSubmit returns an error message, or null when it worked.
     // On success the parent closes the form, so we only update our state on failure.
-    const message = await onSubmit({ title, description, type });
+    const message = await onSubmit({ title, description, type, isMvp });
     if (message !== null) {
       setError(message);
       setSubmitting(false);
@@ -77,6 +79,12 @@ export function ItemForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
+      {!types && (
+        <label>
+          <input type="checkbox" checked={isMvp} onChange={(e) => setIsMvp(e.target.checked)} />
+          MVP
+        </label>
+      )}
       {error && <p role="alert">{error}</p>}
       <button type="submit" disabled={submitting}>
         {submitting ? "Please wait…" : submitLabel}

@@ -5,6 +5,7 @@ import { createItem } from "./itemsApi";
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
 import { useItems } from "./useItems";
+import type { Item } from "./types";
 import { useTemplate } from "./useTemplate";
 
 // The File view: a project's items grouped by category.
@@ -21,6 +22,14 @@ export function FileView({ project }: { project: Project }) {
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
+  }
+
+  // Show a saved or deleted item without asking the server for the whole list again
+  function replaceItem(updated: Item) {
+    items.setItems((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+  }
+  function removeItem(id: string) {
+    items.setItems((current) => current.filter((item) => item.id !== id));
   }
 
   if (loading) return <p>Loading items…</p>;
@@ -79,7 +88,12 @@ export function FileView({ project }: { project: Project }) {
             ) : (
               <ul>
                 {typeItems.map((item) => (
-                  <ItemRow key={item.id} item={item} />
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdated={replaceItem}
+                    onDeleted={removeItem}
+                  />
                 ))}
               </ul>
             )}
@@ -92,7 +106,12 @@ export function FileView({ project }: { project: Project }) {
           <h2>Unknown</h2>
           <ul>
             {unknownItems.map((item) => (
-              <ItemRow key={item.id} item={item} />
+              <ItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdated={replaceItem}
+                    onDeleted={removeItem}
+                  />
             ))}
           </ul>
         </section>
