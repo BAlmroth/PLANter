@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
 import { createItem } from "./itemsApi";
-import { ItemForm } from "./ItemForm";
+import { ItemForm } from "./itemForm";
 import { ItemRow } from "./ItemRowCard";
 import { useItems } from "./useItems";
 import type { Item } from "./types";
