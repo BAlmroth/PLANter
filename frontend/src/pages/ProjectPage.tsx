@@ -4,12 +4,14 @@ import { ApiError } from "../lib/api";
 import { deleteProject, updateProject } from "../features/projects/projectsApi";
 import { ProjectForm } from "../features/projects/ProjectForm";
 import { useProject } from "../features/projects/useProject";
+import { FileView } from "../features/items/FileView";
 
 // Overview of one project, with edit and delete
 export function ProjectPage() {
   const { projectId } = useParams() as { projectId: string };
   const navigate = useNavigate();
-  const { project, error, loading, refetch, setProject } = useProject(projectId);
+  const { project, error, loading, refetch, setProject } =
+    useProject(projectId);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -48,7 +50,11 @@ export function ProjectPage() {
 
   async function handleDelete() {
     // TODO sprint 4: say what else is deleted (counts of items and tasks)
-    if (!window.confirm("Delete this project and everything in it? This cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Delete this project and everything in it? This cannot be undone.",
+      )
+    ) {
       return;
     }
     setDeleteError(null);
@@ -57,7 +63,9 @@ export function ProjectPage() {
       await deleteProject(projectId);
       navigate("/");
     } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Something went wrong.");
+      setDeleteError(
+        err instanceof ApiError ? err.message : "Something went wrong.",
+      );
       setDeleting(false);
     }
   }
@@ -68,7 +76,10 @@ export function ProjectPage() {
         <h1>Edit project</h1>
         {/* The form mounts here, after the project has loaded, so its start values are correct */}
         <ProjectForm
-          initialValues={{ name: project.name, description: project.description ?? "" }}
+          initialValues={{
+            name: project.name,
+            description: project.description ?? "",
+          }}
           submitLabel="Save changes"
           onSubmit={async ({ name, description }) => {
             try {
@@ -77,7 +88,9 @@ export function ProjectPage() {
               setEditing(false);
               return null;
             } catch (err) {
-              return err instanceof ApiError ? err.message : "Something went wrong.";
+              return err instanceof ApiError
+                ? err.message
+                : "Something went wrong.";
             }
           }}
         />
@@ -104,6 +117,7 @@ export function ProjectPage() {
         </button>
       </p>
       {deleteError && <p role="alert">{deleteError}</p>}
+      <FileView project={project} />
 
       <p>
         <Link to="/">Back to projects</Link>
