@@ -5,6 +5,7 @@ import { deleteProject, updateProject } from "../features/projects/projectsApi";
 import { ProjectForm } from "../features/projects/ProjectForm";
 import { useProject } from "../features/projects/useProject";
 import { FileView } from "../features/items/FileView";
+import { MapView } from "../features/map/MapView";
 
 // Overview of one project, with edit and delete
 export function ProjectPage() {
@@ -15,6 +16,8 @@ export function ProjectPage() {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Which view of the project is shown
+  const [view, setView] = useState<"file" | "map">("file");
 
   if (loading) {
     return (
@@ -117,7 +120,15 @@ export function ProjectPage() {
         </button>
       </p>
       {deleteError && <p role="alert">{deleteError}</p>}
-      <FileView project={project} />
+      <p>
+        <button type="button" onClick={() => setView("file")} disabled={view === "file"}>
+          File view
+        </button>{" "}
+        <button type="button" onClick={() => setView("map")} disabled={view === "map"}>
+          Map
+        </button>
+      </p>
+      {view === "file" ? <FileView project={project} /> : <MapView project={project} />}
 
       <p>
         <Link to="/">Back to projects</Link>

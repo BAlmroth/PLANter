@@ -32,7 +32,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
       <Handle type="target" position={Position.Top} />
       <div style={{ fontSize: 11, textTransform: "uppercase", opacity: 0.6 }}>
         {/* Unknown keys must not crash the UI (see CLAUDE.md), so fall back to "Unknown". */}
-        {CATEGORY_LABELS[data.category] ?? "Unknown"}
+        {data.categoryLabel ?? CATEGORY_LABELS[data.category] ?? "Unknown"}
       </div>
       <strong>{data.title}</strong>
       <div style={{ fontSize: 12, color: STATUS_COLORS[data.status] }}>

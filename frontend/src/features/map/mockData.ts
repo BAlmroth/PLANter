@@ -6,6 +6,8 @@ export type ItemStatus = "planned" | "in_progress" | "done";
 export type ItemNodeData = {
   title: string;
   category: string; // template key, for example "page"
+  // The label from the template. Missing in the prototype, which falls back to CATEGORY_LABELS.
+  categoryLabel?: string;
   status: ItemStatus;
 };
 
