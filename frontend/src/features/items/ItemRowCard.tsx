@@ -4,6 +4,7 @@ import { deleteItem, updateItem } from "./itemsApi";
 import { ItemForm } from "./ItemForm";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 
+//add confirmation for 409 "this edit will delete/affect this"
 type Props = {
   item: Item;
   // Called with the item as the server saved it, or with the id of a deleted item

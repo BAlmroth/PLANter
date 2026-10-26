@@ -147,7 +147,7 @@ planter/
 
 - TypeScript strict mode. No `any` without a comment explaining why.
 - Routes are thin: validate, check ownership, call a service, return the result. Logic lives in `services/`.
-- API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user.
+- API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user. 409 for needs confirmation instances. as when deleting och updating an item affects relations.
 - User text (project description, item titles, details, inspiration) is stored as the user typed it, and is made safe when it is shown: the frontend renders it only as text (React escapes it), never as HTML (no `dangerouslySetInnerHTML`), and never in `href`/`src` unless it passed the `http(s)` URL check.
 - React components in PascalCase files, other modules in camelCase. Named exports.
 - Code, comments, commit messages and documentation in English.

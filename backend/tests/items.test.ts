@@ -222,6 +222,72 @@ describe("PATCH /api/items/:id", () => {
     expect(res.body.type).toBe("component");
   });
 
+  describe("type change and relationships", () => {
+    // A component that belongs to a page, plus a function the component triggers
+    async function setupConnected() {
+      const projectId = await createProjectAs(asA);
+      const component = await createItemAs(asA, projectId, { title: "Button", type: "component" });
+      const page = await createItemAs(asA, projectId, { title: "Home", type: "page" });
+      const fn = await createItemAs(asA, projectId, { title: "save", type: "function" });
+      await prisma.relationship.createMany({
+        data: [
+          { projectId, sourceItemId: component.id, targetItemId: page.id, type: "belongs_to" },
+          { projectId, sourceItemId: component.id, targetItemId: fn.id, type: "triggers" },
+        ],
+      });
+      return { projectId, component, page, fn };
+    }
+
+    it("returns 409 with a count and changes nothing when a type change would break connections", async () => {
+      const { component } = await setupConnected();
+      // A page may not belong to a page, so "component belongs to page" breaks. "triggers" stays valid.
+      const res = await request(app).patch(`/api/items/${component.id}`).set(asA).send({ type: "data" });
+      expect(res.status).toBe(409);
+      expect(res.body.error.details).toEqual({ invalidRelationships: 2 });
+
+      const after = await request(app).get(`/api/items/${component.id}`).set(asA);
+      expect(after.body.type).toBe("component");
+      expect(await prisma.relationship.count({ where: { sourceItemId: component.id } })).toBe(2);
+    });
+
+    it("counts only the connections that become invalid, not the ones that stay valid", async () => {
+      const { component } = await setupConnected();
+      // A page can trigger a function, but "page belongs to page" is not allowed
+      const res = await request(app).patch(`/api/items/${component.id}`).set(asA).send({ type: "page" });
+      expect(res.status).toBe(409);
+      expect(res.body.error.details).toEqual({ invalidRelationships: 1 });
+    });
+
+    it("deletes only the invalid connections when the client confirms", async () => {
+      const { component, fn } = await setupConnected();
+      const res = await request(app)
+        .patch(`/api/items/${component.id}`)
+        .set(asA)
+        .send({ type: "page", confirmRelationshipRemoval: true });
+      expect(res.status).toBe(200);
+      expect(res.body.type).toBe("page");
+
+      const left = await prisma.relationship.findMany({ where: { sourceItemId: component.id } });
+      expect(left).toHaveLength(1);
+      expect(left[0]).toMatchObject({ targetItemId: fn.id, type: "triggers" });
+    });
+
+    it("does not touch connections when only other fields change", async () => {
+      const { component } = await setupConnected();
+      const res = await request(app).patch(`/api/items/${component.id}`).set(asA).send({ title: "Renamed" });
+      expect(res.status).toBe(200);
+      expect(await prisma.relationship.count({ where: { sourceItemId: component.id } })).toBe(2);
+    });
+
+    it("checks incoming connections too", async () => {
+      const { page } = await setupConnected();
+      // "component belongs to page" ends at the page, and a component cannot belong to a function
+      const res = await request(app).patch(`/api/items/${page.id}`).set(asA).send({ type: "function" });
+      expect(res.status).toBe(409);
+      expect(res.body.error.details).toEqual({ invalidRelationships: 1 });
+    });
+  });
+
   it("returns 400 for an unknown type, and the type stays the same", async () => {
     const item = await createItemAs(asA, await createProjectAs(asA));
     const res = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ type: "quest" });

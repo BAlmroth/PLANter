@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateItemInput, UpdateItemInput } from "../schemas/items.js";
+import { relationshipRuleSchema } from "../schemas/relationships.js";
 import { getTemplate } from "../templates/index.js";
 import { getOwnedProject } from "./projects.js";
 
@@ -52,28 +53,62 @@ export async function createItem(projectId: string, userId: string, input: Creat
   });
 }
 
+// Ids of the item's relationships that would break the template rules if the item got newType
+async function findRelationshipsInvalidAfterTypeChange(itemId: string, newType: string, templateKey: string) {
+  const template = getTemplate(templateKey);
+  if (!template) throw new Error(`Project has an unknown template: ${templateKey}`);
+  const ruleSchema = relationshipRuleSchema(template);
+
+  const relationships = await prisma.relationship.findMany({
+    where: { OR: [{ sourceItemId: itemId }, { targetItemId: itemId }] },
+    include: { source: { select: { type: true } }, target: { select: { type: true } } },
+  });
+
+  return relationships
+    .filter((r) => {
+      const sourceType = r.sourceItemId === itemId ? newType : r.source.type;
+      const targetType = r.targetItemId === itemId ? newType : r.target.type;
+      return !ruleSchema.safeParse({ sourceType, type: r.type, targetType }).success;
+    })
+    .map((r) => r.id);
+}
+
 // UPDATE ITEM
+// Changing the type can make existing relationships invalid. Then the client gets a 409 with the
+// number, and must send confirmRelationshipRemoval: true to delete them and change the type.
 export async function updateItem(itemId: string, userId: string, input: UpdateItemInput) {
   const item = await getOwnedItem(itemId, userId);
-  const { title, type, description, status, isMvp } = input;
+  const { title, type, description, status, isMvp, confirmRelationshipRemoval } = input;
 
+  let invalidIds: string[] = [];
   if (type !== undefined) {
-    // TODO sprint 3: if the new type makes existing relationships invalid, reject unless the
-    // client confirms with a flag, then delete them in one transaction (see todo.md)
     const project = await getOwnedProject(item.projectId, userId);
     checkItemTypeInTemplate(project.template, type);
+
+    if (type !== item.type) {
+      invalidIds = await findRelationshipsInvalidAfterTypeChange(itemId, type, project.template);
+      if (invalidIds.length > 0 && !confirmRelationshipRemoval) {
+        throw new HttpError(409, "Changing the type would delete connections that are no longer allowed", {
+          invalidRelationships: invalidIds.length,
+        });
+      }
+    }
   }
 
-  return prisma.item.update({
-    where: { id: itemId },
-    data: {
-      ...(title !== undefined && { title }),
-      ...(type !== undefined && { type }),
-      ...(description !== undefined && { description }),
-      ...(status !== undefined && { status }),
-      ...(isMvp !== undefined && { isMvp }),
-    },
-  });
+  const data = {
+    ...(title !== undefined && { title }),
+    ...(type !== undefined && { type }),
+    ...(description !== undefined && { description }),
+    ...(status !== undefined && { status }),
+    ...(isMvp !== undefined && { isMvp }),
+  };
+
+  // Delete and update together: either both happen or neither
+  const [, updated] = await prisma.$transaction([
+    prisma.relationship.deleteMany({ where: { id: { in: invalidIds } } }),
+    prisma.item.update({ where: { id: itemId }, data }),
+  ]);
+  return updated;
 }
 
 // DELETE ITEM
