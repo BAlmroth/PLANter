@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
-import { testRouter } from "./routes/testRoute.js";
 import { templatesRouter } from "./routes/templates.js";
 import { projectsRouter } from "./routes/projects.js";
 import { itemsRouter, projectItemsRouter } from "./routes/items.js";
@@ -18,9 +17,6 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
-
-// TEMPORARY test route, delete when real routes exist
-app.use("/api/_test", testRouter);
 
 app.use("/api/templates", templatesRouter);
 app.use("/api/projects", projectsRouter);

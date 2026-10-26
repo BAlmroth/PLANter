@@ -20,47 +20,31 @@ vi.mock("../src/lib/supabase.js", () => {
   };
 });
 
-describe("POST /api/_test (requireAuth + validate)", () => {
+// POST /api/relationships is used as an example of a protected route with a validated body.
+// All of these requests stop before the database is reached.
+describe("requireAuth + validate (POST /api/relationships)", () => {
   it("returns 401 without a token", async () => {
-    const res = await request(app).post("/api/_test").send({ name: "x" });
+    const res = await request(app).post("/api/relationships").send({});
     expect(res.status).toBe(401);
     expect(res.body.error.message).toBeTypeOf("string");
   });
 
   it("returns 401 with an invalid token", async () => {
     const res = await request(app)
-      .post("/api/_test")
+      .post("/api/relationships")
       .set("Authorization", "Bearer wrong-token")
-      .send({ name: "x" });
+      .send({});
     expect(res.status).toBe(401);
-  });
-
-  it("returns 200 with a valid token", async () => {
-    const res = await request(app)
-      .post("/api/_test")
-      .set("Authorization", "Bearer token-a")
-      .send({ name: "x" });
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ userId: "user-a", name: "x" });
   });
 
   it("returns 400 with details for an invalid body", async () => {
     const res = await request(app)
-      .post("/api/_test")
+      .post("/api/relationships")
       .set("Authorization", "Bearer token-a")
-      .send({ name: "" });
+      .send({ sourceItemId: "not-a-uuid", targetItemId: "x", type: "" });
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBeTypeOf("string");
-    expect(res.body.error.details.fieldErrors.name).toBeDefined();
-  });
-
-  it("ignores a userId sent in the body", async () => {
-    const res = await request(app)
-      .post("/api/_test")
-      .set("Authorization", "Bearer token-b")
-      .send({ name: "x", userId: "user-a" });
-    expect(res.status).toBe(200);
-    expect(res.body.userId).toBe("user-b");
+    expect(res.body.error.details.fieldErrors.sourceItemId).toBeDefined();
   });
 });
 
@@ -73,7 +57,8 @@ describe("error handler", () => {
 
   it("returns 400 for invalid JSON", async () => {
     const res = await request(app)
-      .post("/api/_test")
+      .post("/api/relationships")
+      .set("Authorization", "Bearer token-a")
       .set("Content-Type", "application/json")
       .send("{not json");
     expect(res.status).toBe(400);
