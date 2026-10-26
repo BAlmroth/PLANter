@@ -2,17 +2,19 @@ import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import { deleteItem, updateItem } from "./itemsApi";
 import { ItemForm } from "./ItemForm";
+import type { Connection } from "../relationships/connections";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 
 //add confirmation for 409 "this edit will delete/affect this"
 type Props = {
   item: Item;
+  connections: Connection[];
   // Called with the item as the server saved it, or with the id of a deleted item
   onUpdated: (item: Item) => void;
   onDeleted: (id: string) => void;
 };
 
-export function ItemRow({ item, onUpdated, onDeleted }: Props) {
+export function ItemRow({ item, connections, onUpdated, onDeleted }: Props) {
   // true while the edit form is open
   const [editing, setEditing] = useState(false);
   // true while a request from a checkbox or the delete button is running
@@ -39,8 +41,10 @@ export function ItemRow({ item, onUpdated, onDeleted }: Props) {
   }
 
   async function handleDelete() {
-    // TODO sprint 3: say how many connections and tasks are deleted too
-    if (!window.confirm(`Delete "${item.title}"? This also deletes its connections and tasks.`)) {
+    // TODO when tasks exist: add the number of tasks
+    const count = connections.length;
+    const alsoDeletes = count === 0 ? "its tasks" : `${count} ${count === 1 ? "connection" : "connections"} and its tasks`;
+    if (!window.confirm(`Delete "${item.title}"? This also deletes ${alsoDeletes}.`)) {
       return;
     }
     setError(null);
@@ -85,6 +89,15 @@ export function ItemRow({ item, onUpdated, onDeleted }: Props) {
       <h3>{item.title}</h3>
       {item.isMvp && <p>MVP</p>}
       {item.description && <p>{item.description}</p>}
+      {connections.length > 0 && (
+        <ul>
+          {connections.map((connection) => (
+            <li key={connection.id}>
+              {connection.label}: {connection.otherTitle}
+            </li>
+          ))}
+        </ul>
+      )}
       <label>
         <input
           type="checkbox"

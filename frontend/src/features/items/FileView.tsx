@@ -7,21 +7,25 @@ import { ItemRow } from "./ItemRowCard";
 import { useItems } from "./useItems";
 import type { Item } from "./types";
 import { useTemplate } from "./useTemplate";
+import { getConnections } from "../relationships/connections";
+import { useRelationships } from "../relationships/useRelationships";
 
 // The File view: a project's items grouped by category.
 export function FileView({ project }: { project: Project }) {
   const template = useTemplate(project.template);
   const items = useItems(project.id);
+  const relationships = useRelationships(project.id);
   // true while the add form is open
   const [adding, setAdding] = useState(false);
 
-  const loading = template.loading || items.loading;
-  const error = template.error ?? items.error;
+  const loading = template.loading || items.loading || relationships.loading;
+  const error = template.error ?? items.error ?? relationships.error;
 
   // Retry only the request that failed
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
+    if (relationships.error) relationships.refetch();
   }
 
   // Show a saved or deleted item without asking the server for the whole list again
@@ -44,6 +48,10 @@ export function FileView({ project }: { project: Project }) {
       </div>
     );
   }
+
+  // template.template is set here (checked above)
+  const connectionsOf = (item: Item) =>
+    getConnections(item.id, relationships.relationships, items.items, template.template!);
 
   // Items whose type is not in the template (for example an old key) go under "Unknown"
   const knownKeys = template.template.itemTypes.map((type) => type.key);
@@ -91,6 +99,7 @@ export function FileView({ project }: { project: Project }) {
                   <ItemRow
                     key={item.id}
                     item={item}
+                    connections={connectionsOf(item)}
                     onUpdated={replaceItem}
                     onDeleted={removeItem}
                   />
@@ -109,6 +118,7 @@ export function FileView({ project }: { project: Project }) {
               <ItemRow
                     key={item.id}
                     item={item}
+                    connections={connectionsOf(item)}
                     onUpdated={replaceItem}
                     onDeleted={removeItem}
                   />
