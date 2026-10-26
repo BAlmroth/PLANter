@@ -1,0 +1,52 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+/* Title on the left, buttons on the right. Wraps on narrow screens. */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 2.2rem;
+}
+
+.subtitle {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The "New project" link looks like a button */
+.newButton {
+  padding: 10px 16px;
+  color: var(--on-primary);
+  background: var(--button-bg);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.newButton:hover {
+  filter: brightness(0.9);
+}
+
+/* Cards sit in a row and wrap onto the next line */
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
