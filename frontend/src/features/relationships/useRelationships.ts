@@ -38,10 +38,23 @@ export function useRelationships(projectId: string) {
     setReloadCount((count) => count + 1);
   }
 
+  // Used after a connection is created: pass the new list, or a function that gets the current list
+  function setRelationships(next: Relationship[] | ((current: Relationship[]) => Relationship[])) {
+    setResult((previous) => {
+      const current = previous?.projectId === projectId ? previous.relationships : [];
+      return {
+        projectId,
+        relationships: typeof next === "function" ? next(current) : next,
+        error: null,
+      };
+    });
+  }
+
   return {
     relationships: loading ? [] : result.relationships,
     error: loading ? null : result.error,
     loading,
     refetch,
+    setRelationships,
   };
 }

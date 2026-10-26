@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
-import { createItem } from "./itemsApi";
+import { createItem, deleteItem } from "./itemsApi";
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
 import { useItems } from "./useItems";
 import type { Item } from "./types";
 import { useTemplate } from "./useTemplate";
-import { getConnections } from "../relationships/connections";
+import { getConnectOptions, getConnections, type ConnectOption } from "../relationships/connections";
+import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 
 // The File view: a project's items grouped by category.
@@ -34,6 +35,66 @@ export function FileView({ project }: { project: Project }) {
   }
   function removeItem(id: string) {
     items.setItems((current) => current.filter((item) => item.id !== id));
+  }
+
+  // Creates a new item and connects it to `item`. Two requests: if the connection is refused
+  // (for example it would make a loop), the new item is deleted again so nothing is left behind.
+  // Returns an error message, or null when it worked.
+  async function addConnectedItem(item: Item, option: ConnectOption, title: string) {
+    const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
+
+    let newItem: Item;
+    try {
+      newItem = await createItem(project.id, { title, type: option.newItemType });
+    } catch (err) {
+      return messageFrom(err);
+    }
+
+    try {
+      const relationship = await createRelationship({
+        sourceItemId: option.newItemIsSource ? newItem.id : item.id,
+        targetItemId: option.newItemIsSource ? item.id : newItem.id,
+        type: option.relationshipType,
+      });
+      items.setItems((current) => [...current, newItem]);
+      relationships.setRelationships((current) => [...current, relationship]);
+      return null;
+    } catch (err) {
+      // Undo: remove the item we just created
+      const undone = await deleteItem(newItem.id).then(
+        () => true,
+        () => false,
+      );
+      return undone
+        ? messageFrom(err)
+        : `${messageFrom(err)} The new item was created but not connected. Reload to see it.`;
+    }
+  }
+
+  // Connects `item` to an item that already exists. Returns an error message, or null when it worked.
+  // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
+  async function connectExisting(item: Item, option: ConnectOption, otherItemId: string) {
+    try {
+      const relationship = await createRelationship({
+        sourceItemId: option.newItemIsSource ? otherItemId : item.id,
+        targetItemId: option.newItemIsSource ? item.id : otherItemId,
+        type: option.relationshipType,
+      });
+      relationships.setRelationships((current) => [...current, relationship]);
+      return null;
+    } catch (err) {
+      return err instanceof ApiError ? err.message : "Something went wrong.";
+    }
+  }
+
+  async function removeConnection(relationshipId: string) {
+    try {
+      await deleteRelationship(relationshipId);
+      relationships.setRelationships((current) => current.filter((r) => r.id !== relationshipId));
+      return null;
+    } catch (err) {
+      return err instanceof ApiError ? err.message : "Something went wrong.";
+    }
   }
 
   if (loading) return <p>Loading items…</p>;
@@ -100,6 +161,11 @@ export function FileView({ project }: { project: Project }) {
                     key={item.id}
                     item={item}
                     connections={connectionsOf(item)}
+                    connectOptions={getConnectOptions(item.type, template.template!)}
+                    onAddConnected={(option, title) => addConnectedItem(item, option, title)}
+                    otherItems={items.items.filter((other) => other.id !== item.id)}
+                    onConnectExisting={(option, otherItemId) => connectExisting(item, option, otherItemId)}
+                    onDeleteConnection={removeConnection}
                     onUpdated={replaceItem}
                     onDeleted={removeItem}
                   />
@@ -119,6 +185,11 @@ export function FileView({ project }: { project: Project }) {
                     key={item.id}
                     item={item}
                     connections={connectionsOf(item)}
+                    connectOptions={getConnectOptions(item.type, template.template!)}
+                    onAddConnected={(option, title) => addConnectedItem(item, option, title)}
+                    otherItems={items.items.filter((other) => other.id !== item.id)}
+                    onConnectExisting={(option, otherItemId) => connectExisting(item, option, otherItemId)}
+                    onDeleteConnection={removeConnection}
                     onUpdated={replaceItem}
                     onDeleted={removeItem}
                   />

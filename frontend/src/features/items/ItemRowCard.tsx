@@ -2,21 +2,42 @@ import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import { deleteItem, updateItem } from "./itemsApi";
 import { ItemForm } from "./ItemForm";
-import type { Connection } from "../relationships/connections";
+import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
+import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
+import type { ConnectOption, Connection } from "../relationships/connections";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 
 //add confirmation for 409 "this edit will delete/affect this"
 type Props = {
   item: Item;
   connections: Connection[];
+  // What can be added and connected from this item, and how to do it (returns an error message or null)
+  connectOptions: ConnectOption[];
+  onAddConnected: (option: ConnectOption, title: string) => Promise<string | null>;
+  // The other items in the project, to connect to
+  otherItems: Item[];
+  onConnectExisting: (option: ConnectOption, otherItemId: string) => Promise<string | null>;
+  onDeleteConnection: (relationshipId: string) => Promise<string | null>;
   // Called with the item as the server saved it, or with the id of a deleted item
   onUpdated: (item: Item) => void;
   onDeleted: (id: string) => void;
 };
 
-export function ItemRow({ item, connections, onUpdated, onDeleted }: Props) {
+export function ItemRow({
+  item,
+  connections,
+  connectOptions,
+  onAddConnected,
+  otherItems,
+  onConnectExisting,
+  onDeleteConnection,
+  onUpdated,
+  onDeleted,
+}: Props) {
   // true while the edit form is open
   const [editing, setEditing] = useState(false);
+  // Which connect form is open: a new item, an existing item, or none
+  const [connecting, setConnecting] = useState<"new" | "existing" | null>(null);
   // true while a request from a checkbox or the delete button is running
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +79,16 @@ export function ItemRow({ item, connections, onUpdated, onDeleted }: Props) {
     }
   }
 
+  async function handleDeleteConnection(connection: Connection) {
+    if (!window.confirm(`Remove the connection "${connection.label}: ${connection.otherTitle}"?`)) return;
+    setError(null);
+    setBusy(true);
+    const message = await onDeleteConnection(connection.id);
+    // On success the connection disappears from the list, so only a failure needs to be shown
+    if (message !== null) setError(message);
+    setBusy(false);
+  }
+
   if (editing) {
     return (
       <li>
@@ -93,7 +124,10 @@ export function ItemRow({ item, connections, onUpdated, onDeleted }: Props) {
         <ul>
           {connections.map((connection) => (
             <li key={connection.id}>
-              {connection.label}: {connection.otherTitle}
+              {connection.label}: {connection.otherTitle} ({connection.otherTypeLabel}){" "}
+              <button type="button" onClick={() => handleDeleteConnection(connection)} disabled={busy}>
+                Remove
+              </button>
             </li>
           ))}
         </ul>
@@ -122,6 +156,40 @@ export function ItemRow({ item, connections, onUpdated, onDeleted }: Props) {
       <button type="button" onClick={handleDelete} disabled={busy}>
         Delete
       </button>
+      {connectOptions.length > 0 &&
+        (connecting === "new" ? (
+          <ConnectedItemForm
+            thisTitle={item.title}
+            options={connectOptions}
+            onCancel={() => setConnecting(null)}
+            onSubmit={async (option, title) => {
+              const message = await onAddConnected(option, title);
+              if (message === null) setConnecting(null);
+              return message;
+            }}
+          />
+        ) : connecting === "existing" ? (
+          <ConnectExistingForm
+            thisTitle={item.title}
+            options={connectOptions}
+            items={otherItems}
+            onCancel={() => setConnecting(null)}
+            onSubmit={async (option, otherItemId) => {
+              const message = await onConnectExisting(option, otherItemId);
+              if (message === null) setConnecting(null);
+              return message;
+            }}
+          />
+        ) : (
+          <>
+            <button type="button" onClick={() => setConnecting("new")} disabled={busy}>
+              Add connected item
+            </button>{" "}
+            <button type="button" onClick={() => setConnecting("existing")} disabled={busy}>
+              Connect existing item
+            </button>
+          </>
+        ))}
       {error && <p role="alert">{error}</p>}
     </li>
   );
