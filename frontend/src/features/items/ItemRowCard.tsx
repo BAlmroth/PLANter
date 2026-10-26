@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import { deleteItem, updateItem } from "./itemsApi";
-import { ItemForm } from "./itemForm";
+import { ItemForm } from "./ItemForm";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 
 type Props = {

@@ -109,7 +109,7 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 4. Progress and finished MVP: progress overview, polish and deploy the MVP, tests for progress, then start Should (create from map, todo list, sprints).
 5. Understanding the plan, quality and finishing: impact view, warnings, remaining Should items, error and loading states, security review, README, AI-use documentation.
 
-Current sprint: **2** (update this line when the sprint changes).
+Current sprint: **3** (update this line when the sprint changes).
 
 Cut line if time runs short: Could first, then search, filter, MVP marking and responsive layout. Tests and the security check are never cut. Tests are written in the same sprint as the logic.
 

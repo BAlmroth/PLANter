@@ -6,6 +6,7 @@ import { testRouter } from "./routes/testRoute.js";
 import { templatesRouter } from "./routes/templates.js";
 import { projectsRouter } from "./routes/projects.js";
 import { itemsRouter, projectItemsRouter } from "./routes/items.js";
+import { projectRelationshipsRouter, relationshipsRouter } from "./routes/relationships.js";
 
 export const app = express();
 
@@ -25,6 +26,8 @@ app.use("/api/templates", templatesRouter);
 app.use("/api/projects", projectsRouter);
 app.use("/api/projects/:projectId/items", projectItemsRouter);
 app.use("/api/items", itemsRouter);
+app.use("/api/projects/:projectId/relationships", projectRelationshipsRouter);
+app.use("/api/relationships", relationshipsRouter);
 
 // Must be last: unknown routes get a 404, and every error gets the same response shape
 app.use(notFoundHandler);
