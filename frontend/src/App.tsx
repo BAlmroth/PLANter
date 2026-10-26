@@ -3,6 +3,7 @@ import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { NewProjectPage } from "./pages/NewProjectPage";
 import { ProjectPage } from "./pages/ProjectPage";
+import { ItemPage } from "./pages/ItemPage";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
 import { MapPrototypePage } from "./pages/MapPrototypePage";
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/" element={<ProjectsPage />} />
           <Route path="/projects/new" element={<NewProjectPage />} />
           <Route path="/projects/:projectId" element={<ProjectPage />} />
+          <Route path="/projects/:projectId/items/:itemId" element={<ItemPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
