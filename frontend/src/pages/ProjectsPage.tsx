@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { LogoutButton } from "../auth/LogoutButton";
 import { ProjectCard } from "../features/projects/ProjectCard";
 import { useProjects } from "../features/projects/useProjects";
 import styles from "./ProjectsPage.module.css";
@@ -15,9 +14,7 @@ export function ProjectsPage() {
           <h1 className={styles.title}>Welcome, [name]</h1>
           <p className={styles.subtitle}>Projects overview</p>
         </div>
-        {/* The nav comes later, until then the logout button lives here */}
         <div className={styles.actions}>
-          <LogoutButton />
           <Link to="/projects/new" className={styles.newButton}>
             + New project
           </Link>

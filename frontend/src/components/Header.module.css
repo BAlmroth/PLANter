@@ -1,0 +1,40 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+/* The square with the letter, until there is a real logo */
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: var(--radius);
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
