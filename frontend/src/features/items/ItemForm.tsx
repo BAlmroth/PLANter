@@ -4,18 +4,20 @@ export type ItemFormValues = { title: string; description: string; type: string;
 
 type Props = {
   initialValues?: Partial<ItemFormValues>;
-  // When given, the form shows a type dropdown (used when adding).
-  // Left out when editing, and then the form shows the MVP checkbox instead.
+  // When given, the form shows a type dropdown
   types?: { key: string; label: string }[];
+  // Shows the MVP checkbox (used when editing)
+  showMvp?: boolean;
   submitLabel: string;
   onSubmit: (values: ItemFormValues) => Promise<string | null>;
   onCancel: () => void;
 };
 
-// Title + description (+ type when adding) form for an item, used inline on the File view.
+// Title + description (+ type and MVP checkbox when asked for) form for an item, used inline on the File view.
 export function ItemForm({
   initialValues = {},
   types,
+  showMvp = false,
   submitLabel,
   onSubmit,
   onCancel,
@@ -79,7 +81,7 @@ export function ItemForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
-      {!types && (
+      {showMvp && (
         <label>
           <input type="checkbox" checked={isMvp} onChange={(e) => setIsMvp(e.target.checked)} />
           MVP

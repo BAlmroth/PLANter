@@ -10,6 +10,7 @@ import { useRelationships } from "../relationships/useRelationships";
 import { ItemForm } from "./ItemForm";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
+import { getInvalidRelationshipCount } from "./typeChange";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 
@@ -181,17 +182,42 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
       <>
         <h1>Edit {item.title}</h1>
         <ItemForm
+          types={loadedTemplate.itemTypes}
+          showMvp
           initialValues={{
             title: item.title,
             description: item.description ?? "",
+            type: item.type,
             isMvp: item.isMvp,
           }}
           submitLabel="Save changes"
           onCancel={() => setEditing(false)}
-          onSubmit={async ({ title, description, isMvp }) => {
+          onSubmit={async ({ title, description, type, isMvp }) => {
+            // "" clears the description, like for projects. The type is only sent when it changed.
+            const changes: UpdateItemInput = {
+              title,
+              description,
+              isMvp,
+              ...(type !== item.type && { type }),
+            };
             try {
-              // "" clears the description, like for projects
-              replaceItem(await updateItem(item.id, { title, description, isMvp }));
+              let saved: Item;
+              try {
+                saved = await updateItem(item.id, changes);
+              } catch (err) {
+                // 409: the new type would break some connections. Ask, then send again with the flag.
+                const count = getInvalidRelationshipCount(err);
+                if (count === null) throw err;
+                const newLabel = loadedTemplate.itemTypes.find((t) => t.key === type)?.label ?? type;
+                const what = count === 1 ? "1 connection that is" : `${count} connections that are`;
+                if (!window.confirm(`Changing the type to ${newLabel} deletes ${what} no longer allowed. Continue?`)) {
+                  return "The type was not changed.";
+                }
+                saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
+                // The server deleted some connections, so load the list again
+                relationships.refetch();
+              }
+              replaceItem(saved);
               setEditing(false);
               return null;
             } catch (err) {
