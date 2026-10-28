@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Background, Controls, ReactFlow, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
@@ -16,7 +17,9 @@ const COLUMN_WIDTH = 220;
 const ROW_HEIGHT = 110;
 
 // The relationship map: items as nodes, relationships as arrows. Read-only for now.
+// Click a node to open the item's detail view.
 export function MapView({ project }: { project: Project }) {
+  const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
@@ -63,6 +66,8 @@ export function MapView({ project }: { project: Project }) {
       id: relationship.id,
       source: relationship.sourceItemId,
       target: relationship.targetItemId,
+      // "smoothstep" draws straight lines with 90 degree bends and rounded corners
+      type: "smoothstep",
       // The source item shows the label ("uses"), as described in CLAUDE.md
       label:
         template.template?.relationshipTypes.find((type) => type.key === relationship.type)?.label ??
@@ -100,6 +105,8 @@ export function MapView({ project }: { project: Project }) {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        // A click on a node (not a drag) opens the item's detail view. The node id is the item id.
+        onNodeClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
         // Read-only: connections are made in a later step
         nodesConnectable={false}
         fitView

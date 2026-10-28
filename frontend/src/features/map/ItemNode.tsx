@@ -28,8 +28,9 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
         fontSize: 14,
       }}
     >
-      {/* Handles are the dots where edges attach. Edges need them to connect. */}
-      <Handle type="target" position={Position.Top} />
+      {/* Handles are the dots where edges attach. Edges need them to connect.
+          Arrows leave on the right and enter on the left, so they run left to right like the columns. */}
+      <Handle type="target" position={Position.Left} />
       <div style={{ fontSize: 11, textTransform: "uppercase", opacity: 0.6 }}>
         {/* Unknown keys must not crash the UI (see CLAUDE.md), so fall back to "Unknown". */}
         {data.categoryLabel ?? CATEGORY_LABELS[data.category] ?? "Unknown"}
@@ -38,7 +39,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
       <div style={{ fontSize: 12, color: STATUS_COLORS[data.status] }}>
         {STATUS_LABELS[data.status]}
       </div>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }
