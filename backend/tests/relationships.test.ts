@@ -134,3 +134,37 @@ describe("createRelationship cycles", () => {
     expect(back.type).toBe("triggers");
   });
 });
+
+describe("createRelationship with many connections", () => {
+  // Several items of the same type in one project, returned as a list of ids
+  async function createItems(projectId: string, type: string, count: number) {
+    const items = await Promise.all(
+      Array.from({ length: count }, (_, i) =>
+        prisma.item.create({ data: { projectId, type, title: `${type} ${i + 1}` } }),
+      ),
+    );
+    return items.map((item) => item.id);
+  }
+
+  it("lets one component be used by many pages", async () => {
+    const { project, items } = await setup(USER_A, ["component"]);
+    const pages = await createItems(project.id, "page", 3);
+
+    for (const pageId of pages) {
+      await createRelationship(USER_A, { sourceItemId: items.component, targetItemId: pageId, type: "belongs_to" });
+    }
+
+    expect(await prisma.relationship.count({ where: { sourceItemId: items.component } })).toBe(3);
+  });
+
+  it("lets one page use many components", async () => {
+    const { project, items } = await setup(USER_A, ["page"]);
+    const components = await createItems(project.id, "component", 3);
+
+    for (const componentId of components) {
+      await createRelationship(USER_A, { sourceItemId: componentId, targetItemId: items.page, type: "belongs_to" });
+    }
+
+    expect(await prisma.relationship.count({ where: { targetItemId: items.page } })).toBe(3);
+  });
+});
