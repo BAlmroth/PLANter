@@ -21,10 +21,12 @@ itemTypes: [
   { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true },
 ],
   relationshipTypes: [
-    // A component cannot contain the thing it belongs to so no cycles
-    { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false },
+    // A component cannot contain the thing it uses so no cycles
+    { key: "belongs_to", label: "used by", inverseLabel: "uses", allowCycles: false },
     // Functions may call each other in a loop
     { key: "triggers", label: "triggers", inverseLabel: "triggered by", allowCycles: true },
+    // Pages link to each other, so loops are normal (home -> about -> home)
+    { key: "navigates_to", label: "navigates to", inverseLabel: "reached by", allowCycles: true },
     { key: "reads_from", label: "reads from", inverseLabel: "read by", allowCycles: true },
     { key: "writes_to", label: "writes to", inverseLabel: "written by", allowCycles: true },
     { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
@@ -40,7 +42,8 @@ itemTypes: [
     // Behaviour: what happens on an action
     { source: "page", relationship: "triggers", target: "function" },
     { source: "component", relationship: "triggers", target: "function" },
-    { source: "page", relationship: "triggers", target: "page" },
+    { source: "page", relationship: "navigates_to", target: "page" },
+    { source: "component", relationship: "navigates_to", target: "page" },
     { source: "function", relationship: "triggers", target: "function" },
 
     // Data: what touches a table

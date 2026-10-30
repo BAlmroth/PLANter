@@ -58,6 +58,16 @@ describe("relationshipRuleSchema (web template)", () => {
     expect(result.success).toBe(false);
   });
 
+  it("lets a page navigate to a page, but not trigger one", () => {
+    expect(schema.safeParse({ sourceType: "page", type: "navigates_to", targetType: "page" }).success).toBe(true);
+    expect(schema.safeParse({ sourceType: "page", type: "triggers", targetType: "page" }).success).toBe(false);
+  });
+
+  it("lets a component navigate to a page, but not trigger one", () => {
+    expect(schema.safeParse({ sourceType: "component", type: "navigates_to", targetType: "page" }).success).toBe(true);
+    expect(schema.safeParse({ sourceType: "component", type: "triggers", targetType: "page" }).success).toBe(false);
+  });
+
   it("rejects an unknown relationship type", () => {
     const result = schema.safeParse({ sourceType: "component", type: "hugs", targetType: "page" });
     expect(result.success).toBe(false);
