@@ -15,7 +15,6 @@ export function ProjectCard({ project }: { project: Project }) {
       {/* "" and null both mean no description */}
       <p className={styles.description}>{project.description || "No description"}</p>
       <div className={styles.footer}>
-        <span className={styles.tag}>{project.template}</span>
         <small>Created {new Date(project.createdAt).toLocaleDateString()}</small>
       </div>
     </li>

@@ -96,8 +96,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   async function handleDelete() {
     // TODO when tasks exist: add the number of tasks
     const count = connections.length;
-    const alsoDeletes = count === 0 ? "its tasks" : `${count} ${count === 1 ? "connection" : "connections"} and its tasks`;
-    if (!window.confirm(`Delete "${item!.title}"? This also deletes ${alsoDeletes}.`)) return;
+    const alsoDeletes = count === 0 ? "" : ` This also deletes ${count} ${count === 1 ? "connection" : "connections"}.`;
+    if (!window.confirm(`Delete "${item!.title}"?${alsoDeletes}`)) return;
     setError(null);
     setBusy(true);
     try {

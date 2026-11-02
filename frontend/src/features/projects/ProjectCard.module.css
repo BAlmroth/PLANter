@@ -36,20 +36,11 @@
   margin: 0;
 }
 
-/* Tag and date at the bottom of the card, on one line */
+/* Date at the bottom of the card */
 .footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-top: auto;
-}
-
-.tag {
-  padding: 2px 10px;
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  text-transform: capitalize;
-  background: var(--bg-dark);
-  border-radius: 4px;
 }

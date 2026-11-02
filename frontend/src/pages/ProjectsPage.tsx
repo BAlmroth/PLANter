@@ -10,10 +10,7 @@ export function ProjectsPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Welcome, [name]</h1>
-          <p className={styles.subtitle}>Projects overview</p>
-        </div>
+        <h1 className={styles.title}>Your projects</h1>
         <div className={styles.actions}>
           <Link to="/projects/new" className={styles.newButton}>
             + New project

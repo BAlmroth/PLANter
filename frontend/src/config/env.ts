@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-// Safety filter for environment variables: checks that every variable we need exists and has the right type, and stops the server at startup with a clear message if not instead of causing confusing bugs later. checking though zod schema that defines how the data sshould look like
-
-//zod checks data
-// Describe which environment variables we expect and what they should look like
+// Checks with Zod that every VITE_ variable exists and has the right shape.
+// If one is missing, the app throws at startup with a clear message instead of failing later.
 const schema = z.object({
   VITE_SUPABASE_URL: z.url(),
   VITE_SUPABASE_ANON_KEY: z.string().min(1),
