@@ -3,6 +3,7 @@ import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateItemInput, UpdateItemInput } from "../schemas/items.js";
 import { relationshipRuleSchema } from "../schemas/relationships.js";
 import { getTemplate } from "../templates/index.js";
+import { startPosition } from "./itemLayout.js";
 import { getOwnedProject } from "./projects.js";
 
 // CHECK ITEM TYPE
@@ -41,11 +42,19 @@ export async function createItem(projectId: string, userId: string, input: Creat
   const { title, type, description, status, isMvp } = input;
   checkItemTypeInTemplate(project.template, type);
 
+  // Place the new item in its category's column, so items do not pile up at 0, 0 on the map
+  const itemTypeKeys = (getTemplate(project.template)?.itemTypes ?? []).map((t) => t.key);
+  const sameType = await prisma.item.findMany({
+    where: { projectId, type },
+    select: { positionX: true, positionY: true },
+  });
+
   return prisma.item.create({
     data: {
       projectId,
       title,
       type,
+      ...startPosition(itemTypeKeys, type, sameType),
       ...(description !== undefined && { description }),
       ...(status !== undefined && { status }),
       ...(isMvp !== undefined && { isMvp }),
