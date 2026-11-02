@@ -12,10 +12,6 @@ import type { ItemNodeType } from "./types";
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
 
-// Space between nodes when an item has no saved position yet
-const COLUMN_WIDTH = 220;
-const ROW_HEIGHT = 110;
-
 // The relationship map: items as nodes, relationships as arrows. Read-only for now.
 // Click a node to open the item's detail view.
 export function MapView({ project }: { project: Project }) {
@@ -32,26 +28,13 @@ export function MapView({ project }: { project: Project }) {
     if (!template.template) return { nodes: [], edges: [] };
     const itemTypes = template.template.itemTypes;
 
-    // How many items of each type we have placed so far (for the row)
-    const placed: Record<string, number> = {};
-
     const nodes: ItemNodeType[] = items.items.map((item) => {
-      const column = Math.max(
-        0,
-        itemTypes.findIndex((type) => type.key === item.type),
-      );
-      const row = placed[item.type] ?? 0;
-      placed[item.type] = row + 1;
-
-      // Positions are not saved from the map yet (every item starts at 0, 0).
-      // Until they are, place items in one column per type so they do not pile up.
-      const hasPosition = item.positionX !== 0 || item.positionY !== 0;
       return {
         id: item.id,
         type: "item",
-        position: hasPosition
-          ? { x: item.positionX, y: item.positionY }
-          : { x: column * COLUMN_WIDTH, y: row * ROW_HEIGHT },
+        // The backend gives every new item a start position (services/itemLayout.ts),
+        // so (0, 0) is a real position: the first row of the first column.
+        position: { x: item.positionX, y: item.positionY },
         data: {
           title: item.title,
           category: item.type,
