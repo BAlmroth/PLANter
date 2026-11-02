@@ -14,6 +14,7 @@ import {
   listProjects,
   updateProject,
 } from "../services/projects.js";
+import { getProjectProgress } from "../services/progress.js";
 
 export const projectsRouter = Router();
 
@@ -37,6 +38,11 @@ projectsRouter.get("/:id", validate(projectIdSchema, "params"), async (req, res)
   res.json(await getOwnedProject(id, req.userId!));
 });
 
+// Progress overview: done / total per category and in total
+projectsRouter.get("/:id/progress", validate(projectIdSchema, "params"), async (req, res) => {
+  const { id } = req.params as z.infer<typeof projectIdSchema>;
+  res.json(await getProjectProgress(id, req.userId!));
+});
 
 
 // Update name and/or description
