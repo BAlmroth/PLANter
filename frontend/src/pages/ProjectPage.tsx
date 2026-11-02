@@ -6,6 +6,7 @@ import { ProjectForm } from "../features/projects/ProjectForm";
 import { useProject } from "../features/projects/useProject";
 import { FileView } from "../features/items/FileView";
 import { MapView } from "../features/map/MapView";
+import { TodoView } from "../features/tasks/TodoView";
 import { ProgressBar } from "../features/progress/ProgressBar";
 import { ProgressOverview } from "../features/progress/ProgressOverview";
 import { useProgress } from "../features/progress/useProgress";
@@ -23,10 +24,10 @@ export function ProjectPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   // Which view of the project is shown
-  const [view, setView] = useState<"file" | "map" | "progress">("file");
+  const [view, setView] = useState<"file" | "map" | "progress" | "todo">("file");
 
   // Each switch asks for fresh numbers, because items may have changed in the File view
-  function changeView(next: "file" | "map" | "progress") {
+  function changeView(next: "file" | "map" | "progress" | "todo") {
     setView(next);
     progressState.refetch();
   }
@@ -146,10 +147,14 @@ export function ProjectPage() {
         </button>{" "}
         <button type="button" onClick={() => changeView("progress")} disabled={view === "progress"}>
           Progress
+        </button>{" "}
+        <button type="button" onClick={() => changeView("todo")} disabled={view === "todo"}>
+          Tasks
         </button>
       </p>
       {view === "file" && <FileView project={project} />}
       {view === "map" && <MapView project={project} />}
+      {view === "todo" && <TodoView project={project} />}
       {view === "progress" && (
         <>
           {progressState.loading && <p>Loading progress…</p>}

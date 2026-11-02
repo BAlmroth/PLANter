@@ -7,6 +7,8 @@ import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import { getConnectOptions, getConnections, type ConnectOption, type Connection } from "../relationships/connections";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
+import { ItemTasks } from "../tasks/ItemTasks";
+import { useTasks } from "../tasks/useTasks";
 import { ItemForm } from "./ItemForm";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
@@ -23,6 +25,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
+  const tasks = useTasks(project.id);
 
   // true while the edit form is open
   const [editing, setEditing] = useState(false);
@@ -32,13 +35,14 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loading = template.loading || items.loading || relationships.loading;
-  const loadError = template.error ?? items.error ?? relationships.error;
+  const loading = template.loading || items.loading || relationships.loading || tasks.loading;
+  const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error;
 
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
     if (relationships.error) relationships.refetch();
+    if (tasks.error) tasks.refetch();
   }
 
   if (loading) return <p>Loading item…</p>;
@@ -69,6 +73,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const loadedTemplate = template.template;
   const typeLabel = loadedTemplate.itemTypes.find((t) => t.key === item.type)?.label ?? "Unknown";
   const connections = getConnections(item.id, relationships.relationships, items.items, loadedTemplate);
+  const itemTasks = tasks.tasks.filter((task) => task.itemId === item.id);
   const connectOptions = getConnectOptions(item.type, loadedTemplate);
 
   function replaceItem(updated: Item) {
@@ -94,9 +99,11 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   }
 
   async function handleDelete() {
-    // TODO when tasks exist: add the number of tasks
-    const count = connections.length;
-    const alsoDeletes = count === 0 ? "" : ` This also deletes ${count} ${count === 1 ? "connection" : "connections"}.`;
+    const parts = [
+      connections.length > 0 && `${connections.length} ${connections.length === 1 ? "connection" : "connections"}`,
+      itemTasks.length > 0 && `${itemTasks.length} ${itemTasks.length === 1 ? "task" : "tasks"}`,
+    ].filter(Boolean);
+    const alsoDeletes = parts.length === 0 ? "" : ` This also deletes ${parts.join(" and ")}.`;
     if (!window.confirm(`Delete "${item!.title}"?${alsoDeletes}`)) return;
     setError(null);
     setBusy(true);
@@ -314,6 +321,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
             </button>
           </>
         ))}
+
+      <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
     </>
   );
 }
