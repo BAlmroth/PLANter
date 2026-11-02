@@ -20,7 +20,5 @@ export const updateItemSchema = createItemSchema
   .refine((body) => Object.keys(body).length > 0, "edit at least one field to update");
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 
-// URL params. Two names, because they are different parts of the URL:
-// :id is an item (/api/items/:id), :projectId is its project (/api/projects/:projectId/items)
+// :id in /api/items/:id
 export const itemIdSchema = z.object({ id: z.uuid() });
-export const projectIdParamSchema = z.object({ projectId: z.uuid() });

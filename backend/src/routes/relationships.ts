@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
-import { projectIdParamSchema } from "../schemas/items.js";
+import { projectIdParamSchema } from "../schemas/projects.js";
 import { createRelationshipSchema, relationshipIdSchema } from "../schemas/relationships.js";
 import {
   createRelationship,

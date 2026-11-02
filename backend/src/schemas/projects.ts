@@ -13,8 +13,10 @@ export const createProjectSchema = z.object({
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 
 
-// check that projects id is uuid
+// check that projects id is uuid. Two names, because they are different parts of the URL:
+// :id in /api/projects/:id, and :projectId in nested routes like /api/projects/:projectId/items
 export const projectIdSchema = z.object({ id: z.uuid() });
+export const projectIdParamSchema = z.object({ projectId: z.uuid() });
 
 
 //only update name and description

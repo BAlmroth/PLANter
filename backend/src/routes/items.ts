@@ -2,12 +2,8 @@ import { Router } from "express";
 import type { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
-import {
-  createItemSchema,
-  itemIdSchema,
-  projectIdParamSchema,
-  updateItemSchema,
-} from "../schemas/items.js";
+import { createItemSchema, itemIdSchema, updateItemSchema } from "../schemas/items.js";
+import { projectIdParamSchema } from "../schemas/projects.js";
 import {
   createItem,
   deleteItem,
