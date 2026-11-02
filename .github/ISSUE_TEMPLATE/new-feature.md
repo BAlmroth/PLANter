@@ -7,10 +7,6 @@ assignees: ''
 
 ---
 
----
-name: Issue
-about: What, why, and done when
----
  
 ## What
  
