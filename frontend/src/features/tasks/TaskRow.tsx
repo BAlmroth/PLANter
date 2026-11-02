@@ -1,7 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
+import type { Item } from "../items/types";
 import { deleteTask, updateTask } from "./tasksApi";
-import type { Task } from "./types";
+import type { Task, UpdateTaskInput } from "./types";
 
 type Props = {
   task: Task;
@@ -9,19 +10,23 @@ type Props = {
   setTasks: (next: (current: Task[]) => Task[]) => void;
   // Shown after the title, for example a link to the task's item
   extra?: ReactNode;
+  // When given, the edit form has a dropdown to link the task to an item, or to remove the link
+  items?: Item[];
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
-export function TaskRow({ task, setTasks, extra }: Props) {
+export function TaskRow({ task, setTasks, extra, items }: Props) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
+  // "" means no item
+  const [itemId, setItemId] = useState(task.itemId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   // Sends the changes and replaces the task in the list. Returns true when it worked.
-  async function save(changes: { title?: string; done?: boolean }) {
+  async function save(changes: UpdateTaskInput) {
     setError(null);
     setBusy(true);
     try {
@@ -42,7 +47,8 @@ export function TaskRow({ task, setTasks, extra }: Props) {
       setError("Title is required.");
       return;
     }
-    if (await save({ title })) setEditing(false);
+    // itemId is only sent when the form has the dropdown. null removes the link.
+    if (await save({ title, ...(items && { itemId: itemId === "" ? null : itemId }) })) setEditing(false);
   }
 
   async function handleDelete() {
@@ -70,6 +76,16 @@ export function TaskRow({ task, setTasks, extra }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />{" "}
+          {items && (
+            <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)}>
+              <option value="">No item</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
+          )}{" "}
           <button type="submit" disabled={busy}>
             Save
           </button>{" "}
@@ -78,6 +94,7 @@ export function TaskRow({ task, setTasks, extra }: Props) {
             onClick={() => {
               setEditing(false);
               setTitle(task.title);
+              setItemId(task.itemId ?? "");
               setError(null);
             }}
           >

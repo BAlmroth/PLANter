@@ -113,6 +113,7 @@ export function TodoView({ project }: { project: Project }) {
               key={task.id}
               task={task}
               setTasks={tasks.setTasks}
+              items={items.items}
               extra={task.itemId && <ItemLink project={project} itemId={task.itemId} items={items.items} />}
             />
           ))}
