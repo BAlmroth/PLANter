@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Item, Template } from "../items/types";
-import { getConnectOptions, getConnections } from "./connections";
+import { getAllowedRelationshipTypes, getConnectOptions, getConnections } from "./connections";
 import type { Relationship } from "./types";
 
 const template: Template = {
@@ -101,5 +101,27 @@ describe("getConnectOptions", () => {
 
   it("offers nothing for a type that is not in any combination", () => {
     expect(getConnectOptions("quest", web)).toEqual([]);
+  });
+});
+
+describe("getAllowedRelationshipTypes", () => {
+  const withRules: Template = {
+    ...template,
+    relationshipTypes: [
+      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
+      { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true },
+    ],
+    allowedCombinations: [
+      { source: "page", relationship: "uses", target: "component" },
+      { source: "page", relationship: "tests", target: "page" },
+    ],
+  };
+
+  it("returns only the types allowed for this source and target", () => {
+    expect(getAllowedRelationshipTypes("page", "component", withRules).map((t) => t.key)).toEqual(["uses"]);
+  });
+
+  it("is directional and returns nothing for a combination that is not allowed", () => {
+    expect(getAllowedRelationshipTypes("component", "page", withRules)).toEqual([]);
   });
 });
