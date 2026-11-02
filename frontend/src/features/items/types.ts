@@ -1,5 +1,12 @@
 export type ItemStatus = "planned" | "in_progress" | "done";
 
+// How a status is shown in the UI (File view and map)
+export const STATUS_LABELS: Record<ItemStatus, string> = {
+  planned: "Planned",
+  in_progress: "In progress",
+  done: "Done",
+};
+
 export type Item = {
 id: string;
 projectId: string;

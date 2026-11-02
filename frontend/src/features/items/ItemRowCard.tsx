@@ -1,12 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Connection } from "../relationships/connections";
-import type { Item, ItemStatus } from "./types";
-
-const STATUS_LABELS: Record<ItemStatus, string> = {
-  planned: "Planned",
-  in_progress: "In progress",
-  done: "Done",
-};
+import { STATUS_LABELS, type Item } from "./types";
 
 type Props = {
   projectId: string;

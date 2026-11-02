@@ -1,12 +1,6 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { ItemStatus } from "../items/types";
+import { STATUS_LABELS, type ItemStatus } from "../items/types";
 import type { ItemNodeType } from "./types";
-
-const STATUS_LABELS: Record<ItemStatus, string> = {
-  planned: "Planned",
-  in_progress: "In progress",
-  done: "Done",
-};
 
 const STATUS_COLORS: Record<ItemStatus, string> = {
   planned: "#9ca3af",
