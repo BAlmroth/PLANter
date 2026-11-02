@@ -1,0 +1,7 @@
+/* Project title on the left, progress bar next to it. Wraps on narrow screens. */
+.titleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}

@@ -6,6 +6,10 @@ import { ProjectForm } from "../features/projects/ProjectForm";
 import { useProject } from "../features/projects/useProject";
 import { FileView } from "../features/items/FileView";
 import { MapView } from "../features/map/MapView";
+import { ProgressBar } from "../features/progress/ProgressBar";
+import { ProgressOverview } from "../features/progress/ProgressOverview";
+import { useProgress } from "../features/progress/useProgress";
+import styles from "./ProjectPage.module.css";
 
 // Overview of one project, with edit and delete
 export function ProjectPage() {
@@ -13,11 +17,19 @@ export function ProjectPage() {
   const navigate = useNavigate();
   const { project, error, loading, refetch, setProject } =
     useProject(projectId);
+  // Shared by the header bar and the Progress tab, so both show the same numbers
+  const progressState = useProgress(projectId);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   // Which view of the project is shown
-  const [view, setView] = useState<"file" | "map">("file");
+  const [view, setView] = useState<"file" | "map" | "progress">("file");
+
+  // Each switch asks for fresh numbers, because items may have changed in the File view
+  function changeView(next: "file" | "map" | "progress") {
+    setView(next);
+    progressState.refetch();
+  }
 
   if (loading) {
     return (
@@ -106,7 +118,12 @@ export function ProjectPage() {
 
   return (
     <main>
-      <h1>{project.name}</h1>
+      <div className={styles.titleRow}>
+        <h1>{project.name}</h1>
+        {progressState.progress && (
+          <ProgressBar progress={progressState.progress} label="Project progress" />
+        )}
+      </div>
       {/* "" and null both mean no description */}
       <p>{project.description || "No description"}</p>
       <small>Created {new Date(project.createdAt).toLocaleString()}</small>
@@ -121,14 +138,34 @@ export function ProjectPage() {
       </p>
       {deleteError && <p role="alert">{deleteError}</p>}
       <p>
-        <button type="button" onClick={() => setView("file")} disabled={view === "file"}>
+        <button type="button" onClick={() => changeView("file")} disabled={view === "file"}>
           File view
         </button>{" "}
-        <button type="button" onClick={() => setView("map")} disabled={view === "map"}>
+        <button type="button" onClick={() => changeView("map")} disabled={view === "map"}>
           Map
+        </button>{" "}
+        <button type="button" onClick={() => changeView("progress")} disabled={view === "progress"}>
+          Progress
         </button>
       </p>
-      {view === "file" ? <FileView project={project} /> : <MapView project={project} />}
+      {view === "file" && <FileView project={project} />}
+      {view === "map" && <MapView project={project} />}
+      {view === "progress" && (
+        <>
+          {progressState.loading && <p>Loading progress…</p>}
+          {progressState.error && (
+            <div role="alert">
+              <p>{progressState.error}</p>
+              <button type="button" onClick={progressState.refetch}>
+                Try again
+              </button>
+            </div>
+          )}
+          {progressState.progress && (
+            <ProgressOverview progress={progressState.progress} templateKey={project.template} />
+          )}
+        </>
+      )}
 
       <p>
         <Link to="/">Back to projects</Link>
