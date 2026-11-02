@@ -7,7 +7,8 @@ export type ItemStatus = "planned" | "in_progress" | "done";
 
 export type ProgressItem = { type: string; status: ItemStatus };
 
-export type ProgressCount = { done: number; total: number; percent: number };
+// inProgress is shown for information only. It does not count toward percent.
+export type ProgressCount = { done: number; inProgress: number; total: number; percent: number };
 
 export type CategoryProgress = ProgressCount & { key: string };
 
@@ -17,11 +18,12 @@ export type ProjectProgress = ProgressCount & { categories: CategoryProgress[] }
 export function countProgress(items: ProgressItem[]): ProgressCount {
   const total = items.length;
   const done = items.filter((item) => item.status === "done").length;
+  const inProgress = items.filter((item) => item.status === "in_progress").length;
 
   // An empty project or category is 0%, never a division by zero
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
 
-  return { done, total, percent };
+  return { done, inProgress, total, percent };
 }
 
 // Only item types that count toward progress in the template are included.

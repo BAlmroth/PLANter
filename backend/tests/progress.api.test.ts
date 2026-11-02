@@ -100,7 +100,7 @@ describe("GET /api/projects/:id/progress", () => {
 
     const res = await request(app).get(`/api/projects/${projectId}/progress`).set(asA);
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ done: 2, total: 4, percent: 50 });
+    expect(res.body).toMatchObject({ done: 2, inProgress: 1, total: 4, percent: 50 });
 
     const page = res.body.categories.find((c: { key: string }) => c.key === "page");
     expect(page).toMatchObject({ done: 1, total: 2, percent: 50 });

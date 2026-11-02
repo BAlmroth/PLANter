@@ -11,11 +11,11 @@ describe("countProgress", () => {
       { type: "page", status: "planned" as const },
       { type: "page", status: "in_progress" as const },
     ];
-    expect(countProgress(items)).toEqual({ done: 2, total: 4, percent: 50 });
+    expect(countProgress(items)).toEqual({ done: 2, inProgress: 1, total: 4, percent: 50 });
   });
 
   it("is 0% for no items, not a division by zero", () => {
-    expect(countProgress([])).toEqual({ done: 0, total: 0, percent: 0 });
+    expect(countProgress([])).toEqual({ done: 0, inProgress: 0, total: 0, percent: 0 });
   });
 
   it("counts in progress as not finished", () => {
@@ -24,6 +24,16 @@ describe("countProgress", () => {
       { type: "page", status: "in_progress" as const },
     ];
     expect(countProgress(items).percent).toBe(50);
+  });
+
+  it("counts in progress items without adding them to the percent", () => {
+    const items = [
+      { type: "page", status: "done" as const },
+      { type: "page", status: "in_progress" as const },
+      { type: "page", status: "in_progress" as const },
+      { type: "page", status: "planned" as const },
+    ];
+    expect(countProgress(items)).toMatchObject({ inProgress: 2, done: 1, total: 4, percent: 25 });
   });
 
   it("rounds to a whole percent", () => {
