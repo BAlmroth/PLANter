@@ -87,7 +87,7 @@ async function findRelationshipsInvalidAfterTypeChange(itemId: string, newType: 
 // number, and must send confirmRelationshipRemoval: true to delete them and change the type.
 export async function updateItem(itemId: string, userId: string, input: UpdateItemInput) {
   const item = await getOwnedItem(itemId, userId);
-  const { title, type, description, status, isMvp, confirmRelationshipRemoval } = input;
+  const { title, type, description, status, isMvp, positionX, positionY, confirmRelationshipRemoval } = input;
 
   let invalidIds: string[] = [];
   if (type !== undefined) {
@@ -110,6 +110,8 @@ export async function updateItem(itemId: string, userId: string, input: UpdateIt
     ...(description !== undefined && { description }),
     ...(status !== undefined && { status }),
     ...(isMvp !== undefined && { isMvp }),
+    ...(positionX !== undefined && { positionX }),
+    ...(positionY !== undefined && { positionY }),
   };
 
   // Delete and update together: either both happen or neither

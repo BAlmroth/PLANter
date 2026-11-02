@@ -215,6 +215,21 @@ describe("PATCH /api/items/:id", () => {
     expect(res.body).toMatchObject({ title: "Login page", type: "page", status: "done", isMvp: true });
   });
 
+  it("saves a map position", async () => {
+    const item = await createItemAs(asA, await createProjectAs(asA));
+    const res = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ positionX: 340.5, positionY: -20 });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ positionX: 340.5, positionY: -20 });
+  });
+
+  it("rejects a position that is not a number or out of range", async () => {
+    const item = await createItemAs(asA, await createProjectAs(asA));
+    const text = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ positionX: "far left" });
+    const huge = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ positionY: 1e9 });
+    expect(text.status).toBe(400);
+    expect(huge.status).toBe(400);
+  });
+
   it("can change the type to another type in the template", async () => {
     const item = await createItemAs(asA, await createProjectAs(asA));
     const res = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ type: "component" });

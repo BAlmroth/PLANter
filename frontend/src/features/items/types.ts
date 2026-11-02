@@ -31,7 +31,12 @@ export type CreateItemInput = {
 
 // confirmRelationshipRemoval: send true after the user has agreed that a type change deletes
 // the connections that are no longer allowed (see the 409 answer from PATCH /api/items/:id)
-export type UpdateItemInput = Partial<CreateItemInput> & { confirmRelationshipRemoval?: boolean };
+// positionX / positionY: where the item sits on the map, saved when a node is dragged
+export type UpdateItemInput = Partial<CreateItemInput> & {
+  positionX?: number;
+  positionY?: number;
+  confirmRelationshipRemoval?: boolean;
+};
 
 // The shape of what GET /api/templates/:key returns
 export type Template = {

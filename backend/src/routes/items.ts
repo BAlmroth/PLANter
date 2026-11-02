@@ -45,7 +45,7 @@ itemsRouter.get("/:id", validate(itemIdSchema, "params"), async (req, res) => {
   res.json(await getOwnedItem(id, req.userId!));
 });
 
-// Update title, type, description, status and/or MVP flag
+// Update title, type, description, status, MVP flag and/or map position
 itemsRouter.patch(
   "/:id",
   validate(itemIdSchema, "params"),
