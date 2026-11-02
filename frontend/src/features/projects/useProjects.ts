@@ -38,6 +38,8 @@ export function useProjects() {
 
   // Used by the "Try again" button
   function refetch() {
+    // Clear the old error, so the page does not show it together with "Loading…"
+    setError(null);
     setLoading(true);
     setReloadCount((count) => count + 1);
   }
