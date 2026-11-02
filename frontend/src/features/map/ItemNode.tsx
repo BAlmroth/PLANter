@@ -1,5 +1,6 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { CATEGORY_LABELS, type ItemNodeType, type ItemStatus } from "./mockData";
+import type { ItemStatus } from "../items/types";
+import type { ItemNodeType } from "./types";
 
 const STATUS_LABELS: Record<ItemStatus, string> = {
   planned: "Planned",
@@ -32,8 +33,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
           Arrows leave on the right and enter on the left, so they run left to right like the columns. */}
       <Handle type="target" position={Position.Left} />
       <div style={{ fontSize: 11, textTransform: "uppercase", opacity: 0.6 }}>
-        {/* Unknown keys must not crash the UI (see CLAUDE.md), so fall back to "Unknown". */}
-        {data.categoryLabel ?? CATEGORY_LABELS[data.category] ?? "Unknown"}
+        {data.categoryLabel}
       </div>
       <strong>{data.title}</strong>
       <div style={{ fontSize: 12, color: STATUS_COLORS[data.status] }}>

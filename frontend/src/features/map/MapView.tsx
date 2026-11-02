@@ -7,7 +7,7 @@ import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { useRelationships } from "../relationships/useRelationships";
 import { ItemNode } from "./ItemNode";
-import type { ItemNodeType } from "./mockData";
+import type { ItemNodeType } from "./types";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };

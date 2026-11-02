@@ -6,7 +6,6 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { ItemPage } from "./pages/ItemPage";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
-import { MapPrototypePage } from "./pages/MapPrototypePage";
 import { AppLayout } from "./components/AppLayout";
 
 export function App() {
@@ -16,8 +15,6 @@ export function App() {
         {/* Public pages */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* Temporary: React Flow prototype with mock data, remove after the sprint 1 decision */}
-        <Route path="/map-prototype" element={<MapPrototypePage />} />
 
         {/* requires login  */}
         <Route element={<ProtectedRoute />}>
