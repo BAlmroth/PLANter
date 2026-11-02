@@ -4,10 +4,11 @@ import { Background, Controls, ReactFlow, useNodesState, type Connection, type E
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
-import { updateItem } from "../items/itemsApi";
+import { ItemForm } from "../items/ItemForm";
+import { createItem, updateItem } from "../items/itemsApi";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
-import { createRelationship } from "../relationships/relationshipsApi";
+import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 import { ConnectionPrompt } from "./ConnectionPrompt";
 import { ItemNode } from "./ItemNode";
@@ -19,12 +20,18 @@ const nodeTypes = { item: ItemNode };
 // The relationship map: items as nodes, relationships as arrows.
 // Click a node to open the item's detail view. Drag a node to move it: the new position is saved
 // when the drag ends. Drag from one node's right dot to another's left dot to connect them.
+// Click a connection to delete it. The "Add item" button creates an item.
 export function MapView({ project }: { project: Project }) {
   const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
+  // Shown above the map when saving a position or deleting a connection fails
   const [saveError, setSaveError] = useState<string | null>(null);
+  // true while the add item form is open
+  const [adding, setAdding] = useState(false);
+  // The connection that was clicked, which offers a delete button
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
   const [pending, setPending] = useState<{ sourceId: string; targetId: string } | null>(null);
 
@@ -111,6 +118,18 @@ export function MapView({ project }: { project: Project }) {
     }
   }
 
+  async function handleDeleteConnection(id: string) {
+    if (!window.confirm("Remove this connection?")) return;
+    setSaveError(null);
+    try {
+      await deleteRelationship(id);
+      relationships.setRelationships((current) => current.filter((r) => r.id !== id));
+      setSelectedEdgeId(null);
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : "Something went wrong.");
+    }
+  }
+
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
@@ -133,10 +152,48 @@ export function MapView({ project }: { project: Project }) {
   const pendingSource = items.items.find((item) => item.id === pending?.sourceId);
   const pendingTarget = items.items.find((item) => item.id === pending?.targetId);
 
-  if (items.items.length === 0) return <p>No items yet. Add some in the File view.</p>;
+  const selectedEdge = relationships.relationships.find((r) => r.id === selectedEdgeId);
+  const edgeSource = items.items.find((item) => item.id === selectedEdge?.sourceItemId);
+  const edgeTarget = items.items.find((item) => item.id === selectedEdge?.targetItemId);
+  const edgeLabel = template.template?.relationshipTypes.find((type) => type.key === selectedEdge?.type)?.label;
 
   return (
     <>
+      {adding && template.template ? (
+        <ItemForm
+          types={template.template.itemTypes}
+          submitLabel="Add item"
+          onCancel={() => setAdding(false)}
+          onSubmit={async ({ title, description, type }) => {
+            try {
+              // The backend gives the new item a start position (services/itemLayout.ts)
+              const item = await createItem(project.id, {
+                title,
+                type,
+                ...(description !== "" && { description }),
+              });
+              items.setItems((current) => [...current, item]);
+              setAdding(false);
+              return null;
+            } catch (err) {
+              return err instanceof ApiError ? err.message : "Something went wrong.";
+            }
+          }}
+        />
+      ) : (
+        <button type="button" onClick={() => setAdding(true)}>
+          Add item
+        </button>
+      )}
+      {items.items.length === 0 && <p>No items yet.</p>}
+      {selectedEdge && edgeSource && edgeTarget && (
+        <p>
+          {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}{" "}
+          <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
+            Delete connection
+          </button>
+        </p>
+      )}
       {saveError && <p role="alert">{saveError}</p>}
       {pendingSource && pendingTarget && template.template && (
         // key: a new prompt (with fresh state) for every new connection
@@ -163,7 +220,10 @@ export function MapView({ project }: { project: Project }) {
           onConnect={(connection: Connection) =>
             setPending({ sourceId: connection.source, targetId: connection.target })
           }
-          // An item cannot be connected to itself
+          // Click a connection to get a delete button, click the background to dismiss it
+        onEdgeClick={(_event, edge) => setSelectedEdgeId(edge.id)}
+        onPaneClick={() => setSelectedEdgeId(null)}
+        // An item cannot be connected to itself
           isValidConnection={(connection) => connection.source !== connection.target}
           fitView
         >
