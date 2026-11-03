@@ -1,0 +1,86 @@
+/* The File view page: a header row, then one card per category */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* "Files", the number of items, and "Add item" on the right */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.count {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.addButton {
+  margin-left: auto;
+}
+
+/* Two or more cards side by side when there is room, one on a narrow screen */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Small caps category label, the same as on the overview */
+.label {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  padding-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.labelCount {
+  font-weight: 400;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* ItemForm (shared, so styled from here): one field per row, the buttons side by side at the bottom */
+.addForm form {
+  max-width: 520px;
+}
+.addForm label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}

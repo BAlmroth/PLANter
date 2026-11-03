@@ -3,6 +3,7 @@ import { ApiError } from "../../lib/api";
 import type { Task } from "../tasks/types";
 import { createSprint, deleteSprint, updateSprint } from "./sprintsApi";
 import type { Sprint } from "./types";
+import styles from "./SprintSection.module.css";
 
 type Props = {
   projectId: string;
@@ -81,16 +82,16 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
   }
 
   return (
-    <section>
-      <h2>Sprints</h2>
+    <section className={styles.card}>
+      <h2 className={styles.label}>Sprints</h2>
       {sprints.length === 0 ? (
-        <p>No sprints yet.</p>
+        <p className={styles.empty}>No sprints yet.</p>
       ) : (
-        <ul>
+        <ul className={styles.list}>
           {sprints.map((sprint) => (
-            <li key={sprint.id}>
+            <li key={sprint.id} className={styles.row}>
               {editingId === sprint.id ? (
-                <form onSubmit={handleRename}>
+                <form onSubmit={handleRename} className={styles.inlineForm}>
                   <input
                     type="text"
                     required
@@ -102,33 +103,41 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
                   <button type="submit" disabled={busy}>
                     Save
                   </button>{" "}
-                  <button type="button" onClick={() => setEditingId(null)}>
+                  <button type="button" className={styles.secondary} onClick={() => setEditingId(null)}>
                     Cancel
                   </button>
                 </form>
               ) : (
                 <>
-                  {sprint.name}{" "}
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setEditingId(sprint.id);
-                      setEditName(sprint.name);
-                    }}
-                  >
-                    Rename
-                  </button>{" "}
-                  <button type="button" disabled={busy} onClick={() => handleDelete(sprint)}>
-                    Delete
-                  </button>
+                  <span className={styles.name}>{sprint.name}</span>
+                  <span className={styles.actions}>
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      disabled={busy}
+                      onClick={() => {
+                        setEditingId(sprint.id);
+                        setEditName(sprint.name);
+                      }}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.textButton} ${styles.delete}`}
+                      disabled={busy}
+                      onClick={() => handleDelete(sprint)}
+                    >
+                      Delete
+                    </button>
+                  </span>
                 </>
               )}
             </li>
           ))}
         </ul>
       )}
-      <form onSubmit={handleAdd}>
+      <form onSubmit={handleAdd} className={styles.addForm}>
         <label>
           New sprint
           <input type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />

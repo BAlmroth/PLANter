@@ -9,6 +9,7 @@ import { useSprints } from "../sprints/useSprints";
 import { createTask } from "./tasksApi";
 import { TaskRow } from "./TaskRow";
 import { useTasks } from "./useTasks";
+import styles from "./TodoView.module.css";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
@@ -17,10 +18,9 @@ function ItemLink({ project, itemId, items }: { project: Project; itemId: string
   const item = items.find((i) => i.id === itemId);
   if (!item) return null;
   return (
-    <small>
-      {" "}
-      (<Link to={`/projects/${project.id}/items/${item.id}`}>{item.title}</Link>)
-    </small>
+    <Link to={`/projects/${project.id}/items/${item.id}`} className={styles.itemLink}>
+      {item.title}
+    </Link>
   );
 }
 
@@ -95,61 +95,75 @@ export function TodoView({ project }: { project: Project }) {
   ];
 
   return (
-    <section>
-      <SprintSection
-        projectId={project.id}
-        sprints={sprints.sprints}
-        setSprints={sprints.setSprints}
-        tasks={tasks.tasks}
-        setTasks={tasks.setTasks}
-      />
-      <h2>Tasks</h2>
-      <form onSubmit={handleAdd}>
-        <label>
-          New task
-          <input
-            type="text"
-            required
-            maxLength={100}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        <label>
-          Item (optional)
-          <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-            <option value="">No item</option>
-            {items.items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Sprint (optional)
-          <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-            <option value="">No sprint</option>
-            {sprints.sprints.map((sprint) => (
-              <option key={sprint.id} value={sprint.id}>
-                {sprint.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={adding}>
-          {adding ? "Adding…" : "Add task"}
-        </button>
-      </form>
-      {actionError && <p role="alert">{actionError}</p>}
+    <section className={styles.page}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Tasks</h1>
+        <span className={styles.count}>{tasks.tasks.filter((task) => !task.done).length} pending</span>
+      </div>
+
+      <div className={styles.top}>
+        <SprintSection
+          projectId={project.id}
+          sprints={sprints.sprints}
+          setSprints={sprints.setSprints}
+          tasks={tasks.tasks}
+          setTasks={tasks.setTasks}
+        />
+        <section className={styles.card}>
+          <h2 className={styles.label}>New task</h2>
+          <form onSubmit={handleAdd} className={styles.addForm}>
+            <label className={styles.titleField}>
+              Title
+              <input
+                type="text"
+                required
+                maxLength={100}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </label>
+            <label>
+              Item (optional)
+              <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
+                <option value="">No item</option>
+                {items.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Sprint (optional)
+              <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
+                <option value="">No sprint</option>
+                {sprints.sprints.map((sprint) => (
+                  <option key={sprint.id} value={sprint.id}>
+                    {sprint.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={adding}>
+              {adding ? "Adding…" : "Add task"}
+            </button>
+          </form>
+          {actionError && <p role="alert">{actionError}</p>}
+        </section>
+      </div>
 
       {groups.map((group) => (
-        <div key={group.id}>
-          <h3>{group.name}</h3>
+        <section key={group.id} className={styles.card}>
+          <h2 className={styles.label}>
+            {group.name}
+            <span className={styles.groupCount}>
+              {group.tasks.filter((task) => task.done).length} / {group.tasks.length} done
+            </span>
+          </h2>
           {group.tasks.length === 0 ? (
-            <p>No tasks.</p>
+            <p className={styles.empty}>No tasks.</p>
           ) : (
-            <ul>
+            <ul className={styles.list}>
               {group.tasks.map((task) => (
                 <TaskRow
                   key={task.id}
@@ -162,7 +176,7 @@ export function TodoView({ project }: { project: Project }) {
               ))}
             </ul>
           )}
-        </div>
+        </section>
       ))}
     </section>
   );

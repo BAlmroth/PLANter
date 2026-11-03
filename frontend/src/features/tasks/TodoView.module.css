@@ -1,0 +1,103 @@
+/* The Tasks page: a header row, the Sprints and New task cards, then one card per sprint */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.count {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+/* Sprints and New task side by side when there is room */
+.top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Small caps card label, with the "done" count on the right */
+.label {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  padding-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.groupCount {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* New task: the title on its own row, the two dropdowns side by side, then the button */
+.addForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+.addForm label {
+  font-size: 0.9rem;
+}
+.titleField {
+  grid-column: 1 / -1;
+}
+.addForm button {
+  justify-self: start;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The item a task is about, as a small tag after its title */
+.itemLink {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--primary);
+  text-decoration: none;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+.itemLink:hover {
+  text-decoration: underline;
+}
+
+.empty {
+  margin: 8px 0 0;
+  opacity: 0.7;
+}

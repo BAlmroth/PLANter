@@ -4,6 +4,7 @@ import type { Item } from "../items/types";
 import type { Sprint } from "../sprints/types";
 import { deleteTask, updateTask } from "./tasksApi";
 import type { Task, UpdateTaskInput } from "./types";
+import styles from "./TaskRow.module.css";
 
 type Props = {
   task: Task;
@@ -74,9 +75,9 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
   }
 
   return (
-    <li>
+    <li className={styles.row}>
       {editing ? (
-        <form onSubmit={handleSaveTitle}>
+        <form onSubmit={handleSaveTitle} className={styles.editForm}>
           <input
             type="text"
             required
@@ -110,6 +111,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
           </button>{" "}
           <button
             type="button"
+            className={styles.secondary}
             onClick={() => {
               setEditing(false);
               setTitle(task.title);
@@ -123,17 +125,19 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
         </form>
       ) : (
         <>
-          <label>
-            <input type="checkbox" checked={task.done} disabled={busy} onChange={() => save({ done: !task.done })} />{" "}
-            {task.done ? <s>{task.title}</s> : task.title}
+          <label className={styles.check}>
+            <input type="checkbox" checked={task.done} disabled={busy} onChange={() => save({ done: !task.done })} />
+            <span className={task.done ? styles.done : undefined}>{task.title}</span>
+            {extra}
           </label>
-          {extra}{" "}
-          <button type="button" onClick={() => setEditing(true)} disabled={busy}>
-            Edit
-          </button>{" "}
-          <button type="button" onClick={handleDelete} disabled={busy}>
-            Delete
-          </button>
+          <span className={styles.actions}>
+            <button type="button" className={styles.textButton} onClick={() => setEditing(true)} disabled={busy}>
+              Edit
+            </button>
+            <button type="button" className={`${styles.textButton} ${styles.delete}`} onClick={handleDelete} disabled={busy}>
+              Delete
+            </button>
+          </span>
         </>
       )}
       {error && <p role="alert">{error}</p>}

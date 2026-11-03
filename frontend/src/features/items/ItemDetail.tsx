@@ -344,7 +344,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
           ))}
       </section>
 
-      {/* ItemTasks and TaskRow are shared with the Tasks page, so they are styled from here (.tasks) */}
+      {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
       <section className={`${styles.card} ${styles.tasks}`}>
         <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
       </section>

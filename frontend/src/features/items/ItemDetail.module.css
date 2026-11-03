@@ -160,8 +160,8 @@
   opacity: 0.7;
 }
 
-/* ItemTasks: heading, list of TaskRows and the add form */
-.tasks h2 {
+/* ItemTasks: its heading, list and add form. Only direct children (>), the rows style themselves (TaskRow.module.css) */
+.tasks > h2 {
   margin: 0 0 12px;
   font-family: var(--mono);
   font-size: 0.75rem;
@@ -170,36 +170,18 @@
   text-transform: uppercase;
   color: var(--text);
 }
-.tasks ul {
+.tasks > ul {
   margin: 0 0 16px;
   padding: 0;
   list-style: none;
 }
-.tasks li {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--bg-dark);
-}
-.tasks li label {
-  flex: 1;
-}
-.tasks li button {
-  padding: 4px 10px;
-  font-size: 0.85rem;
-  color: var(--text-h);
-  background: transparent;
-  border: 1px solid var(--border);
-}
 /* The add form: input and button on one line */
-.tasks form {
+.tasks > form {
   display: flex;
   align-items: flex-end;
   gap: 8px;
 }
-.tasks form label {
+.tasks > form label {
   flex: 1;
   font-size: 0.85rem;
 }

@@ -1,0 +1,71 @@
+/* One task: checkbox and title on the left, Edit and Delete on the right */
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-dark);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+
+.check {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-h);
+  cursor: pointer;
+}
+.check input {
+  accent-color: var(--primary);
+}
+
+/* A finished task is crossed out and faded */
+.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Small buttons without a background, so the list stays calm */
+.textButton {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+}
+.textButton:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+.delete:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+/* Edit mode: title, dropdowns and buttons on one line, wrapping when there is no room */
+.editForm {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.editForm input,
+.editForm select {
+  flex: 1 1 160px;
+  width: auto;
+  margin: 0;
+}
+
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+}
