@@ -15,6 +15,7 @@ import type { Item, ItemStatus, UpdateItemInput } from "./types";
 import { getInvalidRelationshipCount } from "./typeChange";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
+import styles from "./ItemDetail.module.css";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
@@ -179,15 +180,15 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   }
 
   const backLink = (
-    <p>
-      <Link to={`/projects/${project.id}`}>Back to {project.name}</Link>
-    </p>
+    <Link to={`/projects/${project.id}`} className={styles.back}>
+      ← Back to {project.name}
+    </Link>
   );
 
   if (editing) {
     return (
-      <>
-        <h1>Edit {item.title}</h1>
+      <section className={styles.card}>
+        <h1 className={styles.title}>Edit {item.title}</h1>
         <ItemForm
           types={loadedTemplate.itemTypes}
           showMvp
@@ -232,97 +233,121 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
             }
           }}
         />
-      </>
+      </section>
     );
   }
 
   return (
-    <>
+    <div className={styles.page}>
       {backLink}
-      <h1>{item.title}</h1>
-      <p>{typeLabel}</p>
-      {item.isMvp && <p>MVP</p>}
-      {item.description && <p>{item.description}</p>}
-      <label>
-        <input
-          type="checkbox"
-          checked={item.status === "in_progress"}
-          disabled={busy}
-          onChange={(e) => setStatus("in_progress", e.target.checked)}
-        />
-        In progress
-      </label>{" "}
-      <label>
-        <input
-          type="checkbox"
-          checked={item.status === "done"}
-          disabled={busy}
-          onChange={(e) => setStatus("done", e.target.checked)}
-        />
-        Done
-      </label>
-      <p>
-        <button type="button" onClick={() => setEditing(true)} disabled={busy}>
-          Edit
-        </button>{" "}
-        <button type="button" onClick={handleDelete} disabled={busy}>
-          Delete
-        </button>
-      </p>
-      {error && <p role="alert">{error}</p>}
 
-      <h2>Connections</h2>
-      {connections.length === 0 ? (
-        <p>No connections yet.</p>
-      ) : (
-        <ul>
-          {connections.map((connection) => (
-            <li key={connection.id}>
-              {connection.label}: {connection.otherTitle} ({connection.otherTypeLabel}){" "}
-              <button type="button" onClick={() => handleRemoveConnection(connection)} disabled={busy}>
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section className={styles.card}>
+        <div className={styles.tags}>
+          <span className={styles.tag}>{typeLabel}</span>
+          {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
+        </div>
+        <h1 className={styles.title}>{item.title}</h1>
+        {item.description && <p className={styles.description}>{item.description}</p>}
 
-      {connectOptions.length > 0 &&
-        (connecting === "new" ? (
-          <ConnectedItemForm
-            thisTitle={item.title}
-            options={connectOptions}
-            onCancel={() => setConnecting(null)}
-            onSubmit={async (option, title) => {
-              const message = await addConnectedItem(option, title);
-              if (message === null) setConnecting(null);
-              return message;
-            }}
-          />
-        ) : connecting === "existing" ? (
-          <ConnectExistingForm
-            thisTitle={item.title}
-            options={connectOptions}
-            items={items.items.filter((other) => other.id !== item.id)}
-            onCancel={() => setConnecting(null)}
-            onSubmit={async (option, otherItemId) => {
-              const message = await connectExisting(option, otherItemId);
-              if (message === null) setConnecting(null);
-              return message;
-            }}
-          />
-        ) : (
-          <>
-            <button type="button" onClick={() => setConnecting("new")} disabled={busy}>
-              Add connected item
-            </button>{" "}
-            <button type="button" onClick={() => setConnecting("existing")} disabled={busy}>
-              Connect existing item
+        <div className={styles.toolbar}>
+          {/* Two checkboxes cover three statuses: neither checked means "planned" */}
+          <div className={styles.status}>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={item.status === "in_progress"}
+                disabled={busy}
+                onChange={(e) => setStatus("in_progress", e.target.checked)}
+              />
+              In progress
+            </label>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={item.status === "done"}
+                disabled={busy}
+                onChange={(e) => setStatus("done", e.target.checked)}
+              />
+              Done
+            </label>
+          </div>
+          <div className={styles.actions}>
+            <button type="button" className={styles.secondary} onClick={() => setEditing(true)} disabled={busy}>
+              Edit
             </button>
-          </>
-        ))}
+            <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
+              Delete
+            </button>
+          </div>
+        </div>
+        {error && <p role="alert">{error}</p>}
+      </section>
 
-      <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
-    </>
+      <section className={styles.card}>
+        <h2 className={styles.label}>Connections</h2>
+        {connections.length === 0 ? (
+          <p className={styles.empty}>No connections yet.</p>
+        ) : (
+          <ul className={styles.list}>
+            {connections.map((connection) => (
+              <li key={connection.id} className={styles.row}>
+                <span>
+                  <span className={styles.relation}>{connection.label}</span> {connection.otherTitle}{" "}
+                  <span className={styles.tag}>{connection.otherTypeLabel}</span>
+                </span>
+                <button
+                  type="button"
+                  className={styles.textButton}
+                  onClick={() => handleRemoveConnection(connection)}
+                  disabled={busy}
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {connectOptions.length > 0 &&
+          (connecting === "new" ? (
+            <ConnectedItemForm
+              thisTitle={item.title}
+              options={connectOptions}
+              onCancel={() => setConnecting(null)}
+              onSubmit={async (option, title) => {
+                const message = await addConnectedItem(option, title);
+                if (message === null) setConnecting(null);
+                return message;
+              }}
+            />
+          ) : connecting === "existing" ? (
+            <ConnectExistingForm
+              thisTitle={item.title}
+              options={connectOptions}
+              items={items.items.filter((other) => other.id !== item.id)}
+              onCancel={() => setConnecting(null)}
+              onSubmit={async (option, otherItemId) => {
+                const message = await connectExisting(option, otherItemId);
+                if (message === null) setConnecting(null);
+                return message;
+              }}
+            />
+          ) : (
+            <div className={styles.actions}>
+              <button type="button" onClick={() => setConnecting("new")} disabled={busy}>
+                Add connected item
+              </button>
+              <button type="button" className={styles.secondary} onClick={() => setConnecting("existing")} disabled={busy}>
+                Connect existing item
+              </button>
+            </div>
+          ))}
+      </section>
+
+      {/* ItemTasks and TaskRow are shared with the Tasks page, so they are styled from here (.tasks) */}
+      <section className={`${styles.card} ${styles.tasks}`}>
+        <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
+      </section>
+    </div>
   );
 }
