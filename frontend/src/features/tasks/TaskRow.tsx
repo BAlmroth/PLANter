@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
+import type { Sprint } from "../sprints/types";
 import { deleteTask, updateTask } from "./tasksApi";
 import type { Task, UpdateTaskInput } from "./types";
 
@@ -12,16 +13,19 @@ type Props = {
   extra?: ReactNode;
   // When given, the edit form has a dropdown to link the task to an item, or to remove the link
   items?: Item[];
+  // The same for the sprint
+  sprints?: Sprint[];
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
-export function TaskRow({ task, setTasks, extra, items }: Props) {
+export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   // "" means no item
   const [itemId, setItemId] = useState(task.itemId ?? "");
+  const [sprintId, setSprintId] = useState(task.sprintId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -47,8 +51,13 @@ export function TaskRow({ task, setTasks, extra, items }: Props) {
       setError("Title is required.");
       return;
     }
-    // itemId is only sent when the form has the dropdown. null removes the link.
-    if (await save({ title, ...(items && { itemId: itemId === "" ? null : itemId }) })) setEditing(false);
+    // itemId and sprintId are only sent when the form has the dropdown. null removes the link.
+    const changes = {
+      title,
+      ...(items && { itemId: itemId === "" ? null : itemId }),
+      ...(sprints && { sprintId: sprintId === "" ? null : sprintId }),
+    };
+    if (await save(changes)) setEditing(false);
   }
 
   async function handleDelete() {
@@ -86,6 +95,16 @@ export function TaskRow({ task, setTasks, extra, items }: Props) {
               ))}
             </select>
           )}{" "}
+          {sprints && (
+            <select aria-label="Sprint" value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
+              <option value="">No sprint</option>
+              {sprints.map((sprint) => (
+                <option key={sprint.id} value={sprint.id}>
+                  {sprint.name}
+                </option>
+              ))}
+            </select>
+          )}{" "}
           <button type="submit" disabled={busy}>
             Save
           </button>{" "}
@@ -95,6 +114,7 @@ export function TaskRow({ task, setTasks, extra, items }: Props) {
               setEditing(false);
               setTitle(task.title);
               setItemId(task.itemId ?? "");
+              setSprintId(task.sprintId ?? "");
               setError(null);
             }}
           >

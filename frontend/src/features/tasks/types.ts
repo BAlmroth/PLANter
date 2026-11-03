@@ -11,11 +11,13 @@ export type Task = {
 export type CreateTaskInput = {
   title: string;
   itemId?: string;
+  sprintId?: string;
 };
 
-// itemId: null removes the link to the item
+// itemId and sprintId: null removes the link
 export type UpdateTaskInput = {
   title?: string;
   done?: boolean;
   itemId?: string | null;
+  sprintId?: string | null;
 };
