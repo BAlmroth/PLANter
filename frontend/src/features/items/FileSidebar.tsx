@@ -49,7 +49,7 @@ export function FileSidebar({ project }: { project: Project }) {
     <nav aria-label="Files">
       <div className={styles.heading}>
         <Link to={`/projects/${project.id}/files`} className={styles.headingLink}>
-          File <span className={styles.count}>{items.items.length} items</span>
+          File Overview<span className={styles.count}>{items.items.length} items </span>
         </Link>
         <button type="button" className={styles.refresh} onClick={items.refetch} aria-label="Refresh file list" title="Refresh">
           ↻

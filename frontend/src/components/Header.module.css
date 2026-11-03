@@ -5,8 +5,9 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 14px 24px;
-  color: var(--on-bar);
-  background: var(--bar-bg);
+  color: var(--text);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .logo {
@@ -16,7 +17,7 @@
   font-family: var(--heading);
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--on-bar);
+  color: var(--text-h);
   text-decoration: none;
 }
 
@@ -27,8 +28,8 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: var(--primary);
-  background: var(--on-bar);
+  color: var(--on-primary);
+  background: var(--primary);
   border-radius: var(--radius);
 }
 
@@ -41,8 +42,8 @@
 }
 
 /* The log out button is an outline on the dark bar */
-.user button {
+/* .user button {
   color: var(--on-bar);
   background: transparent;
   border: 1px solid rgb(243 240 234 / 40%);
-}
+} */

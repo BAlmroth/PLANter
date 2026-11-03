@@ -36,7 +36,7 @@ export function ProjectOverview() {
 
   return (
     <div className={styles.grid}>
-      <OverviewCard label="Desc" to="description" className={styles.wide}>
+      <OverviewCard label="description" to="description" className={styles.wide}>
         <h3 className={styles.cardTitle}>{project.name}</h3>
         {/* "" and null both mean no description */}
         <p className={styles.clamp}>{project.description || "No description"}</p>
