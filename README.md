@@ -25,7 +25,6 @@ The frontend only uses Supabase for login. All data goes through the Express API
 ```
 frontend/   React app (Vite)
 backend/    Express API, Prisma schema and migrations, tests
-docs/       project plan and how the parts fit together
 ```
 
 ## Requirements

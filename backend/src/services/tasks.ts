@@ -19,6 +19,13 @@ async function checkItemInProject(itemId: string, projectId: string) {
   if (!item) throw new HttpError(404, "Item not found");
 }
 
+// Unlike items, sprints have no composite foreign key, so this check is the only protection:
+// without it a task could point at a sprint in someone else's project.
+async function checkSprintInProject(sprintId: string, projectId: string) {
+  const sprint = await prisma.sprint.findFirst({ where: { id: sprintId, projectId }, select: { id: true } });
+  if (!sprint) throw new HttpError(404, "Sprint not found");
+}
+
 // LIST TASKS IN A PROJECT
 // Open tasks first, then by title (tasks have no creation time)
 export async function listTasks(projectId: string, userId: string) {
@@ -32,19 +39,26 @@ export async function listTasks(projectId: string, userId: string) {
 // CREATE TASK
 export async function createTask(projectId: string, userId: string, input: CreateTaskInput) {
   await getOwnedProject(projectId, userId);
-  const { title, itemId } = input;
+  const { title, itemId, sprintId } = input;
   if (itemId !== undefined) await checkItemInProject(itemId, projectId);
+  if (sprintId !== undefined) await checkSprintInProject(sprintId, projectId);
 
   return prisma.task.create({
-    data: { projectId, title, ...(itemId !== undefined && { itemId }) },
+    data: {
+      projectId,
+      title,
+      ...(itemId !== undefined && { itemId }),
+      ...(sprintId !== undefined && { sprintId }),
+    },
   });
 }
 
 // UPDATE TASK
 export async function updateTask(taskId: string, userId: string, input: UpdateTaskInput) {
   const task = await getOwnedTask(taskId, userId);
-  const { title, done, itemId } = input;
+  const { title, done, itemId, sprintId } = input;
   if (itemId) await checkItemInProject(itemId, task.projectId);
+  if (sprintId) await checkSprintInProject(sprintId, task.projectId);
 
   return prisma.task.update({
     where: { id: taskId },
@@ -52,6 +66,7 @@ export async function updateTask(taskId: string, userId: string, input: UpdateTa
       ...(title !== undefined && { title }),
       ...(done !== undefined && { done }),
       ...(itemId !== undefined && { itemId }),
+      ...(sprintId !== undefined && { sprintId }),
     },
   });
 }

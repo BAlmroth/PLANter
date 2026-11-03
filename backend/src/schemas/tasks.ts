@@ -4,13 +4,14 @@ import { z } from "zod";
 export const createTaskSchema = z.object({
   title: z.string().trim().min(1).max(100),
   itemId: z.uuid().optional(), // the item the task is about, if any
+  sprintId: z.uuid().optional(), // the sprint the task is in, if any
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
 // For PATCH: the same fields and done, all optional, but at least one must be sent.
-// itemId: null removes the link to the item.
+// itemId and sprintId: null removes the link.
 export const updateTaskSchema = createTaskSchema
-  .extend({ done: z.boolean(), itemId: z.uuid().nullable() })
+  .extend({ done: z.boolean(), itemId: z.uuid().nullable(), sprintId: z.uuid().nullable() })
   .partial()
   .refine((body) => Object.keys(body).length > 0, "edit at least one field to update");
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
