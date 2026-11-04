@@ -1,0 +1,142 @@
+/* The Groups card on the Files page */
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Small caps card label, the same as on the overview */
+.label {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.labelCount {
+  font-weight: 400;
+}
+
+.subLabel {
+  margin: 16px 0 8px;
+  font-size: 0.9rem;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bg-dark);
+}
+
+/* Name on the left, Edit and Delete on the right */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.description {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.textButton {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+}
+.textButton:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+.delete:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+}
+
+/* The items of a group as small tags, with the add select last */
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.items:empty {
+  display: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  font-size: 0.85rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.remove {
+  padding: 0 6px;
+  color: var(--text);
+  background: transparent;
+}
+.remove:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.group select {
+  margin-top: 8px;
+}
+
+/* Create and edit form: one field per row, the buttons side by side at the bottom */
+.form {
+  max-width: 520px;
+}
+.form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.empty {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
