@@ -66,4 +66,11 @@ itemTypes: [
     { source: "testing", relationship: "tests", target: "function" },
     { source: "testing", relationship: "tests", target: "authentication" },
   ],
+
+  warningRules: [
+    // A page with no component belonging to it is probably an empty page
+    { key: "page_without_components", itemType: "page", relationship: "belongs_to", direction: "incoming", message: "has no components" },
+    // A function nothing triggers is probably never run
+    { key: "function_not_triggered", itemType: "function", relationship: "triggers", direction: "incoming", message: "is not triggered by anything" },
+  ],
 };

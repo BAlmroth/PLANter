@@ -69,3 +69,32 @@ describe("getTemplate", () => {
     expect(getTemplate("__proto__")).toBeUndefined();
   });
 });
+
+describe("web template warning rules", () => {
+  const itemKeys = webTemplate.itemTypes.map((t) => t.key);
+  const relationshipKeys = webTemplate.relationshipTypes.map((t) => t.key);
+
+  it("only uses item types and relationship types that exist", () => {
+    for (const rule of webTemplate.warningRules) {
+      expect(itemKeys, `item type "${rule.itemType}"`).toContain(rule.itemType);
+      expect(relationshipKeys, `relationship "${rule.relationship}"`).toContain(rule.relationship);
+    }
+  });
+
+  it("has unique rule keys", () => {
+    const keys = webTemplate.warningRules.map((r) => r.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("only asks for connections the template allows", () => {
+    // A rule that can never be satisfied would warn forever
+    for (const rule of webTemplate.warningRules) {
+      const allowed = webTemplate.allowedCombinations.some(
+        (c) =>
+          c.relationship === rule.relationship &&
+          (rule.direction === "incoming" ? c.target : c.source) === rule.itemType,
+      );
+      expect(allowed, `rule "${rule.key}" can never be satisfied`).toBe(true);
+    }
+  });
+});
