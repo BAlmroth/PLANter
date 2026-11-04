@@ -15,6 +15,7 @@ import {
   updateProject,
 } from "../services/projects.js";
 import { getProjectProgress } from "../services/progress.js";
+import { getProjectWarnings } from "../services/warnings.js";
 
 export const projectsRouter = Router();
 
@@ -44,6 +45,11 @@ projectsRouter.get("/:id/progress", validate(projectIdSchema, "params"), async (
   res.json(await getProjectProgress(id, req.userId!));
 });
 
+// Warnings for overlooked things, e.g. a page with no components
+projectsRouter.get("/:id/warnings", validate(projectIdSchema, "params"), async (req, res) => {
+  const { id } = req.params as z.infer<typeof projectIdSchema>;
+  res.json(await getProjectWarnings(id, req.userId!));
+});
 
 // Update name and/or description
 projectsRouter.patch(
