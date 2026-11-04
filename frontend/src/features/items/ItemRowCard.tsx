@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import type { Group } from "../groups/types";
 import type { Connection } from "../relationships/connections";
+import type { Warning } from "../warnings/types";
+import { WarningBadge } from "../warnings/WarningBadge";
 import { STATUS_LABELS, type Item } from "./types";
 import styles from "./ItemRowCard.module.css";
 
@@ -10,10 +12,12 @@ type Props = {
   connections: Connection[];
   // The groups this item is in
   groups: Group[];
+  // What might be missing on this item. Empty = no badge.
+  warnings: Warning[];
 };
 
 // One item in the File view. Read-only: editing, deleting and connecting happen in the detail view.
-export function ItemRow({ projectId, item, connections, groups }: Props) {
+export function ItemRow({ projectId, item, connections, groups, warnings }: Props) {
   return (
     <li className={styles.row}>
       <div className={styles.top}>
@@ -21,6 +25,7 @@ export function ItemRow({ projectId, item, connections, groups }: Props) {
           {item.title}
         </Link>
         <span className={styles.tags}>
+          <WarningBadge messages={warnings.map((warning) => warning.message)} />
           {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
           {/* The class has the same name as the status, for example styles.in_progress */}
           <span className={`${styles.tag} ${styles[item.status]}`}>{STATUS_LABELS[item.status]}</span>

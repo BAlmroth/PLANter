@@ -7,6 +7,7 @@ export type ItemNodeData = {
   category: string; // template key, for example "page"
   categoryLabel: string; // the label from the template, or "Unknown"
   status: ItemStatus;
+  warnings: string[]; // what might be missing, shown behind a "!" badge. Empty = no badge.
 };
 
 // `Node<Data, "item">`: a node whose `type` is "item" and whose `data` has the shape above.

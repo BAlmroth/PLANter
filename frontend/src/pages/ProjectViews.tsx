@@ -20,13 +20,13 @@ export function InspirationPage() {
 }
 
 export function FilesPage() {
-  const { project } = useProjectContext();
-  return <FileView project={project} />;
+  const { project, warnings } = useProjectContext();
+  return <FileView project={project} warnings={warnings.byItem} />;
 }
 
 export function MapPage() {
-  const { project } = useProjectContext();
-  return <MapView project={project} />;
+  const { project, warnings } = useProjectContext();
+  return <MapView project={project} warnings={warnings.byItem} />;
 }
 
 export function TasksPage() {

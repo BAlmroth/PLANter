@@ -10,6 +10,7 @@ import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
+import type { WarningsByItem } from "../warnings/types";
 import { ConnectionPrompt } from "./ConnectionPrompt";
 import { ItemNode } from "./ItemNode";
 import type { ItemNodeType } from "./types";
@@ -21,7 +22,7 @@ const nodeTypes = { item: ItemNode };
 // Click a node to open the item's detail view. Drag a node to move it: the new position is saved
 // when the drag ends. Drag from one node's right dot to another's left dot to connect them.
 // Click a connection to delete it. The "Add item" button creates an item.
-export function MapView({ project }: { project: Project }) {
+export function MapView({ project, warnings }: { project: Project; warnings: WarningsByItem }) {
   const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
@@ -55,10 +56,11 @@ export function MapView({ project }: { project: Project }) {
           // An unknown key is shown as "Unknown" instead of crashing (see CLAUDE.md)
           categoryLabel: itemTypes.find((type) => type.key === item.type)?.label ?? "Unknown",
           status: item.status,
+          warnings: (warnings.get(item.id) ?? []).map((warning) => warning.message),
         },
       };
     });
-  }, [template.template, items.items]);
+  }, [template.template, items.items, warnings]);
 
   const edges = useMemo(() => {
     return relationships.relationships.map((relationship): Edge => ({

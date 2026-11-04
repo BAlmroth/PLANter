@@ -6,6 +6,7 @@ import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { getConnections } from "../relationships/connections";
 import { useRelationships } from "../relationships/useRelationships";
+import type { WarningsByItem } from "../warnings/types";
 import { createItem } from "./itemsApi";
 import { getFileSections, type FileViewMode } from "./fileSections";
 import { ItemForm } from "./ItemForm";
@@ -16,7 +17,7 @@ import styles from "./FileView.module.css";
 
 // The File view: a project's items grouped by category, read-only apart from adding items.
 // Editing, deleting and connecting are done in the detail view of an item.
-export function FileView({ project }: { project: Project }) {
+export function FileView({ project, warnings }: { project: Project; warnings: WarningsByItem }) {
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
@@ -128,6 +129,7 @@ export function FileView({ project }: { project: Project }) {
                     item={item}
                     connections={connectionsOf(item.id)}
                     groups={getGroupsOfItem(item.id, groups.groups)}
+                    warnings={warnings.get(item.id) ?? []}
                   />
                 ))}
               </ul>

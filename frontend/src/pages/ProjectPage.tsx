@@ -1,6 +1,7 @@
 import { Link, Outlet, useParams } from "react-router-dom";
 import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
+import { useWarnings } from "../features/warnings/useWarnings";
 import { ProjectSubHeader } from "../features/projects/ProjectSubHeader";
 import type { Project } from "../features/projects/types";
 import type { ProjectContext } from "../features/projects/useProjectContext";
@@ -54,13 +55,21 @@ type FrameProps = { project: Project; setProject: (project: Project) => void };
 function ProjectFrame({ project, setProject }: FrameProps) {
   // Shared by the sub header and the Progress page, so both show the same numbers
   const progress = useProgress(project.id);
+  // Shared by the File view and the map, so both show the same badges
+  const warnings = useWarnings(project.id);
 
-  const context: ProjectContext = { project, setProject, progress };
+  const context: ProjectContext = { project, setProject, progress, warnings };
+
+  // Items, connections and tasks may have changed, so ask for fresh numbers and warnings
+  function refresh() {
+    progress.refetch();
+    warnings.refetch();
+  }
 
   return (
     <div className={styles.project}>
       {/* Each click on a page link asks for fresh numbers, because items may have changed */}
-      <ProjectSubHeader project={project} progress={progress.progress} onNavigate={progress.refetch} />
+      <ProjectSubHeader project={project} progress={progress.progress} onNavigate={refresh} />
 
       <div className={styles.body}>
         <aside className={styles.sidebar}>
