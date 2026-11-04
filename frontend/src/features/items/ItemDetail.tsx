@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
+import { getGroupsOfItem } from "../groups/itemGroups";
+import { useGroups } from "../groups/useGroups";
 import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
 import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import { getConnectOptions, getConnections, type ConnectOption, type Connection } from "../relationships/connections";
@@ -27,6 +29,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
   const tasks = useTasks(project.id);
+  const groups = useGroups(project.id);
 
   // true while the edit form is open
   const [editing, setEditing] = useState(false);
@@ -36,14 +39,15 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loading = template.loading || items.loading || relationships.loading || tasks.loading;
-  const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error;
+  const loading = template.loading || items.loading || relationships.loading || tasks.loading || groups.loading;
+  const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error ?? groups.error;
 
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
     if (relationships.error) relationships.refetch();
     if (tasks.error) tasks.refetch();
+    if (groups.error) groups.refetch();
   }
 
   if (loading) return <p>Loading item…</p>;
@@ -75,6 +79,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const typeLabel = loadedTemplate.itemTypes.find((t) => t.key === item.type)?.label ?? "Unknown";
   const connections = getConnections(item.id, relationships.relationships, items.items, loadedTemplate);
   const itemTasks = tasks.tasks.filter((task) => task.itemId === item.id);
+  const itemGroups = getGroupsOfItem(item.id, groups.groups);
   const connectOptions = getConnectOptions(item.type, loadedTemplate);
 
   function replaceItem(updated: Item) {
@@ -247,6 +252,9 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
           {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
         </div>
         <h1 className={styles.title}>{item.title}</h1>
+        {itemGroups.length > 0 && (
+          <p className={styles.groups}>Groups: {itemGroups.map((group) => group.name).join(", ")}</p>
+        )}
         {item.description && <p className={styles.description}>{item.description}</p>}
 
         <div className={styles.toolbar}>

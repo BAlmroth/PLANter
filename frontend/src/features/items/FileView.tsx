@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
+import { GroupSection } from "../groups/GroupSection";
+import { getGroupsOfItem } from "../groups/itemGroups";
+import { useGroups } from "../groups/useGroups";
 import { getConnections } from "../relationships/connections";
 import { useRelationships } from "../relationships/useRelationships";
 import { createItem } from "./itemsApi";
@@ -16,17 +19,19 @@ export function FileView({ project }: { project: Project }) {
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
+  const groups = useGroups(project.id);
   // true while the add form is open
   const [adding, setAdding] = useState(false);
 
-  const loading = template.loading || items.loading || relationships.loading;
-  const error = template.error ?? items.error ?? relationships.error;
+  const loading = template.loading || items.loading || relationships.loading || groups.loading;
+  const error = template.error ?? items.error ?? relationships.error ?? groups.error;
 
   // Retry only the request that failed
   function tryAgain() {
     if (template.error) template.refetch();
     if (items.error) items.refetch();
     if (relationships.error) relationships.refetch();
+    if (groups.error) groups.refetch();
   }
 
   if (loading) return <p>Loading items…</p>;
@@ -88,6 +93,8 @@ export function FileView({ project }: { project: Project }) {
         </div>
       )}
 
+      <GroupSection projectId={project.id} groups={groups.groups} setGroups={groups.setGroups} items={items.items} />
+
       <div className={styles.grid}>
         {loadedTemplate.itemTypes.map((type) => {
           const typeItems = items.items.filter((item) => item.type === type.key);
@@ -106,6 +113,7 @@ export function FileView({ project }: { project: Project }) {
                       projectId={project.id}
                       item={item}
                       connections={connectionsOf(item.id)}
+                      groups={getGroupsOfItem(item.id, groups.groups)}
                     />
                   ))}
                 </ul>
@@ -124,6 +132,7 @@ export function FileView({ project }: { project: Project }) {
                   projectId={project.id}
                   item={item}
                   connections={connectionsOf(item.id)}
+                      groups={getGroupsOfItem(item.id, groups.groups)}
                 />
               ))}
             </ul>
