@@ -1,0 +1,139 @@
+/* Three columns on a wide screen: description and todo are two wide, tech stack and sprint one */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Cards with a link: the label link covers the whole card */
+.clickable {
+  position: relative;
+}
+.clickable:hover {
+  border-color: var(--borderDark);
+}
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+}
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* Links and buttons inside a card sit above the card link, so they get their own clicks */
+.itemLink {
+  position: relative;
+  z-index: 1;
+}
+
+/* At most four lines of the description, the rest is on the description page */
+.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The small caps label ("DESC", "TODO") */
+.label {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.cardTitle {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.list {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.listRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--bg-dark);
+}
+
+.meta {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+/* One column on a narrow screen */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Cards with a link: the label link covers the whole card */
+.clickable {
+  position: relative;
+}
+.clickable:hover {
+  border-color: var(--borderDark);
+}
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+}
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* Links and buttons inside a card sit above the card link, so they get their own clicks */
+.itemLink {
+  position: relative;
+  z-index: 1;
+}
+
+/* At most four lines of the description, the rest is on the description page */
+.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wide {
+    grid-column: auto;
+  }
+}

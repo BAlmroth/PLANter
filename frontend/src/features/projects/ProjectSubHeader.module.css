@@ -1,0 +1,42 @@
+.subHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 14px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.name {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* The page links, in one rounded group pushed to the right */
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.link {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+}
+.link:hover {
+  color: var(--text-h);
+}
+
+.active {
+  color: var(--text-h);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}

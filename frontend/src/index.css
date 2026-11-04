@@ -18,6 +18,10 @@
   --accent: #d97706;
   --danger: #e06d53;
 
+  /* Dark green bars (header and footer) */
+  --bar-bg: #2f4f40;
+  --on-bar: #f3f0ea;
+
   --sans: system-ui, "Segoe UI", Roboto, sans-serif;
   --heading: var(--sans);
   --mono: ui-monospace, Consolas, monospace;

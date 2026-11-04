@@ -1,0 +1,90 @@
+/* One item: title and tags on top, then the description and the connections */
+.row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bg-dark);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--text-h);
+  text-decoration: none;
+}
+.title:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.tags {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.tag {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  border-radius: 4px;
+}
+
+/* One colour per status. The names match the status keys. */
+.planned {
+  color: var(--text);
+  background: var(--bg-dark);
+}
+.in_progress {
+  color: var(--accent);
+  background: rgb(217 119 6 / 12%);
+}
+.done {
+  color: var(--primary);
+  background: rgb(62 101 84 / 12%);
+}
+
+.mvp {
+  color: var(--on-primary);
+  background: var(--accent);
+}
+
+/* The groups of the item, as a subtitle under the title */
+.groups {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.description {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+/* The connections, indented under the item with a thin line */
+.connections {
+  margin: 8px 0 0;
+  padding: 0 0 0 12px;
+  list-style: none;
+  font-size: 0.85rem;
+  border-left: 2px solid var(--border);
+}
+
+/* "uses", "used by" */
+.relation {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.type {
+  opacity: 0.7;
+}

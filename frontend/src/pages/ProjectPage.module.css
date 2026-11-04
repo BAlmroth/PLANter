@@ -1,7 +1,49 @@
-/* Project title on the left, progress bar next to it. Wraps on narrow screens. */
-.titleRow {
+.project {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+/* File view on the left, the current page on the right */
+.body {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr); /* minmax: wide content (the map) must not stretch the grid */
+  align-items: start;
+  gap: 24px;
+  padding: 24px;
+}
+
+/* A set height, about 85% of the space under the header and sub header (together about 120px).
+   Stays in view while the page on the right scrolls. A long list scrolls inside the box. */
+.sidebar {
+  position: sticky;
+  top: 16px;
+  box-sizing: border-box; /* the height includes the padding and border */
+  height: calc((100vh - 120px) * 0.85);
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  min-width: 0;
+}
+
+/* Loading and error messages, before there is a project */
+.message {
+  padding: 24px;
+}
+
+/* One column on a narrow screen: File view first, then the page */
+@media (max-width: 900px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    position: static;
+  }
 }

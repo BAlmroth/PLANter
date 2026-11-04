@@ -1,0 +1,102 @@
+import { Link } from "react-router-dom";
+import { getGroupsOfItem } from "../groups/itemGroups";
+import type { Group } from "../groups/types";
+import { useGroups } from "../groups/useGroups";
+import type { Project } from "../projects/types";
+import { STATUS_LABELS } from "./types";
+import { useItems } from "./useItems";
+import { useTemplate } from "./useTemplate";
+import styles from "./FileSidebar.module.css";
+
+// The names of the groups an item is in, as a small line under its name. Nothing for an item in no group.
+function GroupNames({ itemId, groups }: { itemId: string; groups: Group[] }) {
+  const itemGroups = getGroupsOfItem(itemId, groups);
+  if (itemGroups.length === 0) return null;
+  return <span className={styles.groups}>{itemGroups.map((group) => group.name).join(", ")}</span>;
+}
+
+// The short file list on the left of every project page: category, item name, groups and status.
+// The full File view (descriptions and connections) is its own page, /projects/:projectId/files.
+// It loads once and is not reloaded when the page changes. The refresh button loads it again,
+// for example after an item was added on the map or a group was changed.
+export function FileSidebar({ project }: { project: Project }) {
+  const template = useTemplate(project.template);
+  const items = useItems(project.id);
+  const groups = useGroups(project.id);
+
+  const loading = template.loading || items.loading || groups.loading;
+  const error = template.error ?? items.error ?? groups.error;
+
+  function tryAgain() {
+    if (template.error) template.refetch();
+    if (items.error) items.refetch();
+    if (groups.error) groups.refetch();
+  }
+
+  function refresh() {
+    items.refetch();
+    groups.refetch();
+  }
+
+  if (loading) return <p>Loading items…</p>;
+
+  if (error || !template.template) {
+    return (
+      <div role="alert">
+        <p>{error ?? "Something went wrong."}</p>
+        <button type="button" onClick={tryAgain}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  // Items whose type is not in the template (for example an old key) go under "Unknown"
+  const knownKeys = template.template.itemTypes.map((type) => type.key);
+  const categories = [
+    ...template.template.itemTypes.map((type) => ({
+      key: type.key,
+      label: type.pluralLabel,
+      items: items.items.filter((item) => item.type === type.key),
+    })),
+    { key: "unknown", label: "Unknown", items: items.items.filter((item) => !knownKeys.includes(item.type)) },
+  ];
+
+  return (
+    <nav aria-label="Files">
+      <div className={styles.heading}>
+        <Link to={`/projects/${project.id}/files`} className={styles.headingLink}>
+          File Overview<span className={styles.count}>{items.items.length} items </span>
+        </Link>
+        <button type="button" className={styles.refresh} onClick={refresh} aria-label="Refresh file list" title="Refresh">
+          ↻
+        </button>
+      </div>
+      {categories
+        // Hide "Unknown" when there is nothing in it
+        .filter((category) => category.key !== "unknown" || category.items.length > 0)
+        .map((category) => (
+          <section key={category.key} className={styles.group}>
+            <h2 className={styles.groupTitle}>{category.label}</h2>
+            {category.items.length === 0 ? (
+              <p className={styles.empty}>No items yet.</p>
+            ) : (
+              <ul className={styles.list}>
+                {category.items.map((item) => (
+                  <li key={item.id}>
+                    <Link to={`/projects/${project.id}/items/${item.id}`} className={styles.row}>
+                      <span className={styles.name}>
+                        {item.title}
+                        <GroupNames itemId={item.id} groups={groups.groups} />
+                      </span>
+                      <span className={styles.status}>{STATUS_LABELS[item.status]}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))}
+    </nav>
+  );
+}

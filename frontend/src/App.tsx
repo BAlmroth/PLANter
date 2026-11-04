@@ -4,6 +4,8 @@ import { ProjectsPage } from "./pages/ProjectsPage";
 import { NewProjectPage } from "./pages/NewProjectPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { ItemPage } from "./pages/ItemPage";
+import { DescriptionPage, FilesPage, MapPage, ProgressPage, TasksPage } from "./pages/ProjectViews";
+import { ProjectOverview } from "./features/projects/ProjectOverview";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
 import { AppLayout } from "./components/AppLayout";
@@ -21,8 +23,16 @@ export function App() {
           <Route element={<AppLayout />}>
           <Route path="/" element={<ProjectsPage />} />
           <Route path="/projects/new" element={<NewProjectPage />} />
-          <Route path="/projects/:projectId" element={<ProjectPage />} />
-          <Route path="/projects/:projectId/items/:itemId" element={<ItemPage />} />
+          {/* ProjectPage is the frame (sub header and File view). The nested route fills its Outlet. */}
+          <Route path="/projects/:projectId" element={<ProjectPage />}>
+            <Route index element={<ProjectOverview />} />
+            <Route path="description" element={<DescriptionPage />} />
+            <Route path="files" element={<FilesPage />} />
+            <Route path="map" element={<MapPage />} />
+            <Route path="tasks" element={<TasksPage />} />
+            <Route path="progress" element={<ProgressPage />} />
+            <Route path="items/:itemId" element={<ItemPage />} />
+          </Route>
           </Route>
         </Route>
       </Routes>

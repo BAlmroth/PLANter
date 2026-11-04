@@ -97,3 +97,13 @@ export function getTypeChoices(options: ConnectOption[]): ConnectOption[] {
     (option, index) => options.findIndex((o) => o.newItemType === option.newItemType) === index,
   );
 }
+
+// The relationship types the template allows from a source item type to a target item type.
+// Used on the map, after a connection is dragged between two items.
+export function getAllowedRelationshipTypes(sourceType: string, targetType: string, template: Template) {
+  return template.relationshipTypes.filter((type) =>
+    template.allowedCombinations.some(
+      (c) => c.source === sourceType && c.target === targetType && c.relationship === type.key,
+    ),
+  );
+}

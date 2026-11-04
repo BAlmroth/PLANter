@@ -1,7 +1,8 @@
 .footer {
-  padding: 16px 24px;
-  font-size: 0.9rem;
-  background: var(--bg-dark);
+  padding: 14px 24px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--surface);
   border-top: 1px solid var(--border);
-  /* box-shadow: 0 -2px 4px rgb(0 0 0 / 8%); */
 }

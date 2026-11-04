@@ -1,0 +1,195 @@
+/* The item page: a back link and three cards (the item, its connections, its tasks) */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.back {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text);
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--text-h);
+}
+
+.card {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* --- The item --- */
+
+.tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Small grey chip, used for the type and for the type of a connected item */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.mvp {
+  color: var(--on-primary);
+  background: var(--accent);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+}
+
+/* The groups of the item, as a subtitle under the title */
+.groups {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.description {
+  max-width: 65ch; /* a comfortable line length to read */
+  margin: 0 0 16px;
+  white-space: pre-wrap; /* keep the line breaks the user typed */
+}
+
+/* Status on the left, Edit and Delete on the right */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.status {
+  display: flex;
+  gap: 8px;
+}
+
+/* A checkbox with its text, shaped like a pill */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.toggle:has(input:checked) {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--bg);
+}
+.toggle input {
+  accent-color: var(--primary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Quieter buttons than the green default */
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+}
+.danger {
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--danger);
+}
+.textButton {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+}
+.textButton:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+/* --- Connections and tasks --- */
+
+/* Small caps card label, the same as on the overview */
+.label {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-dark);
+}
+
+/* "uses", "used by": the kind of connection, before the item name */
+.relation {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.empty {
+  opacity: 0.7;
+}
+
+/* ItemTasks: its heading, list and add form. Only direct children (>), the rows style themselves (TaskRow.module.css) */
+.tasks > h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.tasks > ul {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+/* The add form: input and button on one line */
+.tasks > form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.tasks > form label {
+  flex: 1;
+  font-size: 0.85rem;
+}
