@@ -4,7 +4,7 @@ import { ProjectsPage } from "./pages/ProjectsPage";
 import { NewProjectPage } from "./pages/NewProjectPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { ItemPage } from "./pages/ItemPage";
-import { DescriptionPage, FilesPage, MapPage, ProgressPage, TasksPage } from "./pages/ProjectViews";
+import { DescriptionPage, FilesPage, InspirationPage, MapPage, ProgressPage, TasksPage } from "./pages/ProjectViews";
 import { ProjectOverview } from "./features/projects/ProjectOverview";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
@@ -27,6 +27,7 @@ export function App() {
           <Route path="/projects/:projectId" element={<ProjectPage />}>
             <Route index element={<ProjectOverview />} />
             <Route path="description" element={<DescriptionPage />} />
+            <Route path="inspiration" element={<InspirationPage />} />
             <Route path="files" element={<FilesPage />} />
             <Route path="map" element={<MapPage />} />
             <Route path="tasks" element={<TasksPage />} />
