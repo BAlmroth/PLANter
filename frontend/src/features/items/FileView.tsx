@@ -4,6 +4,8 @@ import type { Project } from "../projects/types";
 import { GroupSection } from "../groups/GroupSection";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
+import { ItemFilterBar } from "../filters/ItemFilterBar";
+import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { getConnections } from "../relationships/connections";
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
@@ -26,6 +28,8 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
   const [adding, setAdding] = useState(false);
   // How the items are divided into cards
   const [mode, setMode] = useState<FileViewMode>("category");
+  // Items that do not match are left out of the cards
+  const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
   const error = template.error ?? items.error ?? relationships.error ?? groups.error;
@@ -56,13 +60,20 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
     getConnections(itemId, relationships.relationships, items.items, loadedTemplate);
 
   // The cards: one per category or one per group, depending on the mode
-  const sections = getFileSections(mode, items.items, loadedTemplate, groups.groups);
+  const filtering = hasFilters(filters);
+  const shownItems = items.items.filter((item) => matchesFilters(item, filters, groups.groups));
+  // While filtering, empty cards are left out so the result is short
+  const sections = getFileSections(mode, shownItems, loadedTemplate, groups.groups).filter(
+    (section) => !filtering || section.items.length > 0,
+  );
 
   return (
     <section className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Files</h1>
-        <span className={styles.count}>{items.items.length} items</span>
+        <span className={styles.count}>
+          {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
+        </span>
         <div className={styles.modes} role="group" aria-label="Group items by">
           {(["category", "group"] as const).map((option) => (
             <button
@@ -108,6 +119,10 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
           />
         </div>
       )}
+
+      <ItemFilterBar filters={filters} onChange={setFilters} template={loadedTemplate} groups={groups.groups} />
+
+      {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
 
       <GroupSection projectId={project.id} groups={groups.groups} setGroups={groups.setGroups} items={items.items} />
 

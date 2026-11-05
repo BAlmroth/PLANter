@@ -13,8 +13,8 @@ import { createRelationship, deleteRelationship } from "../relationships/relatio
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
 import { ConnectionPrompt } from "./ConnectionPrompt";
-import { MapFilterBar } from "./MapFilterBar";
-import { hasFilters, matchesFilters, NO_FILTERS, type MapFilters } from "./mapFilters";
+import { ItemFilterBar } from "../filters/ItemFilterBar";
+import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { ItemNode } from "./ItemNode";
 import type { ItemNodeType } from "./types";
 
@@ -42,7 +42,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   // The node that was clicked: it and its connections light up (impact view)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   // Items that match the filters get a purple outline, the rest of the map stays as it is
-  const [filters, setFilters] = useState<MapFilters>(NO_FILTERS);
+  const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
   const error = template.error ?? items.error ?? relationships.error ?? groups.error;
@@ -230,7 +230,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         </button>
       )}
       {template.template && (
-        <MapFilterBar filters={filters} onChange={setFilters} template={template.template} groups={groups.groups} />
+        <ItemFilterBar filters={filters} onChange={setFilters} template={template.template} groups={groups.groups} />
       )}
       {items.items.length === 0 && <p>No items yet.</p>}
       {selectedEdge && edgeSource && edgeTarget && (
