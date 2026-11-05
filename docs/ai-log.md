@@ -1118,3 +1118,25 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What went wrong:**
 - The first version declared `shownNodes` before the `useNodesState` line that creates `nodes`, which gave a TypeScript error (variable used before its declaration). The AI moved the block below it. After that, typecheck and the 59 frontend tests passed. I have not tried it in the browser yet.
 - `docs/ai-log.md` was missing on disk (it is in `.gitignore` since `8e0d3f4`). I had the AI restore the last tracked version from git (`8e0d3f4^`) and append this entry, so entries written after that commit may be missing.
+
+## 2026-11-05: Filters on the map
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To filter the map on group, category, item type, and anything else that fits.
+
+**What was generated:** In `frontend/src/features/map/`:
+- `mapFilters.ts`: the filter type and `matchesFilters`, a plain function. An item must pass every active filter.
+- `mapFilters.test.ts`: 6 Vitest tests (no filter, type, status, MVP, group, several filters together).
+- `MapFilterBar.tsx`: the bar above the map with selects for type, group and status, an "MVP only" checkbox and a "Clear filters" button.
+- `MapView.tsx`: holds the filter state, loads the groups, and styles matching nodes in the `shownNodes` memo.
+
+**Decisions:**
+- Category and item type are the same thing in this app (the category is fixed by the template), so there is one "Type" filter. The AI added status and "MVP only" as the extra filters.
+- The first version hid items that did not match (`hidden` on the node). I asked whether that was the best way. The AI pointed out that hiding also hides the connections, so a filter on pages shows pages with no connections. I chose to switch to dimming.
+- Final behaviour: nothing is hidden. Matching items get a purple outline, so the whole map and its connections stay visible. The impact view still fades unconnected nodes on click, so the two do not clash.
+- Each filter takes one value. Multi-select was suggested and not built.
+
+**What I changed or corrected:** I changed the approach from hiding to outlining after reviewing the first version.
+
+**What went wrong:** Nothing broke. The first version was replaced because of its design, not because of a bug. Typecheck and the 65 frontend tests pass, but I have not tried the filters in the browser yet.

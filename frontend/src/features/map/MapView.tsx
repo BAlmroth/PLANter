@@ -4,6 +4,7 @@ import { Background, Controls, ReactFlow, useNodesState, type Connection, type E
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
+import { useGroups } from "../groups/useGroups";
 import { ItemForm } from "../items/ItemForm";
 import { createItem, updateItem } from "../items/itemsApi";
 import { useItems } from "../items/useItems";
@@ -12,6 +13,8 @@ import { createRelationship, deleteRelationship } from "../relationships/relatio
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
 import { ConnectionPrompt } from "./ConnectionPrompt";
+import { MapFilterBar } from "./MapFilterBar";
+import { hasFilters, matchesFilters, NO_FILTERS, type MapFilters } from "./mapFilters";
 import { ItemNode } from "./ItemNode";
 import type { ItemNodeType } from "./types";
 
@@ -27,6 +30,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
+  const groups = useGroups(project.id);
   // Shown above the map when saving a position or deleting a connection fails
   const [saveError, setSaveError] = useState<string | null>(null);
   // true while the add item form is open
@@ -37,9 +41,11 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [pending, setPending] = useState<{ sourceId: string; targetId: string } | null>(null);
   // The node that was clicked: it and its connections light up (impact view)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  // Items that match the filters get a purple outline, the rest of the map stays as it is
+  const [filters, setFilters] = useState<MapFilters>(NO_FILTERS);
 
-  const loading = template.loading || items.loading || relationships.loading;
-  const error = template.error ?? items.error ?? relationships.error;
+  const loading = template.loading || items.loading || relationships.loading || groups.loading;
+  const error = template.error ?? items.error ?? relationships.error ?? groups.error;
 
   // Rebuilt only when the data changes, not on every render
   const itemNodes = useMemo(() => {
@@ -117,14 +123,25 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
 
   // The selected node and the nodes directly connected to it stay bright, the others fade
   const shownNodes = useMemo(() => {
-    if (!selectedNodeId) return nodes;
+    // Filters outline the matching items instead of hiding the others, so the connections stay visible
+    const matchingIds = new Set(
+      items.items.filter((item) => matchesFilters(item, filters, groups.groups)).map((item) => item.id),
+    );
+    const visibleNodes = hasFilters(filters)
+      ? nodes.map((node) =>
+          matchingIds.has(node.id)
+            ? { ...node, style: { outline: "3px solid #7c3aed", outlineOffset: 2, borderRadius: 8 } }
+            : node,
+        )
+      : nodes;
+    if (!selectedNodeId) return visibleNodes;
     const connectedIds = new Set<string>([selectedNodeId]);
     for (const r of relationships.relationships) {
       if (r.sourceItemId === selectedNodeId) connectedIds.add(r.targetItemId);
       if (r.targetItemId === selectedNodeId) connectedIds.add(r.sourceItemId);
     }
-    return nodes.map((node) => (connectedIds.has(node.id) ? node : { ...node, style: { opacity: 0.3 } }));
-  }, [nodes, relationships.relationships, selectedNodeId]);
+    return visibleNodes.map((node) => (connectedIds.has(node.id) ? node : { ...node, style: { ...node.style, opacity: 0.3 } }));
+  }, [nodes, items.items, groups.groups, filters, relationships.relationships, selectedNodeId]);
 
   // Creates the connection that was dragged. Returns an error message, or null when it worked.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
@@ -160,6 +177,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     if (template.error) template.refetch();
     if (items.error) items.refetch();
     if (relationships.error) relationships.refetch();
+    if (groups.error) groups.refetch();
   }
 
   if (loading) return <p>Loading map…</p>;
@@ -210,6 +228,9 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         <button type="button" onClick={() => setAdding(true)}>
           Add item
         </button>
+      )}
+      {template.template && (
+        <MapFilterBar filters={filters} onChange={setFilters} template={template.template} groups={groups.groups} />
       )}
       {items.items.length === 0 && <p>No items yet.</p>}
       {selectedEdge && edgeSource && edgeTarget && (
