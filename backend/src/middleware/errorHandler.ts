@@ -36,6 +36,12 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // A request body over the size limit (thrown by express.raw()): the file is too big
+  if (typeof err === "object" && err !== null && "type" in err && err.type === "entity.too.large") {
+    res.status(413).json({ error: { message: "File is too large (max 5 MB)" } });
+    return;
+  }
+
   // Anything else is a bug. Log it for us, but don't leak the details to the client
   console.error(err);
   res.status(500).json({ error: { message: "Internal server error" } });

@@ -5,7 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const apiRequest = vi.hoisted(() => vi.fn());
 vi.mock("../../lib/api", () => ({ apiRequest }));
 
-import { createInspiration, deleteInspiration, listInspirations, updateInspiration } from "./inspirationsApi";
+import {
+  createInspiration,
+  deleteInspiration,
+  listInspirations,
+  updateInspiration,
+  uploadInspirationImage,
+} from "./inspirationsApi";
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -33,6 +39,17 @@ describe("inspirationsApi", () => {
     expect(path).toBe("/api/inspirations/i1");
     expect(options.method).toBe("PATCH");
     expect(JSON.parse(options.body)).toEqual({ title: "New", url: "" });
+  });
+
+  it("uploadInspirationImage puts the file as the body with its own Content-Type", async () => {
+    const file = new File(["x"], "mood.png", { type: "image/png" });
+    await uploadInspirationImage("i1", file);
+
+    const [path, options] = apiRequest.mock.calls[0];
+    expect(path).toBe("/api/inspirations/i1/image");
+    expect(options.method).toBe("PUT");
+    expect(options.headers).toEqual({ "Content-Type": "image/png" });
+    expect(options.body).toBe(file);
   });
 
   it("deleteInspiration deletes by id", async () => {

@@ -5,6 +5,8 @@ export type Inspiration = {
   title: string;
   url: string | null;
   text: string | null;
+  // A temporary link to the image (stops working after about an hour), or null if there is no image
+  imageUrl: string | null;
   createdAt: string;
 };
 

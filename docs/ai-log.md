@@ -1140,3 +1140,41 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What I changed or corrected:** I changed the approach from hiding to outlining after reviewing the first version.
 
 **What went wrong:** Nothing broke. The first version was replaced because of its design, not because of a bug. Typecheck and the 65 frontend tests pass, but I have not tried the filters in the browser yet.
+
+## 2026-11-05: Images in project inspiration
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To add images to the project inspiration, where each image has a small description option.
+
+**What was generated:** The work was done in five small steps, with my approval before each one.
+- **Database:** a nullable column `image_path` on `project_inspirations` (migration `20261105160446_inspiration_image_path`). The database stores only the path of the file in Supabase Storage, never the file. No new table, so no new RLS statement was needed.
+- **Backend:**
+  - `lib/storage.ts`: upload, signed URLs and delete against the private bucket `inspiration-images`.
+  - `services/imageFiles.ts`: checks the first bytes of a file ("magic bytes") to tell JPEG, PNG and WebP from anything else.
+  - `PUT /api/inspirations/:id/image` in `routes/inspirations.ts`, using `express.raw()` with a 5 MB limit.
+  - `services/inspirations.ts`: `setInspirationImage`. Every inspiration response now has `imageUrl` (a signed link valid for one hour, or `null`) instead of the internal `imagePath`. Replacing an image or deleting an entry also deletes the old file.
+  - `middleware/errorHandler.ts`: a file over the limit returns 413 in the normal error shape.
+  - `tests/inspirationImages.api.test.ts`: 9 tests with Storage mocked.
+- **Frontend:** `uploadInspirationImage` in `inspirationsApi.ts` (with a test), a file input in the add and edit forms of `InspirationPageCard.tsx`, the image shown above its description, and one CSS class.
+
+**Decisions:**
+- **Upload path:** through Express, not straight from the browser to Storage. This keeps rule 1 (only Express touches data). The bucket is private, and only Express can create a signed link, after the ownership check.
+- **Allowed files:** JPEG, PNG and WebP, max 5 MB. SVG is left out on purpose because it can contain scripts.
+- **multer or not:** the AI first suggested multer. I asked whether it was needed and which option was better. We chose the built-in `express.raw()`, so no new library was added. The file is sent as the request body.
+- **Two requests:** an entry is created first, then the image is attached with a `PUT`. If the image upload fails, the entry stays and the error message says so.
+- **Description:** the existing `text` field is the image's description. I did not add a separate 500-character limit. It keeps the 2000-character limit.
+- **Real file type:** the server looks at the first bytes of the file and does not trust the `Content-Type` header, which a client can set to anything.
+- **Client-controlled paths:** the file path is made by the server (`<projectId>/<random uuid>.<ext>`). The client never chooses a file name.
+
+**What I changed or corrected:** I decided between the AI's options (upload path, limits, multer or `express.raw()`) and asked for the migration to wait until I had thought about the size of the change.
+
+**What went wrong:**
+- One new test, "includes imageUrl in the list", failed when I ran the suite. It expected the entries in creation order, but two rows created in the same millisecond have the same `created_at`, so Postgres can return them in either order. It passed for the AI and failed for me. The AI changed the test to look entries up by title. The route code was not wrong. The app has the same tie in `listInspirations`, which is harmless in real use, so I did not change it.
+- The AI made `getOwnedInspiration` return more fields and refactored the create, update and list responses into one helper, after noticing that create and update still returned the raw row with `imagePath` and no `imageUrl`.
+
+**Known limitations:**
+- Deleting a whole project deletes its inspiration rows (cascade), but the image files stay in the bucket. Deleting a single entry does remove its file.
+- The tests mock Storage, so the real bucket and the signed URLs are only checked by hand.
+- There is no automated test for the upload form.
+- A signed link expires after one hour, so an open page can show a broken image until it is reloaded.

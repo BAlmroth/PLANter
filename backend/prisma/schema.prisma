@@ -165,7 +165,9 @@ model ProjectInspiration {
   title     String
   url       String?
   text      String?
-  //room for images later?
+  // Path of the image inside the private Supabase Storage bucket (not a URL). Null = no image.
+  // The text field doubles as the image description.
+  imagePath String?  @map("image_path")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   // Deleting the project deletes its inspiration
