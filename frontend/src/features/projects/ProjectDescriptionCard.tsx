@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useConfirm } from "../../components/useConfirm";
 import { ApiError } from "../../lib/api";
 import { OverviewCard } from "./OverviewCard";
 import { ProjectForm } from "./ProjectForm";
@@ -15,12 +16,12 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { confirm, modal } = useConfirm();
 
   async function handleDelete() {
     // TODO sprint 4: say what else is deleted (counts of items and tasks)
-    if (!window.confirm("Delete this project and everything in it? This cannot be undone.")) {
-      return;
-    }
+    const message = "This deletes the project and everything in it. This cannot be undone.";
+    if (!(await confirm({ title: `Delete "${project.name}"?`, message }))) return;
     setDeleteError(null);
     setDeleting(true);
     try {
@@ -59,6 +60,7 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
 
   return (
     <OverviewCard label="Desc">
+      {modal}
       <h3 className={styles.cardTitle}>{project.name}</h3>
       {/* "" and null both mean no description */}
       <p>{project.description || "No description"}</p>

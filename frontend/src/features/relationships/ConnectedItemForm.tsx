@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FormField } from "../../components/FormField";
 import { getTypeChoices, type ConnectOption } from "./connections";
 
 type Props = {
@@ -18,6 +19,7 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
   const [newItemType, setNewItemType] = useState(options[0]?.newItemType ?? "");
   const [optionKey, setOptionKey] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const typeChoices = getTypeChoices(options);
@@ -29,10 +31,11 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setTitleError(null);
 
     if (!selected) return;
     if (title.trim() === "") {
-      setError("Title is required.");
+      setTitleError("Title is required.");
       return;
     }
 
@@ -45,17 +48,15 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Title of the new item
+    <form onSubmit={handleSubmit} noValidate>
+      <FormField label="Title of the new item" required error={titleError}>
         <input
           type="text"
-          required
           maxLength={100}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-      </label>
+      </FormField>
       <label>
         What is it?
         <select

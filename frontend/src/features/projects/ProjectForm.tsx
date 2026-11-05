@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FormField } from "../../components/FormField";
 
 export type ProjectFormValues = { name: string; description: string };
 
@@ -17,14 +18,16 @@ export function ProjectForm({
   const [name, setName] = useState(initialValues.name);
   const [description, setDescription] = useState(initialValues.description);
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setNameError(null);
 
     if (name.trim() === "") {
-      setError("Name is required.");
+      setNameError("Name is required.");
       return;
     }
 
@@ -37,17 +40,15 @@ export function ProjectForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Name
+    <form onSubmit={handleSubmit} noValidate>
+      <FormField label="Name" required error={nameError}>
         <input
           type="text"
-          required
           maxLength={100}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-      </label>
+      </FormField>
       <label>
         Description (optional)
         <textarea

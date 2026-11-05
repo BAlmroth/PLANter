@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
+import { FormField } from "../components/FormField";
 import { useAuth } from "./authContext";
 
 type Props = {
@@ -23,6 +24,8 @@ export function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Once Supabase has logged the user in, AuthProvider updates `user`
@@ -32,6 +35,12 @@ export function AuthForm({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault(); // stop the browser from reloading the page
     setError(null);
+    const nextEmailError = email.trim() === "" ? "Email is required." : null;
+    const nextPasswordError =
+      password === "" ? "Password is required." : password.length < 6 ? "Password must be at least 6 characters." : null;
+    setEmailError(nextEmailError);
+    setPasswordError(nextPasswordError);
+    if (nextEmailError || nextPasswordError) return;
     setSubmitting(true);
     try {
       setError(await onSubmit(email, password));
@@ -43,28 +52,23 @@ export function AuthForm({
   return (
     <main>
       <h1>{title}</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
+      <form onSubmit={handleSubmit} noValidate>
+        <FormField label="Email" required error={emailError}>
           <input
             type="email"
             autoComplete="email"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </label>
-        <label>
-          Password
+        </FormField>
+        <FormField label="Password" required error={passwordError}>
           <input
             type="password"
             autoComplete={passwordAutoComplete}
-            required
-            minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </label>
+        </FormField>
         {error && <p role="alert">{error}</p>}
         <button type="submit" disabled={submitting}>
           {submitting ? "Please wait…" : submitLabel}

@@ -1140,3 +1140,24 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What I changed or corrected:** I changed the approach from hiding to outlining after reviewing the first version.
 
 **What went wrong:** Nothing broke. The first version was replaced because of its design, not because of a bug. Typecheck and the 65 frontend tests pass, but I have not tried the filters in the browser yet.
+
+## 2026-11-05: Inline field errors and delete modal
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To replace the browser's own error bubbles (for required fields) and `window.confirm` (for deletes) with a small error text under the field, a `*` on required fields, and a delete modal.
+
+**What was generated:** In `frontend/src/components/`:
+- `FormField.tsx`: a label with a red `*` while the field is required and has no error, and the error text below it when something is wrong. `FieldError` is the same error text on its own, for fields without a visible label.
+- `ConfirmModal.tsx`: a confirmation dialog using the browser's `<dialog>` element (dims the page, traps focus, Escape cancels).
+- `useConfirm.tsx`: a hook that works like `window.confirm` (`await confirm({ title, message })`) and returns the `modal` to render.
+- All forms with a required field (login/register, project, item, connected item, tasks, sprints, groups, inspiration) now use `noValidate`, check the field themselves and show the error under it. The inspiration forms also check the `http(s)` link.
+- All `window.confirm` calls (item, connection on the item page and on the map, type change, task, sprint, group, project) now use the modal.
+
+**Decisions:**
+- No new library: the native `<dialog>` and a small hook were enough.
+- Field errors use their own state, separate from the server error line, so they sit under the right field.
+- Inputs with only an `aria-label` (inline edit forms, inspiration) have `*` in the placeholder instead of a label.
+- Inspiration deletion had no confirmation before, and still has none.
+
+**What went wrong:** Nothing broke. Typecheck, lint and the 67 frontend tests pass, but I have not tried the forms and the modal in the browser yet.

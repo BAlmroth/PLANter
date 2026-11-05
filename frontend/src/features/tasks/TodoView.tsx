@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { FormField } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
 import type { Item } from "../items/types";
@@ -35,6 +36,7 @@ export function TodoView({ project }: { project: Project }) {
   const [sprintId, setSprintId] = useState("");
   // Shown under the form when adding fails (errors of a task are shown on its row)
   const [actionError, setActionError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
 
   const loading = tasks.loading || items.loading || sprints.loading;
@@ -42,8 +44,9 @@ export function TodoView({ project }: { project: Project }) {
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
+    setTitleError(null);
     if (title.trim() === "") {
-      setActionError("Title is required.");
+      setTitleError("Title is required.");
       return;
     }
     setActionError(null);
@@ -111,17 +114,17 @@ export function TodoView({ project }: { project: Project }) {
         />
         <section className={styles.card}>
           <h2 className={styles.label}>New task</h2>
-          <form onSubmit={handleAdd} className={styles.addForm}>
-            <label className={styles.titleField}>
-              Title
-              <input
-                type="text"
-                required
-                maxLength={100}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </label>
+          <form onSubmit={handleAdd} className={styles.addForm} noValidate>
+            <div className={styles.titleField}>
+              <FormField label="Title" required error={titleError}>
+                <input
+                  type="text"
+                  maxLength={100}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </FormField>
+            </div>
             <label>
               Item (optional)
               <select value={itemId} onChange={(e) => setItemId(e.target.value)}>

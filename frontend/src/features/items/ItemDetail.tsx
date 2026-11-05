@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useConfirm } from "../../components/useConfirm";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
@@ -38,6 +39,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   // true while a request from a checkbox, a delete button or a remove button is running
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { confirm, modal } = useConfirm();
 
   const loading = template.loading || items.loading || relationships.loading || tasks.loading || groups.loading;
   const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error ?? groups.error;
@@ -110,7 +112,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
       itemTasks.length > 0 && `${itemTasks.length} ${itemTasks.length === 1 ? "task" : "tasks"}`,
     ].filter(Boolean);
     const alsoDeletes = parts.length === 0 ? "" : ` This also deletes ${parts.join(" and ")}.`;
-    if (!window.confirm(`Delete "${item!.title}"?${alsoDeletes}`)) return;
+    if (!(await confirm({ title: `Delete "${item!.title}"?`, message: `This cannot be undone.${alsoDeletes}` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -123,7 +125,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   }
 
   async function handleRemoveConnection(connection: Connection) {
-    if (!window.confirm(`Remove the connection "${connection.label}: ${connection.otherTitle}"?`)) return;
+    const message = `"${connection.label}: ${connection.otherTitle}" will be removed.`;
+    if (!(await confirm({ title: "Remove connection?", message, confirmLabel: "Remove" }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -192,6 +195,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
 
   if (editing) {
     return (
+      <>
+        {modal}
       <section className={styles.card}>
         <h1 className={styles.title}>Edit {item.title}</h1>
         <ItemForm
@@ -223,7 +228,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
                 if (count === null) throw err;
                 const newLabel = loadedTemplate.itemTypes.find((t) => t.key === type)?.label ?? type;
                 const what = count === 1 ? "1 connection that is" : `${count} connections that are`;
-                if (!window.confirm(`Changing the type to ${newLabel} deletes ${what} no longer allowed. Continue?`)) {
+                const message = `Changing the type to ${newLabel} deletes ${what} no longer allowed.`;
+                if (!(await confirm({ title: "Change type?", message, confirmLabel: "Change type" }))) {
                   return "The type was not changed.";
                 }
                 saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
@@ -239,11 +245,13 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
           }}
         />
       </section>
+      </>
     );
   }
 
   return (
     <div className={styles.page}>
+      {modal}
       {backLink}
 
       <section className={styles.card}>

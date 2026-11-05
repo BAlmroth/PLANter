@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react";
+import { useConfirm } from "../../components/useConfirm";
+import { FormField } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
 import { addItemToGroup, createGroup, deleteGroup, removeItemFromGroup, updateGroup } from "./groupsApi";
@@ -28,9 +30,15 @@ type FormProps = {
 function GroupForm({ initial, submitLabel, busy, onSubmit, onCancel }: FormProps) {
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setNameError(null);
+    if (name.trim() === "") {
+      setNameError("Name is required.");
+      return;
+    }
     const ok = await onSubmit({ name, description });
     // Only the create form (no cancel button) starts empty again. The edit form closes itself.
     if (ok && !onCancel) {
@@ -40,11 +48,10 @@ function GroupForm({ initial, submitLabel, busy, onSubmit, onCancel }: FormProps
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <label>
-        Name
-        <input type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
-      </label>
+    <form onSubmit={handleSubmit} className={styles.form} noValidate>
+      <FormField label="Name" required error={nameError}>
+        <input type="text" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
+      </FormField>
       <label>
         Description (optional)
         <input
@@ -74,6 +81,7 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { confirm, modal } = useConfirm();
 
   // Runs an API call with the busy flag and error line, and returns true when it worked
   async function run(action: () => Promise<void>) {
@@ -111,7 +119,7 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
   async function handleDelete(group: Group) {
     const count = group.itemIds.length;
     const alsoChanges = count === 0 ? "" : ` Its ${count === 1 ? "item stays" : `${count} items stay`}.`;
-    if (!window.confirm(`Delete the group "${group.name}"?${alsoChanges}`)) return;
+    if (!(await confirm({ title: "Delete group?", message: `"${group.name}" will be deleted.${alsoChanges}` }))) return;
     await run(async () => {
       await deleteGroup(group.id);
       setGroups((current) => current.filter((g) => g.id !== group.id));
@@ -138,6 +146,7 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
 
   return (
     <section className={styles.card}>
+      {modal}
       <h2 className={styles.label}>
         Groups <span className={styles.labelCount}>{groups.length}</span>
       </h2>

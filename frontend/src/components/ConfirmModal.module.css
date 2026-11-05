@@ -1,0 +1,31 @@
+.modal {
+  max-width: 420px;
+  padding: 24px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.modal::backdrop {
+  background: rgba(28, 40, 38, 0.5);
+}
+
+.title {
+  margin: 0 0 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancel {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+
+.danger {
+  background: var(--danger);
+}

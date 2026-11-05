@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FormField } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import { createTask } from "./tasksApi";
 import { TaskRow } from "./TaskRow";
@@ -19,12 +20,14 @@ const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "
 export function ItemTasks({ projectId, itemId, tasks, setTasks }: Props) {
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
+    setTitleError(null);
     if (title.trim() === "") {
-      setError("Title is required.");
+      setTitleError("Title is required.");
       return;
     }
     setError(null);
@@ -52,17 +55,15 @@ export function ItemTasks({ projectId, itemId, tasks, setTasks }: Props) {
           ))}
         </ul>
       )}
-      <form onSubmit={handleAdd}>
-        <label>
-          New task
+      <form onSubmit={handleAdd} noValidate>
+        <FormField label="New task" required error={titleError}>
           <input
             type="text"
-            required
             maxLength={100}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-        </label>
+        </FormField>
         <button type="submit" disabled={busy}>
           {busy ? "Adding…" : "Add task"}
         </button>

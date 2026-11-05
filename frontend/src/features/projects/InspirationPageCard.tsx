@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { FieldError } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import { createInspiration, deleteInspiration, updateInspiration } from "../inspirations/inspirationsApi";
 import type { Inspiration } from "../inspirations/types";
@@ -7,6 +8,16 @@ import { useInspirations } from "../inspirations/useInspirations";
 import { OverviewCard } from "./OverviewCard";
 import { isHttpUrl } from "./isHttpUrl";
 import styles from "./ProjectOverview.module.css";
+
+type FieldErrors = { title?: string; url?: string };
+
+// Same rules as the backend: a title, and a link (when given) that starts with http(s)://
+function validate(title: string, url: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (title.trim() === "") errors.title = "Title is required.";
+  if (url.trim() !== "" && !isHttpUrl(url.trim())) errors.url = "The link must start with http:// or https://.";
+  return errors;
+}
 
 // The Inspiration page: all links and notes of the project, with add and delete
 export function InspirationPageCard({ projectId }: { projectId: string }) {
@@ -21,10 +32,13 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
   const [editTitle, setEditTitle] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [editText, setEditText] = useState("");
+  const [addErrors, setAddErrors] = useState<FieldErrors>({});
+  const [editErrors, setEditErrors] = useState<FieldErrors>({});
 
   function startEdit(inspiration: Inspiration) {
     setActionError(null);
     setEditingId(inspiration.id);
+    setEditErrors({});
     setEditTitle(inspiration.title);
     setEditUrl(inspiration.url ?? "");
     setEditText(inspiration.text ?? "");
@@ -33,6 +47,9 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
   async function handleSave(event: FormEvent, id: string) {
     event.preventDefault();
     setActionError(null);
+    const errors = validate(editTitle, editUrl);
+    setEditErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setSaving(true);
     try {
       // All three fields are sent: an empty url or text clears it
@@ -49,6 +66,9 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
   async function handleAdd(event: FormEvent) {
     event.preventDefault();
     setActionError(null);
+    const errors = validate(title, url);
+    setAddErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setSaving(true);
     try {
       // Empty fields are left out of the request
@@ -98,9 +118,11 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
               {inspirations.map((inspiration) =>
                 inspiration.id === editingId ? (
                   <li key={inspiration.id} className={styles.listRow}>
-                    <form onSubmit={(event) => handleSave(event, inspiration.id)} className={styles.inlineForm}>
-                      <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} aria-label="Title" required maxLength={100} />
+                    <form onSubmit={(event) => handleSave(event, inspiration.id)} className={styles.inlineForm} noValidate>
+                      <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title *" aria-label="Title" maxLength={100} />
+                      <FieldError message={editErrors.title} />
                       <input type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
+                      <FieldError message={editErrors.url} />
                       <textarea value={editText} onChange={(e) => setEditText(e.target.value)} placeholder="Notes (optional)" aria-label="Notes" maxLength={2000} rows={3} />
                       <button type="submit" disabled={saving}>
                         {saving ? "Saving…" : "Save"}
@@ -137,9 +159,11 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
             </ul>
           )}
 
-          <form onSubmit={handleAdd} className={styles.inlineForm}>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={100} />
+          <form onSubmit={handleAdd} className={styles.inlineForm} noValidate>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title *" aria-label="Title" maxLength={100} />
+            <FieldError message={addErrors.title} />
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
+            <FieldError message={addErrors.url} />
             <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Notes (optional)" aria-label="Notes" maxLength={2000} rows={3} />
             <button type="submit" disabled={saving}>
               {saving ? "Adding…" : "Add"}

@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react";
+import { useConfirm } from "../../components/useConfirm";
+import { FieldError, FormField } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import type { Task } from "../tasks/types";
 import { createSprint, deleteSprint, updateSprint } from "./sprintsApi";
@@ -23,12 +25,16 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [editNameError, setEditNameError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { confirm, modal } = useConfirm();
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
+    setNameError(null);
     if (name.trim() === "") {
-      setError("Name is required.");
+      setNameError("Name is required.");
       return;
     }
     setError(null);
@@ -46,8 +52,9 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
 
   async function handleRename(e: FormEvent) {
     e.preventDefault();
+    setEditNameError(null);
     if (editName.trim() === "") {
-      setError("Name is required.");
+      setEditNameError("Name is required.");
       return;
     }
     setError(null);
@@ -66,7 +73,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
   async function handleDelete(sprint: Sprint) {
     const count = tasks.filter((task) => task.sprintId === sprint.id).length;
     const alsoChanges = count === 0 ? "" : ` Its ${count === 1 ? "task stays" : `${count} tasks stay`}, without a sprint.`;
-    if (!window.confirm(`Delete the sprint "${sprint.name}"?${alsoChanges}`)) return;
+    if (!(await confirm({ title: "Delete sprint?", message: `"${sprint.name}" will be deleted.${alsoChanges}` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -83,6 +90,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
 
   return (
     <section className={styles.card}>
+      {modal}
       <h2 className={styles.label}>Sprints</h2>
       {sprints.length === 0 ? (
         <p className={styles.empty}>No sprints yet.</p>
@@ -91,15 +99,16 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
           {sprints.map((sprint) => (
             <li key={sprint.id} className={styles.row}>
               {editingId === sprint.id ? (
-                <form onSubmit={handleRename} className={styles.inlineForm}>
+                <form onSubmit={handleRename} className={styles.inlineForm} noValidate>
                   <input
                     type="text"
-                    required
                     maxLength={100}
+                    placeholder="Sprint name *"
                     aria-label="Sprint name"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                  />{" "}
+                  />
+                  <FieldError message={editNameError} />{" "}
                   <button type="submit" disabled={busy}>
                     Save
                   </button>{" "}
@@ -117,6 +126,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
                       disabled={busy}
                       onClick={() => {
                         setEditingId(sprint.id);
+                        setEditNameError(null);
                         setEditName(sprint.name);
                       }}
                     >
@@ -137,11 +147,10 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
           ))}
         </ul>
       )}
-      <form onSubmit={handleAdd} className={styles.addForm}>
-        <label>
-          New sprint
-          <input type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
+      <form onSubmit={handleAdd} className={styles.addForm} noValidate>
+        <FormField label="New sprint" required error={nameError}>
+          <input type="text" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
+        </FormField>
         <button type="submit" disabled={busy}>
           Add sprint
         </button>

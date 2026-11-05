@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useConfirm } from "../../components/useConfirm";
 import { useNavigate } from "react-router-dom";
 import { Background, Controls, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -33,6 +34,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const groups = useGroups(project.id);
   // Shown above the map when saving a position or deleting a connection fails
   const [saveError, setSaveError] = useState<string | null>(null);
+  const { confirm, modal } = useConfirm();
   // true while the add item form is open
   const [adding, setAdding] = useState(false);
   // The connection that was clicked, which offers a delete button
@@ -162,7 +164,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   }
 
   async function handleDeleteConnection(id: string) {
-    if (!window.confirm("Remove this connection?")) return;
+    if (!(await confirm({ title: "Remove connection?", message: "This connection will be removed.", confirmLabel: "Remove" }))) return;
     setSaveError(null);
     try {
       await deleteRelationship(id);
@@ -203,6 +205,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
 
   return (
     <>
+      {modal}
       {adding && template.template ? (
         <ItemForm
           types={template.template.itemTypes}

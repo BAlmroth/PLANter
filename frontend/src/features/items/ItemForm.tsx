@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FormField } from "../../components/FormField";
 
 export type ItemFormValues = { title: string; description: string; type: string; isMvp: boolean };
 
@@ -28,14 +29,16 @@ export function ItemForm({
   // Starts on the first type in the list, or on the item's own type when editing
   const [type, setType] = useState(initialValues.type ?? types?.[0]?.key ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setTitleError(null);
 
     if (title.trim() === "") {
-      setError("Title is required.");
+      setTitleError("Title is required.");
       return;
     }
 
@@ -50,7 +53,7 @@ export function ItemForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       {types && (
         <label>
           Type
@@ -63,16 +66,14 @@ export function ItemForm({
           </select>
         </label>
       )}
-      <label>
-        Title
+      <FormField label="Title" required error={titleError}>
         <input
           type="text"
-          required
           maxLength={100}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-      </label>
+      </FormField>
       <label>
         Description (optional)
         <textarea

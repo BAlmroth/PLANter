@@ -1,4 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
+import { useConfirm } from "../../components/useConfirm";
+import { FieldError } from "../../components/FormField";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
 import type { Sprint } from "../sprints/types";
@@ -28,7 +30,9 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
   const [itemId, setItemId] = useState(task.itemId ?? "");
   const [sprintId, setSprintId] = useState(task.sprintId ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { confirm, modal } = useConfirm();
 
   // Sends the changes and replaces the task in the list. Returns true when it worked.
   async function save(changes: UpdateTaskInput) {
@@ -48,8 +52,9 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
 
   async function handleSaveTitle(e: FormEvent) {
     e.preventDefault();
+    setTitleError(null);
     if (title.trim() === "") {
-      setError("Title is required.");
+      setTitleError("Title is required.");
       return;
     }
     // itemId and sprintId are only sent when the form has the dropdown. null removes the link.
@@ -62,7 +67,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete the task "${task.title}"?`)) return;
+    if (!(await confirm({ title: "Delete task?", message: `"${task.title}" will be deleted.` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -76,16 +81,18 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
 
   return (
     <li className={styles.row}>
+      {modal}
       {editing ? (
-        <form onSubmit={handleSaveTitle} className={styles.editForm}>
+        <form onSubmit={handleSaveTitle} className={styles.editForm} noValidate>
           <input
             type="text"
-            required
             maxLength={100}
+            placeholder="Task title *"
             aria-label="Task title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-          />{" "}
+          />
+          <FieldError message={titleError} />{" "}
           {items && (
             <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)}>
               <option value="">No item</option>
@@ -118,6 +125,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
               setItemId(task.itemId ?? "");
               setSprintId(task.sprintId ?? "");
               setError(null);
+              setTitleError(null);
             }}
           >
             Cancel
