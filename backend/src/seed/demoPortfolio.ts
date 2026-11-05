@@ -12,8 +12,17 @@ export type SeedItem = {
   description?: string;
   status: Status;
   isMvp?: boolean;
+  // Where the item sits on the map, in grid steps (the runner multiplies by DEMO_COLUMN_WIDTH and
+  // DEMO_ROW_HEIGHT). Hand placed: columns by role, rows by feature, so related items sit side by side.
+  col: number;
+  row: number;
   details?: { title: string; url?: string; text?: string }[];
 };
+
+// Map spacing for the demo, in pixels per grid step. Much wider than the spacing for new items
+// (services/itemLayout.ts), so the arrows between items are easy to follow.
+export const DEMO_COLUMN_WIDTH = 420;
+export const DEMO_ROW_HEIGHT = 220;
 
 export const demoProject = {
   name: "Awesome Demo Portfolio",
@@ -26,66 +35,66 @@ export const demoProject = {
 
 export const demoItems: SeedItem[] = [
   // PAGES
-  { ref: "pageHome", type: "page", title: "Home", description: "Landing page: who I am and my best work.", status: "done", isMvp: true },
-  { ref: "pageProjects", type: "page", title: "Projects", description: "Filterable grid of all projects.", status: "in_progress", isMvp: true },
-  { ref: "pageProjectDetail", type: "page", title: "Project detail", description: "One project: story, screenshots, links.", status: "planned", isMvp: true },
-  { ref: "pageAbout", type: "page", title: "About", description: "Background, skills and a downloadable resume.", status: "in_progress" },
-  { ref: "pageContact", type: "page", title: "Contact", description: "Contact form and social links.", status: "planned", isMvp: true },
-  { ref: "pageAdmin", type: "page", title: "Admin dashboard", description: "Only for me: add, edit and delete projects.", status: "planned" },
+  { ref: "pageHome", col: 2, row: 1, type: "page", title: "Home", description: "Landing page: who I am and my best work.", status: "done", isMvp: true },
+  { ref: "pageProjects", col: 2, row: 6, type: "page", title: "Projects", description: "Filterable grid of all projects.", status: "in_progress", isMvp: true },
+  { ref: "pageProjectDetail", col: 2, row: 8, type: "page", title: "Project detail", description: "One project: story, screenshots, links.", status: "planned", isMvp: true },
+  { ref: "pageAbout", col: 2, row: 5, type: "page", title: "About", description: "Background, skills and a downloadable resume.", status: "in_progress" },
+  { ref: "pageContact", col: 2, row: 10, type: "page", title: "Contact", description: "Contact form and social links.", status: "planned", isMvp: true },
+  { ref: "pageAdmin", col: 2, row: 12, type: "page", title: "Admin dashboard", description: "Only for me: add, edit and delete projects.", status: "planned" },
   // Intentional gap: a page with no components or connections, to test warnings later
-  { ref: "pageNotFound", type: "page", title: "Not found (404)", description: "Shown for unknown URLs.", status: "planned" },
+  { ref: "pageNotFound", col: 2, row: 3, type: "page", title: "Not found (404)", description: "Shown for unknown URLs.", status: "planned" },
 
   // COMPONENTS
-  { ref: "compNavbar", type: "component", title: "Navbar", description: "Logo, page links and the theme toggle.", status: "done", isMvp: true },
-  { ref: "compFooter", type: "component", title: "Footer", description: "Social links and copyright.", status: "done" },
-  { ref: "compHero", type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true },
-  { ref: "compButton", type: "component", title: "Button", description: "Shared button used all over the site.", status: "done" },
-  { ref: "compProjectCard", type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true },
-  { ref: "compProjectGrid", type: "component", title: "Project grid", description: "Responsive grid of project cards with filter chips.", status: "in_progress", isMvp: true },
-  { ref: "compImageGallery", type: "component", title: "Image gallery", description: "Screenshots with a lightbox.", status: "planned" },
-  { ref: "compSkillsList", type: "component", title: "Skills list", description: "Skills grouped by area with a level indicator.", status: "planned" },
-  { ref: "compContactForm", type: "component", title: "Contact form", description: "Name, email and message with inline errors.", status: "planned", isMvp: true },
-  { ref: "compThemeToggle", type: "component", title: "Theme toggle", description: "Switch between light and dark mode.", status: "planned" },
-  { ref: "compProjectForm", type: "component", title: "Project form", description: "Create or edit a project in the admin area.", status: "planned" },
+  { ref: "compNavbar", col: 1, row: 0, type: "component", title: "Navbar", description: "Logo, page links and the theme toggle.", status: "done", isMvp: true },
+  { ref: "compFooter", col: 1, row: 2, type: "component", title: "Footer", description: "Social links and copyright.", status: "done" },
+  { ref: "compHero", col: 1, row: 1, type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true },
+  { ref: "compButton", col: 1, row: 3, type: "component", title: "Button", description: "Shared button used all over the site.", status: "done" },
+  { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true },
+  { ref: "compProjectGrid", col: 1, row: 6, type: "component", title: "Project grid", description: "Responsive grid of project cards with filter chips.", status: "in_progress", isMvp: true },
+  { ref: "compImageGallery", col: 1, row: 8, type: "component", title: "Image gallery", description: "Screenshots with a lightbox.", status: "planned" },
+  { ref: "compSkillsList", col: 1, row: 5, type: "component", title: "Skills list", description: "Skills grouped by area with a level indicator.", status: "planned" },
+  { ref: "compContactForm", col: 1, row: 10, type: "component", title: "Contact form", description: "Name, email and message with inline errors.", status: "planned", isMvp: true },
+  { ref: "compThemeToggle", col: 1, row: 4, type: "component", title: "Theme toggle", description: "Switch between light and dark mode.", status: "planned" },
+  { ref: "compProjectForm", col: 1, row: 12, type: "component", title: "Project form", description: "Create or edit a project in the admin area.", status: "planned" },
 
   // FUNCTIONS
-  { ref: "fnFetchProjects", type: "function", title: "Fetch projects", description: "Loads all projects from the API.", status: "in_progress", isMvp: true },
-  { ref: "fnFilterProjects", type: "function", title: "Filter projects", description: "Filters the list by tag.", status: "planned" },
-  { ref: "fnSubmitContact", type: "function", title: "Submit contact form", description: "Validates the form and saves the message.", status: "planned", isMvp: true },
-  { ref: "fnSendEmail", type: "function", title: "Send email notification", description: "Emails me when a new message arrives.", status: "planned" },
-  { ref: "fnToggleTheme", type: "function", title: "Toggle theme", description: "Saves the choice in localStorage.", status: "planned" },
-  { ref: "fnSaveProject", type: "function", title: "Save project", description: "Creates or updates a project (admin).", status: "planned" },
+  { ref: "fnFetchProjects", col: 3, row: 6, type: "function", title: "Fetch projects", description: "Loads all projects from the API.", status: "in_progress", isMvp: true },
+  { ref: "fnFilterProjects", col: 3, row: 7, type: "function", title: "Filter projects", description: "Filters the list by tag.", status: "planned" },
+  { ref: "fnSubmitContact", col: 3, row: 10, type: "function", title: "Submit contact form", description: "Validates the form and saves the message.", status: "planned", isMvp: true },
+  { ref: "fnSendEmail", col: 3, row: 11, type: "function", title: "Send email notification", description: "Emails me when a new message arrives.", status: "planned" },
+  { ref: "fnToggleTheme", col: 3, row: 4, type: "function", title: "Toggle theme", description: "Saves the choice in localStorage.", status: "planned" },
+  { ref: "fnSaveProject", col: 3, row: 12, type: "function", title: "Save project", description: "Creates or updates a project (admin).", status: "planned" },
   // Intentional gap: nothing triggers this function
-  { ref: "fnDeleteProject", type: "function", title: "Delete project", description: "Removes a project (admin).", status: "planned" },
+  { ref: "fnDeleteProject", col: 3, row: 13, type: "function", title: "Delete project", description: "Removes a project (admin).", status: "planned" },
 
   // DATA
-  { ref: "dataProjects", type: "data", title: "Projects table", description: "title, summary, tags, repo_url, live_url, thumbnail_url", status: "in_progress", isMvp: true },
-  { ref: "dataMessages", type: "data", title: "Messages table", description: "name, email, message, created_at", status: "planned", isMvp: true },
-  { ref: "dataSkills", type: "data", title: "Skills table", description: "name, area, level", status: "planned" },
+  { ref: "dataProjects", col: 4, row: 7, type: "data", title: "Projects table", description: "title, summary, tags, repo_url, live_url, thumbnail_url", status: "in_progress", isMvp: true },
+  { ref: "dataMessages", col: 4, row: 10, type: "data", title: "Messages table", description: "name, email, message, created_at", status: "planned", isMvp: true },
+  { ref: "dataSkills", col: 4, row: 5, type: "data", title: "Skills table", description: "name, area, level", status: "planned" },
 
   // AUTHENTICATION
-  { ref: "authAdmin", type: "authentication", title: "Admin login", description: "Email and password for me only, no public sign-up.", status: "planned" },
+  { ref: "authAdmin", col: 0, row: 12, type: "authentication", title: "Admin login", description: "Email and password for me only, no public sign-up.", status: "planned" },
 
   // DESIGN
-  { ref: "designPalette", type: "design", title: "Colour palette", description: "Light and dark palettes with accessible contrast.", status: "done", isMvp: true },
-  { ref: "designTypography", type: "design", title: "Typography", description: "One heading font, one body font, a type scale.", status: "done" },
-  { ref: "designLayout", type: "design", title: "Layout and spacing", description: "12 column grid, spacing scale and breakpoints.", status: "in_progress" },
+  { ref: "designPalette", col: 1, row: 15, type: "design", title: "Colour palette", description: "Light and dark palettes with accessible contrast.", status: "done", isMvp: true },
+  { ref: "designTypography", col: 2, row: 15, type: "design", title: "Typography", description: "One heading font, one body font, a type scale.", status: "done" },
+  { ref: "designLayout", col: 3, row: 15, type: "design", title: "Layout and spacing", description: "12 column grid, spacing scale and breakpoints.", status: "in_progress" },
 
   // ASSETS
-  { ref: "assetLogo", type: "asset", title: "Logo", description: "SVG logo in two colours.", status: "done" },
-  { ref: "assetPhoto", type: "asset", title: "Profile photo", description: "Square photo, optimised for the web.", status: "planned" },
-  { ref: "assetScreenshots", type: "asset", title: "Project screenshots", description: "Two to four per project, WebP.", status: "planned" },
-  { ref: "assetResume", type: "asset", title: "Resume (PDF)", description: "Downloadable from the About page.", status: "planned" },
+  { ref: "assetLogo", col: 1, row: 16, type: "asset", title: "Logo", description: "SVG logo in two colours.", status: "done" },
+  { ref: "assetPhoto", col: 2, row: 16, type: "asset", title: "Profile photo", description: "Square photo, optimised for the web.", status: "planned" },
+  { ref: "assetScreenshots", col: 3, row: 16, type: "asset", title: "Project screenshots", description: "Two to four per project, WebP.", status: "planned" },
+  { ref: "assetResume", col: 4, row: 16, type: "asset", title: "Resume (PDF)", description: "Downloadable from the About page.", status: "planned" },
 
   // TESTING
-  { ref: "testContact", type: "testing", title: "Contact form validation test", description: "Rejects empty and invalid input.", status: "planned" },
-  { ref: "testFilter", type: "testing", title: "Project filter test", description: "Filtering by tag returns the right projects.", status: "planned" },
-  { ref: "testAuth", type: "testing", title: "Admin access test", description: "Admin routes reject visitors who are not logged in.", status: "planned" },
-  { ref: "testNavbar", type: "testing", title: "Navbar test", description: "Every link goes to the right page.", status: "done" },
+  { ref: "testContact", col: 0, row: 10, type: "testing", title: "Contact form validation test", description: "Rejects empty and invalid input.", status: "planned" },
+  { ref: "testFilter", col: 0, row: 7, type: "testing", title: "Project filter test", description: "Filtering by tag returns the right projects.", status: "planned" },
+  { ref: "testAuth", col: 0, row: 13, type: "testing", title: "Admin access test", description: "Admin routes reject visitors who are not logged in.", status: "planned" },
+  { ref: "testNavbar", col: 0, row: 0, type: "testing", title: "Navbar test", description: "Every link goes to the right page.", status: "done" },
 
   // TECH STACK
   {
-    ref: "techReact", type: "tech_stack", title: "React", status: "done", isMvp: true,
+    ref: "techReact", col: 1, row: 17, type: "tech_stack", title: "React", status: "done", isMvp: true,
     description: "UI library for the whole site.",
     details: [
       { title: "Official docs", url: "https://react.dev" },
@@ -93,22 +102,22 @@ export const demoItems: SeedItem[] = [
     ],
   },
   {
-    ref: "techTypescript", type: "tech_stack", title: "TypeScript", status: "done",
+    ref: "techTypescript", col: 2, row: 17, type: "tech_stack", title: "TypeScript", status: "done",
     description: "Types for the frontend and the API.",
     details: [{ title: "Handbook", url: "https://www.typescriptlang.org/docs/" }],
   },
   {
-    ref: "techVite", type: "tech_stack", title: "Vite", status: "done",
+    ref: "techVite", col: 3, row: 17, type: "tech_stack", title: "Vite", status: "done",
     description: "Dev server and build tool.",
     details: [{ title: "Guide", url: "https://vite.dev/guide/" }],
   },
   {
-    ref: "techPostgres", type: "tech_stack", title: "PostgreSQL", status: "in_progress",
+    ref: "techPostgres", col: 4, row: 17, type: "tech_stack", title: "PostgreSQL", status: "in_progress",
     description: "Database for projects, skills and messages.",
     details: [{ title: "Note", text: "Hosted on Supabase, accessed through Prisma." }],
   },
   {
-    ref: "techVercel", type: "tech_stack", title: "Vercel", status: "planned",
+    ref: "techVercel", col: 5, row: 17, type: "tech_stack", title: "Vercel", status: "planned",
     description: "Hosting for the frontend.",
     details: [{ title: "Docs", url: "https://vercel.com/docs" }],
   },

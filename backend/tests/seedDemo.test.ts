@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeEach } from "vitest";
 import { prisma } from "../src/lib/prisma.js";
 import { seedDemoProject } from "../src/seed/seedDemo.js";
 import {
-  demoGroups, demoInspirations, demoItems, demoProject, demoRelationships, demoSprints, demoBacklogTasks,
+  DEMO_COLUMN_WIDTH, DEMO_ROW_HEIGHT, demoGroups, demoInspirations, demoItems, demoProject, demoRelationships, demoSprints, demoBacklogTasks,
 } from "../src/seed/demoPortfolio.js";
 import { relationshipRuleSchema } from "../src/schemas/relationships.js";
 import { wouldCreateCycle } from "../src/services/relationships.js";
@@ -36,6 +36,26 @@ describe("demo portfolio seed data", () => {
       expect(target, r.target).toBeDefined();
       expect(r.source).not.toBe(r.target);
       expect(rule.safeParse({ sourceType: source!.type, type: r.type, targetType: target!.type }).success, `${r.source} ${r.type} ${r.target}`).toBe(true);
+    }
+  });
+
+  it("gives every item its own spot on the map", () => {
+    const spots = demoItems.map((i) => `${i.col},${i.row}`);
+    expect(new Set(spots).size).toBe(demoItems.length);
+    for (const i of demoItems) {
+      expect(Number.isInteger(i.col) && i.col >= 0, i.ref).toBe(true);
+      expect(Number.isInteger(i.row) && i.row >= 0, i.ref).toBe(true);
+    }
+  });
+
+  it("puts an item beside the page or component it belongs to", () => {
+    // A component and the page it belongs to are never more than one column apart,
+    // unless the component is shared (it belongs to more than one place)
+    const targets = (ref: string) => demoRelationships.filter((r) => r.source === ref && r.type === "belongs_to");
+    for (const r of demoRelationships.filter((x) => x.type === "belongs_to" && targets(x.source).length === 1)) {
+      const source = byRef.get(r.source)!;
+      const target = byRef.get(r.target)!;
+      expect(Math.abs(source.col - target.col), `${r.source} -> ${r.target}`).toBeLessThanOrEqual(1);
     }
   });
 
@@ -90,6 +110,10 @@ describe("seedDemoProject (database)", () => {
       tasks: demoSprints.flatMap((s) => s.tasks).length + demoBacklogTasks.length,
       inspirations: demoInspirations.length,
     });
+    // Positions from the seed data are saved (grid steps times the demo column width and row height)
+    const home = await prisma.item.findFirstOrThrow({ where: { projectId: result.projectId, title: "Home" } });
+    const homeSeed = demoItems.find((i) => i.ref === "pageHome")!;
+    expect([home.positionX, home.positionY]).toEqual([homeSeed.col * DEMO_COLUMN_WIDTH, homeSeed.row * DEMO_ROW_HEIGHT]);
     expect(await prisma.groupItem.count({ where: { projectId: result.projectId } })).toBe(
       demoGroups.reduce((n, g) => n + g.items.length, 0),
     );

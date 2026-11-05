@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma.js";
+ import { prisma } from "../lib/prisma.js";
 import type { Template } from "../templates/index.js";
 import { getTemplate } from "../templates/index.js";
 import { getOwnedProject } from "./projects.js";
