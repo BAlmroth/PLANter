@@ -35,6 +35,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
   const [pending, setPending] = useState<{ sourceId: string; targetId: string } | null>(null);
+  // The node that was clicked: it and its connections light up (impact view)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const loading = template.loading || items.loading || relationships.loading;
   const error = template.error ?? items.error ?? relationships.error;
@@ -63,18 +65,29 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   }, [template.template, items.items, warnings]);
 
   const edges = useMemo(() => {
-    return relationships.relationships.map((relationship): Edge => ({
-      id: relationship.id,
-      source: relationship.sourceItemId,
-      target: relationship.targetItemId,
-      // "smoothstep" draws straight lines with 90 degree bends and rounded corners
-      type: "smoothstep",
-      // The source item shows the label ("uses"), as described in CLAUDE.md
-      label:
-        template.template?.relationshipTypes.find((type) => type.key === relationship.type)?.label ??
-        "Unknown",
-    }));
-  }, [template.template, relationships.relationships]);
+    return relationships.relationships.map((relationship): Edge => {
+      // Impact view: with a node selected, its own connections light up and the rest fade
+      const touchesSelected =
+        relationship.sourceItemId === selectedNodeId || relationship.targetItemId === selectedNodeId;
+      return {
+        id: relationship.id,
+        source: relationship.sourceItemId,
+        target: relationship.targetItemId,
+        // "smoothstep" draws straight lines with 90 degree bends and rounded corners
+        type: "smoothstep",
+        // The source item shows the label ("uses"), as described in CLAUDE.md
+        label:
+          template.template?.relationshipTypes.find((type) => type.key === relationship.type)?.label ??
+          "Unknown",
+        animated: touchesSelected,
+        style: selectedNodeId
+          ? touchesSelected
+            ? { stroke: "#2563eb", strokeWidth: 3 }
+            : { opacity: 0.2 }
+          : undefined,
+      };
+    });
+  }, [template.template, relationships.relationships, selectedNodeId]);
 
   // Fires once when a drag ends: save the new position of every node that was dragged
   // (several if a selection was dragged). If a save fails, reload the saved positions.
@@ -101,6 +114,17 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   // measures) through onNodesChange. The copy is reset whenever the items are loaded again.
   const [nodes, setNodes, onNodesChange] = useNodesState<ItemNodeType>([]);
   useEffect(() => setNodes(itemNodes), [itemNodes, setNodes]);
+
+  // The selected node and the nodes directly connected to it stay bright, the others fade
+  const shownNodes = useMemo(() => {
+    if (!selectedNodeId) return nodes;
+    const connectedIds = new Set<string>([selectedNodeId]);
+    for (const r of relationships.relationships) {
+      if (r.sourceItemId === selectedNodeId) connectedIds.add(r.targetItemId);
+      if (r.targetItemId === selectedNodeId) connectedIds.add(r.sourceItemId);
+    }
+    return nodes.map((node) => (connectedIds.has(node.id) ? node : { ...node, style: { opacity: 0.3 } }));
+  }, [nodes, relationships.relationships, selectedNodeId]);
 
   // Creates the connection that was dragged. Returns an error message, or null when it worked.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
@@ -211,11 +235,16 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
       {/* React Flow fills its parent, so the parent needs an explicit height. */}
       <div style={{ width: "100%", height: "70vh" }}>
         <ReactFlow
-          nodes={nodes}
+          nodes={shownNodes}
           edges={edges}
           nodeTypes={nodeTypes}
-          // A click on a node (not a drag) opens the item's detail view. The node id is the item id.
-          onNodeClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
+          // A click on a node lights up its connections. A double click opens the item's detail view.
+          // The node id is the item id.
+          onNodeClick={(_event, node) => {
+            setSelectedNodeId(node.id);
+            setSelectedEdgeId(null);
+          }}
+          onNodeDoubleClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
           onNodesChange={onNodesChange}
           onNodeDragStop={(_event, _node, draggedNodes) => handleDragStop(draggedNodes as ItemNodeType[])}
           // Drag from the dot on the right of a node to the dot on the left of another one
@@ -223,8 +252,14 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
             setPending({ sourceId: connection.source, targetId: connection.target })
           }
           // Click a connection to get a delete button, click the background to dismiss it
-        onEdgeClick={(_event, edge) => setSelectedEdgeId(edge.id)}
-        onPaneClick={() => setSelectedEdgeId(null)}
+        onEdgeClick={(_event, edge) => {
+          setSelectedEdgeId(edge.id);
+          setSelectedNodeId(null);
+        }}
+        onPaneClick={() => {
+          setSelectedEdgeId(null);
+          setSelectedNodeId(null);
+        }}
         // An item cannot be connected to itself
           isValidConnection={(connection) => connection.source !== connection.target}
           fitView
