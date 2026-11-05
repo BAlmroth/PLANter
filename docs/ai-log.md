@@ -1178,3 +1178,25 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The tests mock Storage, so the real bucket and the signed URLs are only checked by hand.
 - There is no automated test for the upload form.
 - A signed link expires after one hour, so an open page can show a broken image until it is reloaded.
+
+## 2026-11-05: Follow-up to images in project inspiration
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** Whether everything with the images was done. I had tested it in the browser (upload, display, replace and delete all worked, against the real Supabase bucket) and committed. The AI listed the loose ends and I asked for all three to be fixed.
+
+**What was generated:**
+- `deleteProject` in `services/projects.ts` now collects the image paths of the project's inspirations before the delete and removes the files afterwards. Before this, the database cascade removed the rows but left the files in the bucket. One new test checks that both files are deleted and that an entry without an image adds nothing.
+- `CLAUDE.md`: the data model has `image_path`, the "images are postponed" rule now describes the Storage setup (private bucket, upload through Express, limits), and the Should list no longer says "images later".
+- `README.md`: a Supabase setup step to create the private bucket `inspiration-images` (without it, uploads fail), and a line in the security check that the bucket must not be public.
+
+**What I changed or corrected:** Nothing yet.
+
+**What went wrong:** The first version of the new test used `mock.calls[0][0]`, which passes at runtime but failed `npm run typecheck` (the index may be `undefined` under strict settings). The AI replaced it with `expect.arrayContaining`. The tests had passed, so only the typecheck showed it.
+
+**Known limitations (updated):**
+- Deleting a project and deleting an entry now remove the files. The cleanup runs after the database delete, so if Storage fails at that moment the project is gone but its files stay. This is unlikely, and the files are unreachable (the bucket is private).
+- The same applies to an upload that succeeds when the following database update fails.
+- Deleting a user's account is not handled (there is no such feature yet).
+- The tests mock Storage, and there is no automated test for the upload form. Both were checked by hand in the browser.
+- A signed link expires after one hour, so an open page can show a broken image until it is reloaded.

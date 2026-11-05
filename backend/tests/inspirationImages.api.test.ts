@@ -133,4 +133,23 @@ describe("inspiration images API", () => {
     expect(res.status).toBe(204);
     expect(deleteImages).toHaveBeenCalledWith([path]);
   });
+
+  it("deletes the image files of all inspirations when the project is deleted", async () => {
+    const { projectId, id } = await setup();
+    const second = await prisma.projectInspiration.create({ data: { projectId, title: "Second" } });
+    await putImage(id, png);
+    await putImage(second.id, png);
+    await prisma.projectInspiration.create({ data: { projectId, title: "No image" } });
+    const paths = (await prisma.projectInspiration.findMany({ where: { projectId, imagePath: { not: null } } })).map(
+      (row) => row.imagePath,
+    );
+
+    const res = await request(app).delete(`/api/projects/${projectId}`).set(asA);
+    expect(res.status).toBe(204);
+    expect(deleteImages).toHaveBeenCalledTimes(1);
+    // Both files, in any order, and nothing for the entry without an image
+    expect(paths).toHaveLength(2);
+    expect(deleteImages).toHaveBeenCalledWith(expect.arrayContaining(paths));
+    expect(vi.mocked(deleteImages).mock.calls.flatMap(([called]) => called)).toHaveLength(2);
+  });
 });

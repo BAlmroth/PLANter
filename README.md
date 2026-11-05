@@ -82,6 +82,7 @@ Everything that starts with `VITE_` is built into the JavaScript bundle and is p
 2. Apply the database migrations (next section).
 3. **Authentication → URL Configuration:** set the Site URL to the frontend URL, and add it to Redirect URLs (both `http://localhost:5173` and the Vercel URL).
 4. Email confirmation can be on or off. When it is on, Register shows "Check your email" until the link is clicked.
+5. **Storage → New bucket:** create a bucket named `inspiration-images` with **Public bucket turned off**. The inspiration images are stored there. Without this bucket, uploading an image fails. Only the backend (with the service role key) can read and write it, and it hands out links that stop working after an hour.
 
 ## Database migrations
 
@@ -192,6 +193,8 @@ After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add 
   ```
   curl "https://<project>.supabase.co/rest/v1/projects" -H "apikey: <anon key>"
   ```
+
+- The Storage bucket `inspiration-images` is private (Supabase → Storage: the bucket must not say "Public"). Opening an image URL without a signature must fail.
 
 - Every API route except `/health` requires a valid token, and data that belongs to another user gives 404. The backend tests check this with two users.
 

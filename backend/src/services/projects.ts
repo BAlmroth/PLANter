@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { deleteImages } from "../lib/storage.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateProjectInput, UpdateProjectInput } from "../schemas/projects.js";
 
@@ -47,7 +48,14 @@ export async function updateProject(projectId: string, userId: string, input: Up
 
 // DELETE PROJECT
 // Its items, relationships, tasks and sprints are deleted with it (cascade in the schema).
+// The cascade only removes database rows, so the inspiration image files are deleted here.
 export async function deleteProject(projectId: string, userId: string) {
   await getOwnedProject(projectId, userId);
+  // Collect the paths before the rows are gone
+  const images = await prisma.projectInspiration.findMany({
+    where: { projectId, imagePath: { not: null } },
+    select: { imagePath: true },
+  });
   await prisma.project.delete({ where: { id: projectId } });
+  await deleteImages(images.flatMap((image) => (image.imagePath ? [image.imagePath] : [])));
 }

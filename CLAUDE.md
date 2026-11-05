@@ -71,7 +71,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - `tasks`: id, project_id, item_id (optional), title, done, sprint_id (optional)
 - `sprints`: id, project_id, name
 - `item_details`: id, item_id, title, url (optional), text (optional), created_at. Detail rows of an item, for example the links and notes of a tech stack item. No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order.
-- `project_inspirations`: id, project_id, title, url (optional), text (optional), created_at. Inspiration for the whole project. Not part of progress.
+- `project_inspirations`: id, project_id, title, url (optional), text (optional), image_path (optional), created_at. Inspiration for the whole project. Not part of progress. `image_path` is the path of the image in the private Supabase Storage bucket `inspiration-images` (`<projectId>/<uuid>.<ext>`), never a URL. `text` doubles as the image description. The API returns `imageUrl` (a signed URL valid for one hour) instead of the path.
 
 Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
 
@@ -79,7 +79,7 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 
 - The project description is a column on `projects`, not an item type. MVP is the `is_mvp` flag on items, not an item type.
 - Tech stack and design are ordinary item types: they have a status, count toward progress, can have relationships and appear on the map. No separate tables per category (that would hard-code types outside the template).
-- Images (for item details and inspiration) are postponed. They need Supabase Storage.
+- Images for project inspiration are stored in Supabase Storage (private bucket `inspiration-images`) and uploaded through Express (`PUT /api/inspirations/:id/image`, raw body, JPEG/PNG/WebP, max 5 MB, type checked on the file's first bytes). The frontend never talks to Storage. Deleting an entry or a project also deletes its files. Images for item details are still postponed.
 - Composite foreign keys `(item_id, project_id)` make sure relationships and tasks point at items in the same project.
 - Deleting an item also deletes its relationships and tasks (cascade). The delete confirmation must say so (for example "This also deletes 3 tasks and 5 connections").
 - Timestamps are `timestamptz`. The API sends ISO strings, and the frontend shows them in the user's local time.
@@ -95,7 +95,7 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 
 **Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
 
-**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (images later, they need Storage); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
+**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (with images); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
 
 **Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode.
 
