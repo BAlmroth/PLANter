@@ -14,7 +14,7 @@ const template: Template = {
 function item(id: string, title: string): Item {
   return {
     id, projectId: "p", type: "page", title, description: null, status: "planned",
-    isMvp: false, positionX: 0, positionY: 0, createdAt: "2026-10-26T00:00:00.000Z",
+    isMvp: false, positionX: 0, positionY: 0, imageUrl: null, createdAt: "2026-10-26T00:00:00.000Z",
   };
 }
 

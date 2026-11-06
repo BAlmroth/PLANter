@@ -18,6 +18,8 @@ status: ItemStatus;
 isMvp: boolean;
 positionX: number;
 positionY: number;
+// The main photo: a temporary link (stops working after about an hour), or null if there is no photo
+imageUrl: string | null;
 createdAt: string;
 };
 

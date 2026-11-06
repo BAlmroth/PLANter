@@ -25,6 +25,7 @@ function item(id: string, type: string): Item {
     isMvp: false,
     positionX: 0,
     positionY: 0,
+    imageUrl: null,
     createdAt: "2026-11-04T10:00:00Z",
   };
 }

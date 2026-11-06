@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const apiRequest = vi.hoisted(() => vi.fn());
 vi.mock("../../lib/api", () => ({ apiRequest }));
 
-import { createItem, deleteItem, getTemplate, listItems, updateItem } from "./itemsApi";
+import { createItem, deleteItem, getTemplate, listItems, updateItem, uploadItemImage } from "./itemsApi";
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -42,5 +42,16 @@ describe("itemsApi", () => {
     await deleteItem("i1");
 
     expect(apiRequest).toHaveBeenCalledWith("/api/items/i1", { method: "DELETE" });
+  });
+
+  it("uploadItemImage puts the file as the body with its own Content-Type", async () => {
+    const file = new File(["x"], "screenshot.png", { type: "image/png" });
+    await uploadItemImage("i1", file);
+
+    const [path, options] = apiRequest.mock.calls[0];
+    expect(path).toBe("/api/items/i1/image");
+    expect(options.method).toBe("PUT");
+    expect(options.headers).toEqual({ "Content-Type": "image/png" });
+    expect(options.body).toBe(file);
   });
 });

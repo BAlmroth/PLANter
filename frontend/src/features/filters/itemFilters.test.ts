@@ -13,6 +13,7 @@ const item: Item = {
   isMvp: true,
   positionX: 0,
   positionY: 0,
+  imageUrl: null,
   createdAt: "2026-11-05T00:00:00.000Z",
 };
 const group: Group = {
