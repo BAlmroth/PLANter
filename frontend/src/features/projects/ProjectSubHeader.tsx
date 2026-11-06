@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { ProgressBar } from "../progress/ProgressBar";
 import type { Progress } from "../progress/types";
+import { ProjectSettings } from "./ProjectSettings";
 import type { Project } from "./types";
 import styles from "./ProjectSubHeader.module.css";
 
@@ -42,6 +43,8 @@ export function ProjectSubHeader({ project, progress, onNavigate }: Props) {
           Progress
         </NavLink>
       </nav>
+
+      <ProjectSettings project={project} />
     </div>
   );
 }

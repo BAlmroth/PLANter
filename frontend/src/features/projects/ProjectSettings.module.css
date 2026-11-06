@@ -1,0 +1,47 @@
+.wrapper {
+  position: relative;
+}
+
+.gear {
+  padding: 4px 10px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text);
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.gear:hover {
+  color: var(--text-h);
+}
+
+/* Opens below the gear, aligned to its right edge so it stays on screen */
+.panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 280px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+}
+
+.warning {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.danger {
+  color: #b00020;
+  border-color: #b00020;
+}

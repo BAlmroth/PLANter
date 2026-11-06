@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import styles from "./ProjectOverview.module.css";
 
 type Props = {
-  label: string; // the small caps label, for example "Desc"
+  label: string; // the small caps label, for example "Project description"
   to?: string; // when given, a click anywhere on the card opens this page
   aside?: ReactNode; // shown on the right of the label
   className?: string;
