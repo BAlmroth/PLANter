@@ -1200,3 +1200,61 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Deleting a user's account is not handled (there is no such feature yet).
 - The tests mock Storage, and there is no automated test for the upload form. Both were checked by hand in the browser.
 - A signed link expires after one hour, so an open page can show a broken image until it is reloaded.
+
+## 2026-11-06: Moodboard per item, main photo per item and project color palette (Could, built in sprint 5)
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** For a design area on the overview with a color palette, images and links, a moodboard card per item (links, inspiration images, colors from the palette or new colors, and a short description), and a main photo per item (probably a Figma screenshot). I gave a screenshot of how the moodboard card should look. I asked where the best place to start was. The AI pointed out that none of it was in the plan, so it was added to the scope as a Could item that I chose to build now.
+
+**What was generated:** The work was done in seven steps, with my approval before each one.
+- **Migrations (all additive, applied to Supabase and the test database):**
+  - `item_image_path`: `items.image_path`.
+  - `item_detail_image_path`: `item_details.image_path`.
+  - `project_colors`: a new table, with RLS enabled in the same migration.
+  - `item_colors`: a new join table with composite foreign keys, so an item can only use colors of its own project, with RLS in the same migration. It needed a unique on `project_colors(id, project_id)`.
+  - After each migration, the RLS check from the Definition of Done returned no tables.
+- **Backend:**
+  - `PUT /api/items/:id/image` for the main photo.
+  - A whole item details API: list and create under `/api/items/:itemId/details`, and edit, delete and image under `/api/item-details/:id`.
+  - A palette API: `/api/projects/:projectId/colors` and `/api/colors/:id`.
+  - An item colors API: list all links in a project, and `PUT` and `DELETE` for one link.
+  - Shared code: `services/images.ts` (check and upload, `imageUrl` instead of the storage path, file cleanup), `middleware/imageBody.ts`, `schemas/images.ts`. The inspiration service now uses the same helpers.
+  - Deleting an item or a project now deletes all image files it owns.
+  - New API tests for items' photos, item details, colors and item colors.
+- **Frontend:**
+  - API files and types for item details and colors, and `uploadItemImage`.
+  - Two data hooks, `useItemDetails` and `useColors`.
+  - `MoodboardCard`, a presentational card styled like my screenshot, with add and delete inside it.
+  - `ItemMoodboard` and `ItemColorForm`.
+  - `ItemPhoto` on the item page, and the delete confirmation for an item now counts its moodboard entries.
+  - `ProjectPalette`, with add and delete (confirming how many items use a color) on the Inspiration page and read-only on the overview card.
+- **Docs:** `CLAUDE.md` (data model, images rule, limits, scope) and `README.md` (the bucket is used for all images).
+
+**Decisions:**
+- **Project card:** I chose "extend Inspiration into Design" over a separate card: the existing inspiration entries already have links, notes and images, so a palette was added to them. The page keeps its current look, with edit. The label still says "Inspiration".
+- **Item data:** I chose to reuse `item_details` for the moodboard, adding an image. A row with an image is a visual reference, a row with a link is a link row.
+- **Colors belong to the project:** items only link to them, so "add new color" on an item creates the color in the palette and links it. A palette color's hex only allows `#RRGGBB`, so it is safe in a `style` attribute.
+- **Upload:** as before, `express.raw()` with no new library, through Express.
+- **Fonts:** skipped. It was the first thing on the cut line.
+- **MoodboardCard:** add and delete inside the card, and no edit. To change an entry you delete it and add it again.
+- **Deleting a palette color:** it follows how item delete works (a confirmation in the UI that says what else is removed), not a 409. Item colors are loaded as one list per project, like relationships, so the frontend can count how many items use a color.
+- **Hooks:** I asked for it to be kept small, so there are two hooks, not three: the palette and the item colors are loaded together.
+
+**What I changed or corrected:**
+- I asked "are you sure you are not overengineering and keeping the code conventions and using what is already there". The AI checked the diff. It found `(await withImageUrls([row]))[0]` repeated 10 times and added a small `withImageUrl` helper. The rest was kept.
+- I reminded the AI to always use Zod to validate input. Everything went through Zod except the image file itself, which was checked by hand-written code. It now has a Zod schema (`schemas/images.ts`). The size limit and the allowed types are still enforced by `express.raw()`, because Zod only sees the file after it is in memory. A bad file now gets a 400 before the ownership check, like every other route.
+
+**What went wrong:**
+- **The item details API did not exist.** The AI's plan assumed `item_details` already had routes, because the table and the demo seed existed. Step 2 turned into building the whole API (copied from the inspiration code). The plan I approved was therefore smaller than what was built.
+- **`prisma migrate dev` could not run for `item_colors`.** It wanted a confirmation about the new unique constraint on `project_colors(id, project_id)`, and the AI's shell is non-interactive. The AI generated the same SQL with `prisma migrate diff`, added the RLS line, and created the migration folder by hand, with its own timestamp. The result was checked against the schema with `prisma migrate status`.
+- **A test failed the typecheck.** In the project-delete test, `mock.calls[0][0]` passed at runtime but failed `npm run typecheck`.
+- **Frontend test helpers broke.** Three test files that build `Item` objects by hand needed `imageUrl: null` after the type change, and the first attempt to edit them failed because `sed -i` is not usable in the AI's shell, so the edit was redone in Python.
+- **Not yet tried in the browser:** at the time of writing, I had not tried the moodboard, the item photo or the palette UI. The backend is covered by automated tests (238 pass), the frontend API files by 78 tests, and the cards by typecheck and build only.
+
+**Known limitations:**
+- The cleanup of image files runs after the database delete, so a Storage failure at that moment leaves unreachable files in the private bucket.
+- No component tests: the cards are only checked by hand.
+- After a half-failed add (the entry is saved but the image upload fails), the form keeps its values, so adding again would make a duplicate.
+- There is no duplicate check on palette colors, and no edit for moodboard entries or colors.
+- A signed link expires after one hour.
