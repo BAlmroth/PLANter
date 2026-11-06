@@ -10,6 +10,7 @@ import { projectTasksRouter, tasksRouter } from "./routes/tasks.js";
 import { projectSprintsRouter, sprintsRouter } from "./routes/sprints.js";
 import { groupsRouter, projectGroupsRouter } from "./routes/groups.js";
 import { itemDetailsOfItemRouter, itemDetailsRouter } from "./routes/itemDetails.js";
+import { colorsRouter, projectColorsRouter } from "./routes/colors.js";
 import { inspirationsRouter, projectInspirationsRouter } from "./routes/inspirations.js";
 
 export const app = express();
@@ -39,6 +40,8 @@ app.use("/api/projects/:projectId/groups", projectGroupsRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/projects/:projectId/inspirations", projectInspirationsRouter);
 app.use("/api/inspirations", inspirationsRouter);
+app.use("/api/projects/:projectId/colors", projectColorsRouter);
+app.use("/api/colors", colorsRouter);
 
 // Must be last: unknown routes get a 404, and every error gets the same response shape
 app.use(notFoundHandler);
