@@ -1,4 +1,5 @@
 import { useInspirations } from "../inspirations/useInspirations";
+import { ProjectPalette } from "../moodboard/ProjectPalette";
 import { OverviewCard } from "./OverviewCard";
 import { isHttpUrl } from "./isHttpUrl";
 import styles from "./ProjectOverview.module.css";
@@ -43,6 +44,7 @@ export function InspirationCard({ projectId }: { projectId: string }) {
           ))}
         </ul>
       ))}
+      <ProjectPalette projectId={projectId} editable={false} />
     </OverviewCard>
   );
 }

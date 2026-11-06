@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { ApiError } from "../../lib/api";
+import { IMAGE_TYPES, imageProblem } from "../../lib/imageFile";
 import {
   createInspiration,
   deleteInspiration,
@@ -9,21 +10,12 @@ import {
 } from "../inspirations/inspirationsApi";
 import type { Inspiration } from "../inspirations/types";
 import { useInspirations } from "../inspirations/useInspirations";
+import { ProjectPalette } from "../moodboard/ProjectPalette";
 import { OverviewCard } from "./OverviewCard";
 import { isHttpUrl } from "./isHttpUrl";
 import styles from "./ProjectOverview.module.css";
 
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB, the backend checks this too
-
-// Quick check in the browser so the user gets an answer before uploading. The backend is the real check.
-function imageProblem(file: File): string | null {
-  if (!IMAGE_TYPES.includes(file.type)) return "Image must be a JPEG, PNG or WebP file.";
-  if (file.size > MAX_IMAGE_BYTES) return "Image is too large (max 5 MB).";
-  return null;
-}
-
-// The Inspiration page: all links, notes and images of the project, with add, edit and delete
+// The Inspiration page: all links, notes and images of the project, with add, edit and delete, and the color palette
 export function InspirationPageCard({ projectId }: { projectId: string }) {
   const { inspirations, loading, error, refetch, setInspirations } = useInspirations(projectId);
   const [title, setTitle] = useState("");
@@ -222,6 +214,7 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
           {actionError && <p role="alert">{actionError}</p>}
         </>
       )}
+      <ProjectPalette projectId={projectId} editable />
     </OverviewCard>
   );
 }
