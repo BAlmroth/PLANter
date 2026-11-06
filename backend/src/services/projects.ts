@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma.js";
-import { deleteImages } from "../lib/storage.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateProjectInput, UpdateProjectInput } from "../schemas/projects.js";
+import { deleteImageFiles } from "./images.js";
 
 //CREATE PROJECT
 export function createProject(userId: string, input: CreateProjectInput) {
@@ -52,10 +52,13 @@ export async function updateProject(projectId: string, userId: string, input: Up
 export async function deleteProject(projectId: string, userId: string) {
   await getOwnedProject(projectId, userId);
   // Collect the paths before the rows are gone
-  const images = await prisma.projectInspiration.findMany({
-    where: { projectId, imagePath: { not: null } },
-    select: { imagePath: true },
-  });
+  const where = { projectId, imagePath: { not: null } };
+  const select = { imagePath: true };
+  const [inspirations, items, details] = await Promise.all([
+    prisma.projectInspiration.findMany({ where, select }),
+    prisma.item.findMany({ where, select }),
+    prisma.itemDetail.findMany({ where: { item: { projectId }, imagePath: { not: null } }, select }),
+  ]);
   await prisma.project.delete({ where: { id: projectId } });
-  await deleteImages(images.flatMap((image) => (image.imagePath ? [image.imagePath] : [])));
+  await deleteImageFiles([...inspirations, ...items, ...details]);
 }

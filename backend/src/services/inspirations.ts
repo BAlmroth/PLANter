@@ -1,18 +1,9 @@
-import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
-import { deleteImages, getSignedUrls, uploadImage } from "../lib/storage.js";
+import { deleteImages } from "../lib/storage.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateInspirationInput, UpdateInspirationInput } from "../schemas/inspirations.js";
-import { detectImageKind } from "./imageFiles.js";
+import { saveImageFile, withImageUrl, withImageUrls } from "./images.js";
 import { getOwnedProject } from "./projects.js";
-
-// Every response has the same shape: imagePath (the internal storage path) is replaced by imageUrl,
-// a temporary link that stops working after an hour. imageUrl is null when there is no image.
-type InspirationRow = Awaited<ReturnType<typeof prisma.projectInspiration.findMany>>[number];
-async function withImageUrls(rows: InspirationRow[]) {
-  const urls = await getSignedUrls(rows.flatMap((row) => (row.imagePath ? [row.imagePath] : [])));
-  return rows.map(({ imagePath, ...row }) => ({ ...row, imageUrl: imagePath ? (urls.get(imagePath) ?? null) : null }));
-}
 
 // LIST INSPIRATION IN A PROJECT (oldest first)
 export async function listInspirations(projectId: string, userId: string) {
@@ -32,7 +23,7 @@ export async function createInspiration(projectId: string, userId: string, input
       ...(input.text !== undefined && { text: input.text }),
     },
   });
-  return (await withImageUrls([created]))[0];
+  return await withImageUrl(created);
 }
 
 // GET USER INSPIRATION
@@ -57,24 +48,19 @@ export async function updateInspiration(id: string, userId: string, input: Updat
       ...(input.text !== undefined && { text: input.text || null }),
     },
   });
-  return (await withImageUrls([updated]))[0];
+  return await withImageUrl(updated);
 }
 
 // SET (or replace) THE IMAGE of an inspiration entry
 export async function setInspirationImage(id: string, userId: string, file: Buffer) {
   const inspiration = await getOwnedInspiration(id, userId);
 
-  // Check what the file really is. The path is made by us: the client never chooses a file name.
-  const kind = detectImageKind(file);
-  if (!kind) throw new HttpError(400, "File must be a JPEG, PNG or WebP image");
-  const imagePath = `${inspiration.projectId}/${randomUUID()}.${kind.extension}`;
-
-  await uploadImage(imagePath, file, kind.contentType);
+  const imagePath = await saveImageFile(inspiration.projectId, file);
   const updated = await prisma.projectInspiration.update({ where: { id }, data: { imagePath } });
 
   // The old file is no longer used. Do this last, so a failed upload never loses the old image.
   if (inspiration.imagePath) await deleteImages([inspiration.imagePath]);
-  return (await withImageUrls([updated]))[0];
+  return await withImageUrl(updated);
 }
 
 // DELETE INSPIRATION (and its image file, if it has one)

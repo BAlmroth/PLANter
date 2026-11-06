@@ -1,14 +1,16 @@
 import { Router } from "express";
 import type { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { imageBody } from "../middleware/imageBody.js";
 import { validate } from "../middleware/validate.js";
 import { createItemSchema, itemIdSchema, updateItemSchema } from "../schemas/items.js";
 import { projectIdParamSchema } from "../schemas/projects.js";
 import {
   createItem,
   deleteItem,
-  getOwnedItem,
+  getItem,
   listItems,
+  setItemImage,
   updateItem,
 } from "../services/items.js";
 
@@ -42,7 +44,7 @@ itemsRouter.use(requireAuth);
 // Get one item
 itemsRouter.get("/:id", validate(itemIdSchema, "params"), async (req, res) => {
   const { id } = req.params as z.infer<typeof itemIdSchema>;
-  res.json(await getOwnedItem(id, req.userId!));
+  res.json(await getItem(id, req.userId!));
 });
 
 // Update title, type, description, status, MVP flag and/or map position
@@ -55,6 +57,12 @@ itemsRouter.patch(
     res.json(await updateItem(id, req.userId!, req.body));
   },
 );
+
+// Set or replace the main photo. The request body is the image file itself (see imageBody)
+itemsRouter.put("/:id/image", validate(itemIdSchema, "params"), imageBody, async (req, res) => {
+  const { id } = req.params as z.infer<typeof itemIdSchema>;
+  res.json(await setItemImage(id, req.userId!, req.body));
+});
 
 // Delete an item (its relationships and tasks are deleted with it)
 itemsRouter.delete("/:id", validate(itemIdSchema, "params"), async (req, res) => {
