@@ -9,6 +9,7 @@ import { projectRelationshipsRouter, relationshipsRouter } from "./routes/relati
 import { projectTasksRouter, tasksRouter } from "./routes/tasks.js";
 import { projectSprintsRouter, sprintsRouter } from "./routes/sprints.js";
 import { groupsRouter, projectGroupsRouter } from "./routes/groups.js";
+import { itemDetailsOfItemRouter, itemDetailsRouter } from "./routes/itemDetails.js";
 import { inspirationsRouter, projectInspirationsRouter } from "./routes/inspirations.js";
 
 export const app = express();
@@ -26,6 +27,8 @@ app.use("/api/templates", templatesRouter);
 app.use("/api/projects", projectsRouter);
 app.use("/api/projects/:projectId/items", projectItemsRouter);
 app.use("/api/items", itemsRouter);
+app.use("/api/items/:itemId/details", itemDetailsOfItemRouter);
+app.use("/api/item-details", itemDetailsRouter);
 app.use("/api/projects/:projectId/relationships", projectRelationshipsRouter);
 app.use("/api/relationships", relationshipsRouter);
 app.use("/api/projects/:projectId/tasks", projectTasksRouter);
