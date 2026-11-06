@@ -36,6 +36,7 @@ model Project {
   tasks         Task[]
   sprints       Sprint[]
   inspirations  ProjectInspiration[]
+  colors        ProjectColor[]
   groups        Group[]
 
   // Fast lookup of a user's projects (also used by every ownership check)
@@ -54,6 +55,8 @@ model Item {
   isMvp       Boolean        @default(false) @map("is_mvp")
   positionX   Float          @default(0) @map("position_x")
   positionY   Float          @default(0) @map("position_y")
+  // Main photo (for example a Figma screenshot): path in the private Storage bucket, not a URL
+  imagePath   String?        @map("image_path")
   createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
   // Deleting the project deletes its items
@@ -64,6 +67,7 @@ model Item {
   incoming    Relationship[] @relation("target")
   tasks       Task[]
   details     ItemDetail[]
+  colors      ItemColor[]
   groups      GroupItem[]
 
   // Lets relationships and tasks point at (id, projectId) together,
@@ -149,6 +153,8 @@ model ItemDetail {
   // Both optional: a row can be created with only a title and filled in later
   url       String?
   text      String?
+  // Optional image (a moodboard reference card): path in the private Storage bucket, not a URL
+  imagePath String?  @map("image_path")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   // Deleting the item deletes its details
@@ -212,4 +218,44 @@ model GroupItem {
   @@id([groupId, itemId])
   @@index([itemId])
   @@map("group_items")
+}
+
+// A color in the project's palette (for example #3E6554). Items can link to these colors later.
+model ProjectColor {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  // Always "#RRGGBB" in upper case (checked by Zod)
+  hex       String
+  // Optional label, for example "Primary green"
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  // Deleting the project deletes its palette
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  itemColors ItemColor[]
+
+  // Lets item_colors point at (id, projectId) together, so an item can only use colors of its own project
+  @@unique([id, projectId])
+  // The unique above starts with id, so it doesn't help lookups by projectId
+  @@index([projectId])
+  @@map("project_colors")
+}
+
+// A link between an item and a color in the project's palette (one row per color the item uses).
+model ItemColor {
+  itemId    String @map("item_id") @db.Uuid
+  colorId   String @map("color_id") @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+
+  // projectId is part of both keys, so the item and the color must be in the same project.
+  // Deleting the item or the color deletes the link.
+  item  Item         @relation(fields: [itemId, projectId], references: [id, projectId], onDelete: Cascade)
+  color ProjectColor @relation(fields: [colorId, projectId], references: [id, projectId], onDelete: Cascade)
+
+  // An item can use a color only once. itemId is the first column, so it is indexed by this.
+  @@id([itemId, colorId])
+  // colorId and projectId are not first columns of another index
+  @@index([colorId])
+  @@index([projectId])
+  @@map("item_colors")
 }
