@@ -9,9 +9,12 @@ import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import { getConnectOptions, getConnections, type ConnectOption, type Connection } from "../relationships/connections";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
+import { useItemDetails } from "../itemDetails/useItemDetails";
+import { ItemMoodboard } from "../moodboard/ItemMoodboard";
 import { ItemTasks } from "../tasks/ItemTasks";
 import { useTasks } from "../tasks/useTasks";
 import { ItemForm } from "./ItemForm";
+import { ItemPhoto } from "./ItemPhoto";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 import { getInvalidRelationshipCount } from "./typeChange";
@@ -30,6 +33,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const relationships = useRelationships(project.id);
   const tasks = useTasks(project.id);
   const groups = useGroups(project.id);
+  const details = useItemDetails(itemId);
 
   // true while the edit form is open
   const [editing, setEditing] = useState(false);
@@ -39,8 +43,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loading = template.loading || items.loading || relationships.loading || tasks.loading || groups.loading;
-  const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error ?? groups.error;
+  const loading = template.loading || items.loading || relationships.loading || tasks.loading || groups.loading || details.loading;
+  const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error ?? groups.error ?? details.error;
 
   function tryAgain() {
     if (template.error) template.refetch();
@@ -48,6 +52,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
     if (relationships.error) relationships.refetch();
     if (tasks.error) tasks.refetch();
     if (groups.error) groups.refetch();
+    if (details.error) details.refetch();
   }
 
   if (loading) return <p>Loading item…</p>;
@@ -108,6 +113,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
     const parts = [
       connections.length > 0 && `${connections.length} ${connections.length === 1 ? "connection" : "connections"}`,
       itemTasks.length > 0 && `${itemTasks.length} ${itemTasks.length === 1 ? "task" : "tasks"}`,
+      details.details.length > 0 &&
+        `${details.details.length} moodboard ${details.details.length === 1 ? "entry" : "entries"}`,
     ].filter(Boolean);
     const alsoDeletes = parts.length === 0 ? "" : ` This also deletes ${parts.join(" and ")}.`;
     if (!window.confirm(`Delete "${item!.title}"?${alsoDeletes}`)) return;
@@ -257,6 +264,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
         )}
         {item.description && <p className={styles.description}>{item.description}</p>}
 
+        <ItemPhoto item={item} onChange={replaceItem} />
+
         <div className={styles.toolbar}>
           {/* Two checkboxes cover three statuses: neither checked means "planned" */}
           <div className={styles.status}>
@@ -351,6 +360,8 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
             </div>
           ))}
       </section>
+
+      <ItemMoodboard projectId={project.id} itemId={item.id} details={details} />
 
       {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
       <section className={`${styles.card} ${styles.tasks}`}>

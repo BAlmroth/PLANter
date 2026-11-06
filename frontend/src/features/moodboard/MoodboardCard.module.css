@@ -1,0 +1,154 @@
+/* The inspiration and moodboard card. Colors come from the shared variables in index.css. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* The small caps section label ("COLOR PALETTE") */
+.label {
+  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.links,
+.swatches,
+.references {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row: the title as a link, and the note on the right */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.linkTitle {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.note {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.chip {
+  width: 64px;
+  height: 40px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.hex {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* Two cards per row, one on a narrow screen */
+.references {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.reference {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.image {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px 4px;
+}
+
+/* The small x button. On a swatch or a reference it sits in the corner. */
+.remove {
+  padding: 2px 8px;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text);
+  background: transparent;
+}
+.remove:hover:not(:disabled) {
+  color: var(--danger);
+}
+.swatch .remove,
+.reference .remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+.secondary {
+  align-self: flex-start;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+.error {
+  margin: 0;
+  color: var(--danger);
+}
