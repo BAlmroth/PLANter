@@ -1,0 +1,82 @@
+/* React Flow fills its parent, so the parent needs a height. The map takes the screen height minus
+   about the height of the header, the sub header and the List / Map switch above it (220px, adjust if needed),
+   but never less than 400px. */
+.map {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 400px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* A white box floating over the map. Used for the toolbar, the connection prompt and the messages. */
+.box {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+/* The filters and "Add item" on one row */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A smaller button than the default, so the toolbar stays low */
+.small {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+}
+
+/* The add form opens under the toolbar, inside the same box. ItemForm is shared, so it is styled from here. */
+.addForm {
+  width: 280px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.addForm label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+.addForm textarea {
+  min-height: 60px;
+}
+
+/* The connection prompt, the delete box and errors: one line with the buttons at the end */
+.message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.message p {
+  margin: 0;
+}
+.message button {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+}
+/* The <select> is block and full width by default (index.css). Here it sits inside the sentence. */
+.message select {
+  display: inline-block;
+  width: auto;
+  margin: 0 4px;
+  padding: 4px 8px;
+}
+
+/* An outline button for Cancel, so the main action stands out */
+.secondary {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+}

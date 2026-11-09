@@ -20,6 +20,7 @@ import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../fil
 import { ItemNode } from "./ItemNode";
 import { MapLegend } from "./MapLegend";
 import type { ItemNodeType } from "./types";
+import styles from "./MapView.module.css";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
@@ -238,78 +239,31 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const edgeTarget = items.items.find((item) => item.id === selectedEdge?.targetItemId);
   const edgeLabel = template.template?.relationshipTypes.find((type) => type.key === selectedEdge?.type)?.label;
 
+  // The messages that float at the bottom of the map. Only shown when there is at least one.
+  const hasMessage = items.items.length === 0 || (selectedEdge && edgeSource && edgeTarget) || saveError;
+
   return (
-    <>
-      {adding && template.template ? (
-        <ItemForm
-          types={template.template.itemTypes}
-          submitLabel="Add item"
-          onCancel={() => setAdding(false)}
-          onSubmit={async ({ title, description, type }) => {
-            try {
-              // The backend gives the new item a start position (services/itemLayout.ts)
-              const item = await createItem(project.id, {
-                title,
-                type,
-                ...(description !== "" && { description }),
-              });
-              items.setItems((current) => [...current, item]);
-              setAdding(false);
-              return null;
-            } catch (err) {
-              return err instanceof ApiError ? err.message : "Something went wrong.";
-            }
-          }}
-        />
-      ) : (
-        <button type="button" onClick={() => setAdding(true)}>
-          Add item
-        </button>
-      )}
-      {template.template && (
-        <ItemFilterBar filters={filters} onChange={setFilters} template={template.template} groups={groups.groups} />
-      )}
-      {items.items.length === 0 && <p>No items yet.</p>}
-      {selectedEdge && edgeSource && edgeTarget && (
-        <p>
-          {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}{" "}
-          <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
-            Delete connection
-          </button>
-        </p>
-      )}
-      {saveError && <p role="alert">{saveError}</p>}
-      {pendingSource && pendingTarget && template.template && (
-        // key: a new prompt (with fresh state) for every new connection
-        <ConnectionPrompt
-          key={`${pendingSource.id}-${pendingTarget.id}`}
-          source={pendingSource}
-          target={pendingTarget}
-          template={template.template}
-          onSubmit={connect}
-          onCancel={() => setPending(null)}
-        />
-      )}
-      {/* React Flow fills its parent, so the parent needs an explicit height. */}
-      <div style={{ width: "100%", height: "70vh" }}>
-        <ReactFlow
-          nodes={shownNodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          // A click on a node lights up its connections. A double click opens the item's detail view.
-          // The node id is the item id.
-          onNodeClick={(_event, node) => {
-            setSelectedNodeId(node.id);
-            setSelectedEdgeId(null);
-          }}
-          onNodeDoubleClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
-          onNodesChange={onNodesChange}
-          onNodeDragStop={(_event, _node, draggedNodes) => handleDragStop(draggedNodes as ItemNodeType[])}
-          // Drag from the dot on the right of a node to the dot on the left of another one
-          onConnect={(connection: Connection) =>
-            setPending({ sourceId: connection.source, targetId: connection.target })
-          }
-          // Click a connection to get a delete button, click the background to dismiss it
+    // The controls float over the map in Panels instead of taking space above it.
+    // A Panel stays in its corner when the map is moved or zoomed.
+    <div className={styles.map}>
+      <ReactFlow
+        nodes={shownNodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        // A click on a node lights up its connections. A double click opens the item's detail view.
+        // The node id is the item id.
+        onNodeClick={(_event, node) => {
+          setSelectedNodeId(node.id);
+          setSelectedEdgeId(null);
+        }}
+        onNodeDoubleClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
+        onNodesChange={onNodesChange}
+        onNodeDragStop={(_event, _node, draggedNodes) => handleDragStop(draggedNodes as ItemNodeType[])}
+        // Drag from the dot on the right of a node to the dot on the left of another one
+        onConnect={(connection: Connection) =>
+          setPending({ sourceId: connection.source, targetId: connection.target })
+        }
+        // Click a connection to get a delete button, click the background to dismiss it
         onEdgeClick={(_event, edge) => {
           setSelectedEdgeId(edge.id);
           setSelectedNodeId(null);
@@ -319,28 +273,99 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
           setSelectedNodeId(null);
         }}
         // An item cannot be connected to itself
-          isValidConnection={(connection) => connection.source !== connection.target}
-          fitView
-        >
-          <Background />
-          <Controls />
-          {/* Overview in the corner: every item as a small block in its type's color. Drag or scroll it to move the map. */}
-          {/* Panel places its content on top of the map, in a corner that does not move with the map */}
-          {template.template && (
+        isValidConnection={(connection) => connection.source !== connection.target}
+        fitView
+      >
+        <Background />
+        <Controls />
+        {template.template && (
+          <>
+            {/* Top left: the filters and "Add item". The add form opens under them, in the same box. */}
+            <Panel position="top-left" className={styles.box}>
+              <div className={styles.toolbar}>
+                <ItemFilterBar
+                  filters={filters}
+                  onChange={setFilters}
+                  template={template.template}
+                  groups={groups.groups}
+                />
+                {!adding && (
+                  <button type="button" className={styles.small} onClick={() => setAdding(true)}>
+                    + Add item
+                  </button>
+                )}
+              </div>
+              {adding && (
+                <div className={styles.addForm}>
+                  <ItemForm
+                    types={template.template.itemTypes}
+                    submitLabel="Add item"
+                    onCancel={() => setAdding(false)}
+                    onSubmit={async ({ title, description, type }) => {
+                      try {
+                        // The backend gives the new item a start position (services/itemLayout.ts)
+                        const item = await createItem(project.id, {
+                          title,
+                          type,
+                          ...(description !== "" && { description }),
+                        });
+                        items.setItems((current) => [...current, item]);
+                        setAdding(false);
+                        return null;
+                      } catch (err) {
+                        return err instanceof ApiError ? err.message : "Something went wrong.";
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </Panel>
             <Panel position="top-right">
               <MapLegend template={template.template} />
             </Panel>
-          )}
-          <MiniMap<ItemNodeType>
-            // The MiniMap sets an SVG fill attribute, which can't read CSS variables, so the
-            // fallback for unknown types is a hex value (the same as --borderDark)
-            nodeColor={(node) => node.data.color ?? "#bdae99"}
-            nodeBorderRadius={4}
-            pannable
-            zoomable
-          />
-        </ReactFlow>
-      </div>
-    </>
+          </>
+        )}
+        {/* Top center: pick a relationship type after dragging an arrow between two nodes */}
+        {pendingSource && pendingTarget && template.template && (
+          <Panel position="top-center" className={`${styles.box} ${styles.message}`}>
+            {/* key: a new prompt (with fresh state) for every new connection */}
+            <ConnectionPrompt
+              key={`${pendingSource.id}-${pendingTarget.id}`}
+              source={pendingSource}
+              target={pendingTarget}
+              template={template.template}
+              onSubmit={connect}
+              onCancel={() => setPending(null)}
+            />
+          </Panel>
+        )}
+        {/* Bottom center: the clicked connection with its delete button, errors, and the empty state */}
+        {hasMessage && (
+          <Panel position="bottom-center" className={`${styles.box} ${styles.message}`}>
+            {items.items.length === 0 && <p>No items yet. Use “+ Add item” to create the first one.</p>}
+            {selectedEdge && edgeSource && edgeTarget && (
+              <>
+                <p>
+                  {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}
+                </p>
+                <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
+                  Delete connection
+                </button>
+              </>
+            )}
+            {saveError && <p role="alert">{saveError}</p>}
+          </Panel>
+        )}
+        {/* Overview in the corner: every item as a small block in its type's color. Drag or scroll it to move the map. */}
+        <MiniMap<ItemNodeType>
+          // The MiniMap sets an SVG fill attribute, which can't read CSS variables, so the
+          // fallback for unknown types is a hex value (the same as --borderDark)
+          nodeColor={(node) => node.data.color ?? "#bdae99"}
+          nodeBorderRadius={4}
+          pannable
+          zoomable
+        />
+      </ReactFlow>
+    </div>
   );
 }
