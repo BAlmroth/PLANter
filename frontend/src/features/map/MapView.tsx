@@ -274,6 +274,10 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         }}
         // An item cannot be connected to itself
         isValidConnection={(connection) => connection.source !== connection.target}
+        // React Flow removes selected nodes and edges on Backspace by default. That only removed them from the map,
+        // not from the database, so they came back on reload. Turned off: items are deleted on the item page
+        // (with a confirmation that lists what else is deleted), connections with "Delete connection".
+        deleteKeyCode={null}
         fitView
       >
         <Background />

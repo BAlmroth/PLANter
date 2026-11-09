@@ -1361,4 +1361,4 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - An open filter menu does not close on a click outside it (only by clicking its pill or opening another one).
 - The `220px` in the map height is an estimate of the bars above the map.
 - Closing the group panel throws away a half-filled "New group" form.
-- Noticed, not changed: `MapView` has no `deleteKeyCode` or `onBeforeDelete`, so pressing Backspace on a selected node removes it from the map (not from the database) until the page is reloaded.
+- ~~Pressing Backspace on a selected node removed it from the map (not from the database) until the page was reloaded.~~ Fixed (`fix: stop Backspace from removing nodes from the map`): React Flow's `deleteKeyCode` defaults to `"Backspace"`, and `useNodesState` applied the remove change locally. Now `deleteKeyCode={null}`. Making Backspace really delete was rejected: the confirmation must list tasks and moodboard entries, which the map does not load, and a one-key delete is easy to trigger by mistake.
