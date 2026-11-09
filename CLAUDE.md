@@ -50,9 +50,11 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - A template is plain data (strings, arrays, objects, no functions), so it can be sent as JSON. It contains:
-  - item types: `key`, `label`, and whether the type counts toward progress
+  - item types: `key`, `label`, whether the type counts toward progress, and `color` (`#RRGGBB`, the type's color in the whole UI)
   - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), and `allowCycles`
   - the allowed combinations of source type, relationship type and target type
+  - `groupColors`: the colors a group can have (`#RRGGBB`). Lighter than the item type colors and never the same, so a group never looks like an item type
+- Colors are presentation, like labels: they can be changed at any time without a migration. The database never stores a type color. A group stores its own hex, so changing `groupColors` does not change existing groups.
 - Keys are permanent, labels are free. The database stores only keys (`items.type`, `relationships.type`, `projects.template`). The UI only shows labels, so a label can be changed at any time. A key is never renamed or removed in code alone: that needs a data migration (`UPDATE ... SET type = ...`) in a Prisma migration. If the frontend meets an unknown key, it shows it as "Unknown" instead of crashing.
 - The frontend gets the template from `GET /api/templates/:key` (uses `requireAuth` like every other route). The template is never copied into the frontend.
 - Never hard-code item types or relationship rules in route logic. Read them from the template.
@@ -74,8 +76,10 @@ Login, registration and logout are done in the frontend directly against Supabas
 - `project_colors`: id, project_id, hex (`#RRGGBB`, stored in upper case), name (optional), created_at. The project's color palette. Unique on (id, project_id) so `item_colors` can use a composite foreign key. API: `/api/projects/:projectId/colors` and `/api/colors/:id`.
 - `item_colors`: item_id, color_id, project_id. Primary key (item_id, color_id). Which palette colors an item uses. Composite foreign keys `(item_id, project_id)` and `(color_id, project_id)` make sure the item and the color are in the same project. Items only link to palette colors, they never own one. API: `GET /api/projects/:projectId/item-colors`, `PUT` and `DELETE /api/items/:itemId/colors/:colorId`.
 - `project_inspirations`: id, project_id, title, url (optional), text (optional), image_path (optional), created_at. Inspiration for the whole project. Not part of progress. `image_path` is the path of the image in the private Supabase Storage bucket `inspiration-images` (`<projectId>/<uuid>.<ext>`), never a URL. `text` doubles as the image description. The API returns `imageUrl` (a signed URL valid for one hour) instead of the path.
+- `groups`: id, project_id, name, description (optional), color, created_at. A user-made group of items, for example "Navigation". Not an item type: an item keeps its type and can be in several groups (or none). `color` is one of the template's `groupColors`: Zod checks `#RRGGBB` and the groups service checks the template (400 otherwise). Created without a color, a group gets the next color no group in the project uses yet. Unique on (id, project_id) so `group_items` can use a composite foreign key. API: `/api/projects/:projectId/groups` (list, create), `/api/groups/:id` (edit, delete).
+- `group_items`: group_id, item_id, project_id. Primary key (group_id, item_id). Which items are in a group. Composite foreign keys `(group_id, project_id)` and `(item_id, project_id)` make sure the group and the item are in the same project. Deleting a group or an item only deletes these rows. API: `PUT` and `DELETE /api/groups/:id/items/:itemId`.
 
-Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration), color name max 100, color hex exactly `#RRGGBB` (so a color is safe in a `style` attribute). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
+Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration), color name max 100, group name max 100, group description max 500, color hex exactly `#RRGGBB` for palette and group colors (so a color is safe in a `style` attribute). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
 
 Use database constraints, foreign keys (with cascade delete) and enums in addition to Zod.
 
@@ -151,6 +155,13 @@ planter/
 - Routes are thin: validate, check ownership, call a service, return the result. Logic lives in `services/`.
 - API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user. 409 for needs confirmation instances. as when deleting och updating an item affects relations.
 - User text (project description, item titles, details, inspiration) is stored as the user typed it, and is made safe when it is shown: the frontend renders it only as text (React escapes it), never as HTML (no `dangerouslySetInnerHTML`), and never in `href`/`src` unless it passed the `http(s)` URL check.
+- Colors in the UI: one visual channel per meaning, so a color always means the same thing.
+  - Item type = hue, read from the template (`TypeBadge` pill, colored strip or dot, map node strip). Set with the CSS variable `--type-color` (`typeColorVar` / `typeColorStyle` in `features/items/typeColor.ts`), and CSS falls back to grey for an unknown type.
+  - Status = shape, never color (`StatusIcon`: empty circle planned, half in progress, filled with a check done). On the map, planned nodes also have a dashed border.
+  - Group = a dot or border in the group's color (`GroupChip`, `--group-color` via `groupColorVar`).
+  - MVP = the only filled badge (amber). Errors and warnings = `--danger`. No item type or group color is used for these.
+  - Color never stands alone: the type label, status text or group name is always shown next to it (or as `aria-label`/`title`).
+  - New type or group colors need at least 4.5:1 contrast on white when used as text (type colors) and 3:1 when only used as dots and borders (group colors).
 - React components in PascalCase files, other modules in camelCase. Named exports.
 - Code, comments, commit messages and documentation in English.
 - Small commits with clear messages (for example `feat: add item CRUD routes`). Commit often.
