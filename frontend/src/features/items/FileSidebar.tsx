@@ -16,7 +16,7 @@ function GroupNames({ itemId, groups }: { itemId: string; groups: Group[] }) {
 }
 
 // The short file list on the left of every project page: category, item name, groups and status.
-// The full File view (descriptions and connections) is its own page, /projects/:projectId/files.
+// The full File view (descriptions and connections) is shown on /projects/:projectId/plan.
 // It loads once and is not reloaded when the page changes. The refresh button loads it again,
 // for example after an item was added on the map or a group was changed.
 export function FileSidebar({ project }: { project: Project }) {
@@ -63,12 +63,12 @@ export function FileSidebar({ project }: { project: Project }) {
   ];
 
   return (
-    <nav aria-label="Files">
+    <nav aria-label="Items">
       <div className={styles.heading}>
-        <Link to={`/projects/${project.id}/files`} className={styles.headingLink}>
-          File Overview<span className={styles.count}>{items.items.length} items </span>
+        <Link to={`/projects/${project.id}/plan?view=list`} className={styles.headingLink}>
+          Item Overview<span className={styles.count}>{items.items.length} items </span>
         </Link>
-        <button type="button" className={styles.refresh} onClick={refresh} aria-label="Refresh file list" title="Refresh">
+        <button type="button" className={styles.refresh} onClick={refresh} aria-label="Refresh item list" title="Refresh">
           ↻
         </button>
       </div>

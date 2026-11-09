@@ -14,7 +14,7 @@ type Props = {
 // The bar under the header on every project page: name, progress and the page links.
 export function ProjectSubHeader({ project, progress, onNavigate }: Props) {
   // NavLink adds the "active" class to the link of the page we are on. "end" on the overview link
-  // stops it from also matching /map, /tasks and so on.
+  // stops it from also matching /plan, /tasks and so on.
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? `${styles.link} ${styles.active}` : styles.link;
 
@@ -30,11 +30,8 @@ export function ProjectSubHeader({ project, progress, onNavigate }: Props) {
       <NavLink to="inspiration" className={linkClass} onClick={onNavigate}>
         Inspiration
       </NavLink>
-        <NavLink to="files" className={linkClass} onClick={onNavigate}>
-          Files
-        </NavLink>
-        <NavLink to="map" className={linkClass} onClick={onNavigate}>
-          Map
+        <NavLink to="plan" className={linkClass} onClick={onNavigate}>
+          Items
         </NavLink>
         <NavLink to="tasks" className={linkClass} onClick={onNavigate}>
           Tasks

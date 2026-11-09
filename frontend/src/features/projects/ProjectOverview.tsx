@@ -45,7 +45,7 @@ export function ProjectOverview() {
 
       <InspirationCard projectId={project.id} />
 
-      <OverviewCard label={techLabel} to="files">
+      <OverviewCard label={techLabel} to="plan?view=list">
         {items.loading ? (
           <p>Loading…</p>
         ) : techItems.length === 0 ? (

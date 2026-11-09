@@ -70,7 +70,7 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
   return (
     <section className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Files</h1>
+        <h1 className={styles.title}>Items</h1>
         <span className={styles.count}>
           {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
         </span>
