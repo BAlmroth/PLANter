@@ -18,6 +18,7 @@ import { ItemPhoto } from "./ItemPhoto";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 import { getInvalidRelationshipCount } from "./typeChange";
+import { TypeBadge } from "./TypeBadge";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
@@ -81,7 +82,6 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
   }
 
   const loadedTemplate = template.template;
-  const typeLabel = loadedTemplate.itemTypes.find((t) => t.key === item.type)?.label ?? "Unknown";
   const connections = getConnections(item.id, relationships.relationships, items.items, loadedTemplate);
   const itemTasks = tasks.tasks.filter((task) => task.itemId === item.id);
   const itemGroups = getGroupsOfItem(item.id, groups.groups);
@@ -255,7 +255,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
 
       <section className={styles.card}>
         <div className={styles.tags}>
-          <span className={styles.tag}>{typeLabel}</span>
+          <TypeBadge typeKey={item.type} template={loadedTemplate} />
           {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
         </div>
         <h1 className={styles.title}>{item.title}</h1>
