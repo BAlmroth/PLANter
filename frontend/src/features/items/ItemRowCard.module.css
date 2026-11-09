@@ -1,5 +1,5 @@
-/* One item as a small card in the section's grid: a single line (status, title, tags), then the description
-   cut to one line. The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
+/* One item as a small card in the section's grid: status and title on line 1, the description and the tags
+   on line 2. The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
   min-width: 0;
   padding: 8px 10px;
@@ -32,11 +32,22 @@
   text-decoration: underline;
 }
 
+/* Line 2: description on the left, tags on the right. Indented to line up with the title
+   (status icon 14px + gap 8px). */
+.bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0 22px;
+}
+
+/* The tags never shrink. On line 2 that is fine: the description gives way instead of the title. */
 .tags {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   gap: 8px;
+  margin-left: auto;
 }
 
 /* "3 connections": small and quiet, the list is in the tooltip and on the item page */
@@ -57,9 +68,10 @@
   border-radius: 4px;
 }
 
-/* One line, cut with "…". The indent lines it up with the title (status icon 14px + gap 8px). */
+/* Takes the space the tags leave, cut with "…" (min-width: 0 for the same reason as on .title) */
 .description {
-  margin: 2px 0 0 22px;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   font-size: 0.85rem;
   text-overflow: ellipsis;

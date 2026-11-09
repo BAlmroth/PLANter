@@ -9,15 +9,13 @@ import { StatusIcon } from "./StatusIcon";
 import type { Item, Template } from "./types";
 import styles from "./ItemRowCard.module.css";
 
+//item card in the items list view
 type Props = {
   projectId: string;
   item: Item;
-  // For the type color of the item
   template: Template;
   connections: Connection[];
-  // The groups this item is in
   groups: Group[];
-  // What might be missing on this item. Empty = no badge.
   warnings: Warning[];
 };
 
@@ -32,12 +30,19 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
   return (
     // The strip on the left is in the item type's color (also in "Group" mode, where types are mixed)
     <li className={styles.row} style={typeColorStyle(template, item.type)}>
+      {/* Line 1: the status and the title, which gets the whole width */}
       <div className={styles.top}>
         {/* Icon only: StatusIcon then gives the status text to screen readers and as a tooltip */}
         <StatusIcon status={item.status} />
         <Link to={`/projects/${projectId}/items/${item.id}`} className={styles.title} title={item.title}>
           {item.title}
         </Link>
+      </div>
+      {/* Line 2: the description (cut to fit) on the left, the tags on the right */}
+      <div className={styles.bottom}>
+        <span className={styles.description} title={item.description ?? undefined}>
+          {item.description}
+        </span>
         <span className={styles.tags}>
           <GroupDots groups={groups} />
           {connections.length > 0 && (
@@ -49,11 +54,6 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
           {item.isMvp && <span className={styles.mvp}>MVP</span>}
         </span>
       </div>
-      {item.description && (
-        <p className={styles.description} title={item.description}>
-          {item.description}
-        </p>
-      )}
     </li>
   );
 }
