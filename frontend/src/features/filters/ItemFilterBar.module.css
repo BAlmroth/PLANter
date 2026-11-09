@@ -1,0 +1,89 @@
+/* The filters in one row of small pills. Used in the list toolbar and on top of the map. */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* One filter. position: relative so the menu can be placed right under its pill. */
+.filter {
+  position: relative;
+}
+
+/* The pill: "Type", "Type (2)" when two are checked */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--borderDark);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  /* Hide the default triangle of <summary> (two rules: Chrome/Firefox and Safari) */
+  list-style: none;
+}
+.pill::-webkit-details-marker {
+  display: none;
+}
+/* A small arrow instead, pointing up while open. Only on the dropdowns, not on "MVP only". */
+summary.pill::after {
+  content: "▾";
+  font-size: 0.7rem;
+}
+.filter[open] > .pill::after {
+  content: "▴";
+}
+
+/* A pill with something checked is outlined in the brand color, so an active filter is easy to spot */
+.pillActive {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+/* The checkbox list, floating under the pill instead of pushing the page down */
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  min-width: 180px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.option:hover {
+  background: var(--bg-dark);
+}
+
+.none {
+  margin: 4px 6px;
+  font-size: 0.85rem;
+}
+
+/* "Clear filters": a text button, so it does not look like a main action */
+.clear {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  color: var(--primary);
+  background: none;
+  text-decoration: underline;
+}

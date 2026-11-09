@@ -1,10 +1,11 @@
 import type { Group } from "../groups/types";
 import { STATUS_LABELS, type ItemStatus, type Template } from "../items/types";
 import { hasFilters, NO_FILTERS, toggleValue, type ItemFilters } from "./itemFilters";
+import styles from "./ItemFilterBar.module.css";
 
 type Option = { value: string; label: string };
 
-// One filter: a dropdown with a checkbox per option. The summary shows how many are checked.
+// One filter: a pill that opens a list with a checkbox per option. The pill shows how many are checked.
 function CheckboxFilter({
   title,
   options,
@@ -17,23 +18,26 @@ function CheckboxFilter({
   onToggle: (value: string) => void;
 }) {
   return (
-    <details>
-      <summary>
+    // <details> elements with the same name work together: opening one closes the others (built into HTML)
+    <details name="item-filters" className={styles.filter}>
+      <summary className={selected.length > 0 ? `${styles.pill} ${styles.pillActive}` : styles.pill}>
         {title}
         {selected.length > 0 && ` (${selected.length})`}
       </summary>
-      {options.length === 0 && <p>None yet.</p>}
-      {options.map((option) => (
-        <label key={option.value} style={{ display: "block" }}>
-          <input type="checkbox" checked={selected.includes(option.value)} onChange={() => onToggle(option.value)} />{" "}
-          {option.label}
-        </label>
-      ))}
+      <div className={styles.menu}>
+        {options.length === 0 && <p className={styles.none}>None yet.</p>}
+        {options.map((option) => (
+          <label key={option.value} className={styles.option}>
+            <input type="checkbox" checked={selected.includes(option.value)} onChange={() => onToggle(option.value)} />
+            {option.label}
+          </label>
+        ))}
+      </div>
     </details>
   );
 }
 
-// The filters above the map and the File view. What a filter does to the items is up to the view.
+// The filters above the list and on top of the map. What a filter does to the items is up to the view.
 export function ItemFilterBar({
   filters,
   onChange,
@@ -46,7 +50,7 @@ export function ItemFilterBar({
   groups: Group[];
 }) {
   return (
-    <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start", margin: "8px 0" }}>
+    <div className={styles.bar}>
       <CheckboxFilter
         title="Type"
         options={template.itemTypes.map((type) => ({ value: type.key, label: type.label }))}
@@ -70,16 +74,17 @@ export function ItemFilterBar({
           onChange({ ...filters, statuses: toggleValue(filters.statuses, value as ItemStatus) })
         }
       />
-      <label>
+      {/* Not a list, so a pill with a checkbox inside instead of a menu */}
+      <label className={filters.mvpOnly ? `${styles.pill} ${styles.pillActive}` : styles.pill}>
         <input
           type="checkbox"
           checked={filters.mvpOnly}
           onChange={(e) => onChange({ ...filters, mvpOnly: e.target.checked })}
-        />{" "}
+        />
         MVP only
       </label>
       {hasFilters(filters) && (
-        <button type="button" onClick={() => onChange(NO_FILTERS)}>
+        <button type="button" className={styles.clear} onClick={() => onChange(NO_FILTERS)}>
           Clear filters
         </button>
       )}
