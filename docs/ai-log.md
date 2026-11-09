@@ -1258,3 +1258,31 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - After a half-failed add (the entry is saved but the image upload fails), the form keeps its values, so adding again would make a duplicate.
 - There is no duplicate check on palette colors, and no edit for moodboard entries or colors.
 - A signed link expires after one hour.
+
+## 2026-11-09: Merge the Files and Map pages into one "Items" page
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. Merge the Files page and the Map page into one page with a toggle between them.
+2. Rename "Files" to "Items" where it makes sense in the UI (for example the merged page).
+
+**What was generated:**
+- `PlanPage` in `pages/ProjectViews.tsx` (replaces `FilesPage` and `MapPage`) with a List / Map toggle, and `pages/PlanPage.module.css` for the toggle styling.
+- One route `/projects/:projectId/plan`. The chosen view is kept in the URL (`?view=list` or `?view=map`, list is the default), so a refresh or a shared link opens the same view. Switching uses `replace`, so the back button history is not filled up.
+- The old `/files` and `/map` routes redirect to the new page (`Navigate`), so bookmarks still work.
+- One nav link "Items" in `ProjectSubHeader`. The sidebar heading, the page heading, the aria labels and the overview card link were updated to match.
+
+**Decisions:**
+- **Toggle in the URL, not in state:** a search parameter survives a refresh and can be linked to, and needs no new library or state management.
+- **"List" and "Map" as toggle labels:** a page called "Items" with a toggle option also called "Items" would be confusing, so the card view is called "List".
+- **Only visible text was renamed.** Code names (`FileView`, `FileSidebar`, `fileSections.ts`) and the URL path `plan` were left alone to keep the change small and reviewable.
+
+**What I changed or corrected:** First the AI named the toggle "Files" / "Map" and the nav link "Files & Map". I then asked for the rename to Items, which also changed the URL parameter from `files` to `list` so the code matches the labels.
+
+**What went wrong:** Nothing failed. Typecheck passes and the 78 frontend tests pass, but there is no test for the toggle, and I had not tried the page in the browser when this was written.
+
+**Known limitations:**
+- Switching view remounts the view that is left, so the filters and the group mode of the list reset, and the map refetches its data.
+- `CLAUDE.md` and the docs still say "File view".
+- Both views keep their own page header under the toggle, so there is a little duplicate labelling.
