@@ -61,6 +61,11 @@
   border-radius: 12px;
 }
 
+/* In "Category" mode: a top border in the type's color (--type-color), grey for "Unknown" */
+.categoryCard {
+  border-top: 4px solid var(--type-color, var(--border));
+}
+
 /* Small caps category label, the same as on the overview */
 .label {
   display: flex;

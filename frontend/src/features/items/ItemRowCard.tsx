@@ -3,12 +3,16 @@ import type { Group } from "../groups/types";
 import type { Connection } from "../relationships/connections";
 import type { Warning } from "../warnings/types";
 import { WarningBadge } from "../warnings/WarningBadge";
-import { STATUS_LABELS, type Item } from "./types";
+import { TypeBadge } from "./TypeBadge";
+import { typeColorStyle } from "./typeColor";
+import { STATUS_LABELS, type Item, type Template } from "./types";
 import styles from "./ItemRowCard.module.css";
 
 type Props = {
   projectId: string;
   item: Item;
+  // For the type colors of the item and its connections
+  template: Template;
   connections: Connection[];
   // The groups this item is in
   groups: Group[];
@@ -17,9 +21,10 @@ type Props = {
 };
 
 // One item in the File view. Read-only: editing, deleting and connecting happen in the detail view.
-export function ItemRow({ projectId, item, connections, groups, warnings }: Props) {
+export function ItemRow({ projectId, item, template, connections, groups, warnings }: Props) {
   return (
-    <li className={styles.row}>
+    // The strip on the left is in the item type's color (also in "Group" mode, where types are mixed)
+    <li className={styles.row} style={typeColorStyle(template, item.type)}>
       <div className={styles.top}>
         <Link to={`/projects/${projectId}/items/${item.id}`} className={styles.title}>
           {item.title}
@@ -38,7 +43,7 @@ export function ItemRow({ projectId, item, connections, groups, warnings }: Prop
           {connections.map((connection) => (
             <li key={connection.id}>
               <span className={styles.relation}>{connection.label}</span> {connection.otherTitle}{" "}
-              <span className={styles.type}>({connection.otherTypeLabel})</span>
+              <TypeBadge typeKey={connection.otherType} template={template} />
             </li>
           ))}
         </ul>

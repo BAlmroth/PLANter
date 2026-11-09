@@ -310,7 +310,7 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
               <li key={connection.id} className={styles.row}>
                 <span>
                   <span className={styles.relation}>{connection.label}</span> {connection.otherTitle}{" "}
-                  <span className={styles.tag}>{connection.otherTypeLabel}</span>
+                  <TypeBadge typeKey={connection.otherType} template={loadedTemplate} />
                 </span>
                 <button
                   type="button"

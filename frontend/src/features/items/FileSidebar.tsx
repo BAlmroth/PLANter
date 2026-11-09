@@ -3,6 +3,7 @@ import { getGroupsOfItem } from "../groups/itemGroups";
 import type { Group } from "../groups/types";
 import { useGroups } from "../groups/useGroups";
 import type { Project } from "../projects/types";
+import { typeColorStyle } from "./typeColor";
 import { STATUS_LABELS } from "./types";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
@@ -51,10 +52,13 @@ export function FileSidebar({ project }: { project: Project }) {
     );
   }
 
+  // After the check above TypeScript knows the template is loaded
+  const loadedTemplate = template.template;
+
   // Items whose type is not in the template (for example an old key) go under "Unknown"
-  const knownKeys = template.template.itemTypes.map((type) => type.key);
+  const knownKeys = loadedTemplate.itemTypes.map((type) => type.key);
   const categories = [
-    ...template.template.itemTypes.map((type) => ({
+    ...loadedTemplate.itemTypes.map((type) => ({
       key: type.key,
       label: type.pluralLabel,
       items: items.items.filter((item) => item.type === type.key),
@@ -76,7 +80,8 @@ export function FileSidebar({ project }: { project: Project }) {
         // Hide "Unknown" when there is nothing in it
         .filter((category) => category.key !== "unknown" || category.items.length > 0)
         .map((category) => (
-          <section key={category.key} className={styles.group}>
+          // The key is the type key ("unknown" matches no type, so it stays grey)
+          <section key={category.key} className={styles.group} style={typeColorStyle(loadedTemplate, category.key)}>
             <h2 className={styles.groupTitle}>{category.label}</h2>
             {category.items.length === 0 ? (
               <p className={styles.empty}>No items yet.</p>

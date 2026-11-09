@@ -1,7 +1,9 @@
-/* One item: title and tags on top, then the description and the connections */
+/* One item: title and tags on top, then the description and the connections.
+   The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
-  padding: 12px 0;
+  padding: 12px 0 12px 12px;
   border-bottom: 1px solid var(--bg-dark);
+  border-left: 4px solid var(--type-color, var(--border));
 }
 .row:last-child {
   border-bottom: 0;
@@ -83,8 +85,4 @@
   font-family: var(--mono);
   font-size: 0.8rem;
   color: var(--text);
-}
-
-.type {
-  opacity: 0.7;
 }

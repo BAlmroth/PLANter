@@ -29,9 +29,11 @@ export function ProgressOverview({ progress, templateKey }: Props) {
 
   if (!templateState.template) return null;
 
-  // Category key -> label, from the template. Unknown keys show as "Unknown" instead of crashing.
-  const labelFor = (key: string) =>
-    templateState.template!.itemTypes.find((t) => t.key === key)?.pluralLabel ?? "Unknown";
+  // Category key -> label and color, from the template. Unknown keys show as "Unknown" instead of crashing,
+  // and get the browser's default bar color.
+  const loadedTemplate = templateState.template;
+  const labelFor = (key: string) => loadedTemplate.itemTypes.find((t) => t.key === key)?.pluralLabel ?? "Unknown";
+  const colorFor = (key: string) => loadedTemplate.itemTypes.find((t) => t.key === key)?.color;
 
   return (
     <section>
@@ -44,7 +46,11 @@ export function ProgressOverview({ progress, templateKey }: Props) {
         {progress.categories.map((category) => (
           <li key={category.key}>
             <strong>{labelFor(category.key)}</strong>
-            <ProgressBar progress={category} label={`${labelFor(category.key)} progress`} />
+            <ProgressBar
+              progress={category}
+              label={`${labelFor(category.key)} progress`}
+              color={colorFor(category.key)}
+            />
           </li>
         ))}
       </ul>

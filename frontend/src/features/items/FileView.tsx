@@ -13,6 +13,7 @@ import { createItem } from "./itemsApi";
 import { getFileSections, type FileViewMode } from "./fileSections";
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
+import { typeColorStyle } from "./typeColor";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileView.module.css";
@@ -128,7 +129,12 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
 
       <div className={styles.grid}>
         {sections.map((section) => (
-          <section key={section.key} className={styles.card}>
+          // In "Category" mode the section key is the type key, so the card gets the type's color on top
+          <section
+            key={section.key}
+            className={mode === "category" ? `${styles.card} ${styles.categoryCard}` : styles.card}
+            style={mode === "category" ? typeColorStyle(loadedTemplate, section.key) : undefined}
+          >
             <h2 className={styles.label}>
               {section.title} <span className={styles.labelCount}>{section.items.length}</span>
             </h2>
@@ -142,6 +148,7 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
                     key={item.id}
                     projectId={project.id}
                     item={item}
+                    template={loadedTemplate}
                     connections={connectionsOf(item.id)}
                     groups={getGroupsOfItem(item.id, groups.groups)}
                     warnings={warnings.get(item.id) ?? []}

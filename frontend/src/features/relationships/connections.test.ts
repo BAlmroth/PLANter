@@ -25,13 +25,13 @@ const relationship: Relationship = { id: "r1", projectId: "p", sourceItemId: "1"
 describe("getConnections", () => {
   it("shows the label on the source item", () => {
     expect(getConnections("1", [relationship], [page, button], template)).toEqual([
-      { id: "r1", label: "uses", otherTitle: "Button", otherTypeLabel: "Page" },
+      { id: "r1", label: "uses", otherTitle: "Button", otherType: "page" },
     ]);
   });
 
   it("shows the inverseLabel on the target item", () => {
     expect(getConnections("2", [relationship], [page, button], template)).toEqual([
-      { id: "r1", label: "used by", otherTitle: "LoginPage", otherTypeLabel: "Page" },
+      { id: "r1", label: "used by", otherTitle: "LoginPage", otherType: "page" },
     ]);
   });
 

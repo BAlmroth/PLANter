@@ -55,12 +55,23 @@
   letter-spacing: 0.05em;
   color: var(--text);
 }
+/* A dot in the type's color (--type-color, set on the section) before the category name */
+.groupTitle::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  background: var(--type-color, var(--border));
+  border-radius: 50%;
+}
 
+/* The line next to the items, in the same color */
 .list {
   margin: 0;
   padding: 0 0 0 8px;
   list-style: none;
-  border-left: 1px solid var(--border);
+  border-left: 2px solid var(--type-color, var(--border));
 }
 
 /* Name on the left, status on the right */

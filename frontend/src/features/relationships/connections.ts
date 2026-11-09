@@ -1,8 +1,9 @@
 import type { Item, Template } from "../items/types";
 import type { Relationship } from "./types";
 
-// One line under an item, for example { label: "uses", otherTitle: "Button", otherTypeLabel: "Component" }
-export type Connection = { id: string; label: string; otherTitle: string; otherTypeLabel: string };
+// One line under an item, for example { label: "uses", otherTitle: "Button", otherType: "component" }.
+// otherType is the template key, so the UI can show it as a colored TypeBadge.
+export type Connection = { id: string; label: string; otherTitle: string; otherType: string };
 
 // All connections of one item, seen from that item's side:
 // as the source it shows the label ("uses"), as the target the inverseLabel ("used by").
@@ -30,8 +31,8 @@ export function getConnections(
       // An unknown key is shown as "Unknown" instead of crashing (see CLAUDE.md)
       label: type ? (isSource ? type.label : type.inverseLabel) : "Unknown",
       otherTitle: other.title,
-      // Unknown type keys are shown as "Unknown" too
-      otherTypeLabel: template.itemTypes.find((t) => t.key === other.type)?.label ?? "Unknown",
+      // TypeBadge shows an unknown type key as "Unknown"
+      otherType: other.type,
     });
   }
 
