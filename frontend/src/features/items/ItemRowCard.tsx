@@ -26,6 +26,8 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
   const connectionList = connections
     .map((connection) => `${connection.label} ${connection.otherTitle}`)
     .join(", ");
+  // true when line 3 has something to show
+  const hasTags = groups.length > 0 || connections.length > 0 || warnings.length > 0 || item.isMvp;
 
   return (
     // The strip on the left is in the item type's color (also in "Group" mode, where types are mixed)
@@ -38,12 +40,15 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
           {item.title}
         </Link>
       </div>
-      {/* Line 2: the description (cut to fit) on the left, the tags on the right */}
-      <div className={styles.bottom}>
-        <span className={styles.description} title={item.description ?? undefined}>
+      {/* Line 2: the description, cut to one line. Left out when there is none. */}
+      {item.description && (
+        <p className={styles.description} title={item.description}>
           {item.description}
-        </span>
-        <span className={styles.tags}>
+        </p>
+      )}
+      {/* Line 3: the tags. Left out when the item has none, so the card stays short. */}
+      {hasTags && (
+        <div className={styles.tags}>
           <GroupDots groups={groups} />
           {connections.length > 0 && (
             <span className={styles.connections} title={connectionList}>
@@ -52,8 +57,8 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
           )}
           <WarningBadge messages={warnings.map((warning) => warning.message)} />
           {item.isMvp && <span className={styles.mvp}>MVP</span>}
-        </span>
-      </div>
+        </div>
+      )}
     </li>
   );
 }
