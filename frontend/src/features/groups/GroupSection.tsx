@@ -4,6 +4,7 @@ import type { Item } from "../items/types";
 import { addItemToGroup, createGroup, deleteGroup, removeItemFromGroup, updateGroup } from "./groupsApi";
 import { GroupChip } from "./GroupChip";
 import { GroupColorPicker } from "./GroupColorPicker";
+import { groupColorVar } from "./groupColor";
 import type { Group } from "./types";
 import styles from "./GroupSection.module.css";
 
@@ -164,7 +165,8 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
             const inGroup = items.filter((item) => group.itemIds.includes(item.id));
             const notInGroup = items.filter((item) => !group.itemIds.includes(item.id));
             return (
-              <li key={group.id} className={styles.group}>
+              // Each group is its own small card, with a border and a light background in the group's color
+              <li key={group.id} className={styles.group} style={groupColorVar(group.color)}>
                 {editingId === group.id ? (
                   <GroupForm
                     initial={{ name: group.name, description: group.description ?? "", color: group.color }}
@@ -179,6 +181,9 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
                     <div className={styles.row}>
                       <span className={styles.name}>
                         <GroupChip group={group} />
+                        <span className={styles.itemCount}>
+                          {inGroup.length} {inGroup.length === 1 ? "item" : "items"}
+                        </span>
                       </span>
                       <span className={styles.actions}>
                         <button
@@ -239,14 +244,17 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
           })}
         </ul>
       )}
-      <h3 className={styles.subLabel}>New group</h3>
-      <GroupForm
-        initial={{ name: "", description: "", color: "" }}
-        colors={groupColors}
-        submitLabel="Add group"
-        busy={busy}
-        onSubmit={handleAdd}
-      />
+      {/* A dashed box, so the form reads as "make a new card" and not as one of the groups */}
+      <div className={styles.newGroup}>
+        <h3 className={styles.subLabel}>New group</h3>
+        <GroupForm
+          initial={{ name: "", description: "", color: "" }}
+          colors={groupColors}
+          submitLabel="Add group"
+          busy={busy}
+          onSubmit={handleAdd}
+        />
+      </div>
       {error && <p role="alert">{error}</p>}
     </section>
   );
