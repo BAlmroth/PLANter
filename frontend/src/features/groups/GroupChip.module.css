@@ -15,6 +15,18 @@
   border-radius: 50%;
 }
 
+/* GroupDots: the same dot as in front of a chip, without the name, a bit bigger so it is easy to hover */
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  background: var(--group-color, var(--border));
+  border-radius: 50%;
+}
+
 /* A row of chips that wraps to the next line when it is too long */
 .chips {
   display: inline-flex;

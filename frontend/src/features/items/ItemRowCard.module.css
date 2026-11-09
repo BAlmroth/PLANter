@@ -1,7 +1,7 @@
-/* One item: title and tags on top, then the description and the connections.
+/* One item: a single line (status, title, tags), then the description cut to one line.
    The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
-  padding: 12px 0 12px 12px;
+  padding: 8px 0 8px 10px;
   border-bottom: 1px solid var(--bg-dark);
   border-left: 4px solid var(--type-color, var(--border));
 }
@@ -11,15 +11,21 @@
 
 .top {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
+/* The title takes the free space and is cut with "…" when too long.
+   min-width: 0 is needed: a flex child will not shrink below its text width otherwise. */
 .title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   font-weight: 600;
   color: var(--text-h);
   text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .title:hover {
   color: var(--primary);
@@ -30,46 +36,32 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 6px;
+  gap: 8px;
 }
 
-.tag {
-  padding: 2px 8px;
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  border-radius: 4px;
-}
-
-.mvp {
-  color: var(--on-primary);
-  background: var(--accent);
-}
-
-/* The groups of the item, as a subtitle under the title */
-.groups {
-  margin: 2px 0 0;
+/* "3 connections": small and quiet, the list is in the tooltip and on the item page */
+.connections {
   font-family: var(--mono);
   font-size: 0.75rem;
   color: var(--text);
+  white-space: nowrap;
 }
 
-.description {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-}
-
-/* The connections, indented under the item with a thin line */
-.connections {
-  margin: 8px 0 0;
-  padding: 0 0 0 12px;
-  list-style: none;
-  font-size: 0.85rem;
-  border-left: 2px solid var(--border);
-}
-
-/* "uses", "used by" */
-.relation {
+/* The only filled badge (see the color rules in CLAUDE.md) */
+.mvp {
+  padding: 1px 6px;
   font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text);
+  font-size: 0.7rem;
+  color: var(--on-primary);
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+/* One line, cut with "…". The indent lines it up with the title (status icon 14px + gap 8px). */
+.description {
+  margin: 2px 0 0 22px;
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
