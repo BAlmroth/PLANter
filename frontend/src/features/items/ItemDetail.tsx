@@ -7,28 +7,46 @@ import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
 import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
-import { getConnectOptions, getConnections, type ConnectOption, type Connection } from "../relationships/connections";
+import {
+  getConnectOptions,
+  getConnections,
+  groupConnectionsByLabel,
+  type ConnectOption,
+  type Connection,
+} from "../relationships/connections";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 import { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemMoodboard } from "../moodboard/ItemMoodboard";
 import { ItemTasks } from "../tasks/ItemTasks";
+import type { Warning } from "../warnings/types";
 import { useTasks } from "../tasks/useTasks";
 import { ItemForm } from "./ItemForm";
 import { ItemPhoto } from "./ItemPhoto";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 import { getInvalidRelationshipCount } from "./typeChange";
+import { StatusIcon } from "./StatusIcon";
 import { TypeBadge } from "./TypeBadge";
+import { typeColorStyle } from "./typeColor";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
+type Props = {
+  project: Project;
+  itemId: string;
+  // The warnings of this item only (from the project's warnings in ProjectPage)
+  warnings: Warning[];
+};
+
 // The detail view of one item: this is where an item is edited and deleted, and where its
 // connections are added and removed. The File view only shows items.
-export function ItemDetail({ project, itemId }: { project: Project; itemId: string }) {
+// Layout: a header (breadcrumb, title, actions), then a wide main column (photo, details,
+// connections, tasks) and a narrow side column (description, warnings, moodboard).
+export function ItemDetail({ project, itemId, warnings }: Props) {
   const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
@@ -192,12 +210,6 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
     }
   }
 
-  const backLink = (
-    <Link to={`/projects/${project.id}`} className={styles.back}>
-      ← Back to {project.name}
-    </Link>
-  );
-
   if (editing) {
     return (
       <section className={styles.card}>
@@ -250,26 +262,30 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
     );
   }
 
+  const typeInfo = loadedTemplate.itemTypes.find((t) => t.key === item.type);
+  const doneTasks = itemTasks.filter((task) => task.done).length;
+
   return (
     <div className={styles.page}>
-      {backLink}
-
-      <section className={styles.card}>
-        <div className={styles.tags}>
-          <TypeBadge typeKey={item.type} template={loadedTemplate} />
-          {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
+      {/* --- Header: breadcrumb and title on the left, status and actions on the right --- */}
+      <header className={styles.header}>
+        <div className={styles.heading}>
+          <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
+            <Link to={`/projects/${project.id}`}>{project.name}</Link>
+            <span aria-hidden="true">/</span>
+            <Link to={`/projects/${project.id}/plan?view=list`}>{typeInfo?.pluralLabel ?? "Unknown"}</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{item.title}</span>
+          </nav>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>{item.title}</h1>
+            <TypeBadge typeKey={item.type} template={loadedTemplate} />
+            {item.isMvp && <span className={styles.mvp}>MVP</span>}
+            <GroupChips groups={itemGroups} />
+          </div>
         </div>
-        <h1 className={styles.title}>{item.title}</h1>
-        {itemGroups.length > 0 && (
-          <p className={styles.groups}>
-            Groups: <GroupChips groups={itemGroups} />
-          </p>
-        )}
-        {item.description && <p className={styles.description}>{item.description}</p>}
 
-        <ItemPhoto item={item} onChange={replaceItem} />
-
-        <div className={styles.toolbar}>
+        <div className={styles.headerActions}>
           {/* Two checkboxes cover three statuses: neither checked means "planned" */}
           <div className={styles.status}>
             <label className={styles.toggle}>
@@ -291,85 +307,176 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
               Done
             </label>
           </div>
-          <div className={styles.actions}>
-            <button type="button" className={styles.secondary} onClick={() => setEditing(true)} disabled={busy}>
-              Edit
-            </button>
-            <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
-              Delete
-            </button>
-          </div>
+          <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
+            Delete
+          </button>
+          <button type="button" onClick={() => setEditing(true)} disabled={busy}>
+            Edit item
+          </button>
         </div>
-        {error && <p role="alert">{error}</p>}
-      </section>
-
-      <section className={styles.card}>
-        <h2 className={styles.label}>Connections</h2>
-        {connections.length === 0 ? (
-          <p className={styles.empty}>No connections yet.</p>
-        ) : (
-          <ul className={styles.list}>
-            {connections.map((connection) => (
-              <li key={connection.id} className={styles.row}>
-                <span>
-                  <span className={styles.relation}>{connection.label}</span> {connection.otherTitle}{" "}
-                  <TypeBadge typeKey={connection.otherType} template={loadedTemplate} />
-                </span>
-                <button
-                  type="button"
-                  className={styles.textButton}
-                  onClick={() => handleRemoveConnection(connection)}
-                  disabled={busy}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
         )}
+      </header>
 
-        {connectOptions.length > 0 &&
-          (connecting === "new" ? (
-            <ConnectedItemForm
-              thisTitle={item.title}
-              options={connectOptions}
-              onCancel={() => setConnecting(null)}
-              onSubmit={async (option, title) => {
-                const message = await addConnectedItem(option, title);
-                if (message === null) setConnecting(null);
-                return message;
-              }}
-            />
-          ) : connecting === "existing" ? (
-            <ConnectExistingForm
-              thisTitle={item.title}
-              options={connectOptions}
-              items={items.items.filter((other) => other.id !== item.id)}
-              onCancel={() => setConnecting(null)}
-              onSubmit={async (option, otherItemId) => {
-                const message = await connectExisting(option, otherItemId);
-                if (message === null) setConnecting(null);
-                return message;
-              }}
-            />
-          ) : (
-            <div className={styles.actions}>
-              <button type="button" onClick={() => setConnecting("new")} disabled={busy}>
-                Add connected item
-              </button>
-              <button type="button" className={styles.secondary} onClick={() => setConnecting("existing")} disabled={busy}>
-                Connect existing item
-              </button>
+      <div className={styles.columns}>
+        {/* --- Main column --- */}
+        <div className={styles.column}>
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Main photo</h2>
+            {/* The grey "stage" behind the photo, like a preview area */}
+            <div className={styles.stage}>
+              <ItemPhoto item={item} onChange={replaceItem} />
             </div>
-          ))}
-      </section>
+          </section>
 
-      <ItemMoodboard projectId={project.id} itemId={item.id} details={details} />
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Details</h2>
+            <dl className={styles.tiles}>
+              <div className={styles.tile}>
+                <dt className={styles.label}>Status</dt>
+                <dd>
+                  <StatusIcon status={item.status} showLabel />
+                </dd>
+              </div>
+              <div className={styles.tile}>
+                <dt className={styles.label}>Type</dt>
+                <dd>{typeInfo?.label ?? "Unknown"}</dd>
+              </div>
+              <div className={styles.tile}>
+                <dt className={styles.label}>Connections</dt>
+                <dd>{connections.length}</dd>
+              </div>
+              <div className={styles.tile}>
+                <dt className={styles.label}>Tasks done</dt>
+                <dd>
+                  {doneTasks} / {itemTasks.length}
+                </dd>
+              </div>
+            </dl>
+          </section>
 
-      {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
-      <section className={`${styles.card} ${styles.tasks}`}>
-        <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
-      </section>
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Connections</h2>
+            {connections.length === 0 ? (
+              <p className={styles.empty}>No connections yet.</p>
+            ) : (
+              // One box per kind of connection ("uses", "used by", …), with the other items as pills
+              <div className={styles.relationGroups}>
+                {groupConnectionsByLabel(connections).map((group) => (
+                  <div key={group.label} className={styles.relationGroup}>
+                    <h3 className={styles.label}>{group.label}</h3>
+                    <ul className={styles.pills}>
+                      {group.connections.map((connection) => (
+                        <li
+                          key={connection.id}
+                          className={styles.pill}
+                          style={typeColorStyle(loadedTemplate, connection.otherType)}
+                        >
+                          {connection.otherTitle}
+                          {/* The type label is shown next to the colored dot, so color never stands alone */}
+                          <span className={styles.pillType}>
+                            {loadedTemplate.itemTypes.find((t) => t.key === connection.otherType)?.label ?? "Unknown"}
+                          </span>
+                          <button
+                            type="button"
+                            className={styles.remove}
+                            onClick={() => handleRemoveConnection(connection)}
+                            disabled={busy}
+                            aria-label={`Remove the connection ${connection.label}: ${connection.otherTitle}`}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {connectOptions.length > 0 &&
+              (connecting === "new" ? (
+                <ConnectedItemForm
+                  thisTitle={item.title}
+                  options={connectOptions}
+                  onCancel={() => setConnecting(null)}
+                  onSubmit={async (option, title) => {
+                    const message = await addConnectedItem(option, title);
+                    if (message === null) setConnecting(null);
+                    return message;
+                  }}
+                />
+              ) : connecting === "existing" ? (
+                <ConnectExistingForm
+                  thisTitle={item.title}
+                  options={connectOptions}
+                  items={items.items.filter((other) => other.id !== item.id)}
+                  onCancel={() => setConnecting(null)}
+                  onSubmit={async (option, otherItemId) => {
+                    const message = await connectExisting(option, otherItemId);
+                    if (message === null) setConnecting(null);
+                    return message;
+                  }}
+                />
+              ) : (
+                <div className={styles.actions}>
+                  <button type="button" className={styles.secondary} onClick={() => setConnecting("new")} disabled={busy}>
+                    + Add connected item
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondary}
+                    onClick={() => setConnecting("existing")}
+                    disabled={busy}
+                  >
+                    Connect existing item
+                  </button>
+                </div>
+              ))}
+          </section>
+
+          {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
+          <section className={`${styles.card} ${styles.tasks}`}>
+            <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
+          </section>
+        </div>
+
+        {/* --- Side column --- */}
+        <div className={styles.column}>
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Description</h2>
+            {item.description ? (
+              <p className={styles.description}>{item.description}</p>
+            ) : (
+              <p className={styles.empty}>No description yet. Add one with Edit item.</p>
+            )}
+          </section>
+
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>Warnings</h2>
+              {warnings.length > 0 && <span className={styles.count}>{warnings.length}</span>}
+            </div>
+            {warnings.length === 0 ? (
+              <p className={styles.empty}>Nothing looks missing.</p>
+            ) : (
+              <ul className={styles.warnings}>
+                {warnings.map((warning) => (
+                  <li key={warning.rule} className={styles.warning}>
+                    {/* The message follows the item name, for example "Login has no components" */}
+                    <strong>{item.title}</strong> {warning.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <ItemMoodboard projectId={project.id} itemId={item.id} details={details} />
+        </div>
+      </div>
     </div>
   );
 }

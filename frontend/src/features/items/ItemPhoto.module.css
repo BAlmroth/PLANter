@@ -1,8 +1,10 @@
+/* Centered in the grey area on the item page, the button under the photo */
 .photo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
 }
 
 .image {
@@ -17,10 +19,10 @@
 
 /* The file input is hidden, the label works as the button */
 .upload {
-  align-self: flex-start;
   padding: 6px 12px;
   font-size: 0.9rem;
   color: var(--text-h);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
