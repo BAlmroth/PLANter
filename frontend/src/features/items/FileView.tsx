@@ -65,10 +65,11 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
   // The cards: one per category or one per group, depending on the mode
   const filtering = hasFilters(filters);
   const shownItems = items.items.filter((item) => matchesFilters(item, filters, groups.groups));
-  // While filtering, empty cards are left out so the result is short
-  const sections = getFileSections(mode, shownItems, loadedTemplate, groups.groups).filter(
-    (section) => !filtering || section.items.length > 0,
-  );
+  const allSections = getFileSections(mode, shownItems, loadedTemplate, groups.groups);
+  const sections = allSections.filter((section) => section.items.length > 0);
+  // Empty sections are collapsed into one line at the bottom instead of a heading each.
+  // While filtering they are left out: there "empty" only means "filtered out".
+  const emptySections = filtering ? [] : allSections.filter((section) => section.items.length === 0);
 
   return (
     <section className={styles.page}>
@@ -151,6 +152,7 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
       )}
 
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
+      {items.items.length === 0 && <p className={styles.empty}>No items yet. Use “+ Add item” to create the first one.</p>}
 
       {/* One full-width section per category (or group), stacked. The items of a section fill a grid,
           so a big section gets more rows instead of one long column. */}
@@ -163,26 +165,35 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
               {section.title} <span className={styles.labelCount}>{section.items.length}</span>
             </h2>
             {section.description && <p className={styles.description}>{section.description}</p>}
-            {section.items.length === 0 ? (
-              <p className={styles.empty}>No items yet.</p>
-            ) : (
-              <ul className={styles.list}>
-                {section.items.map((item) => (
-                  <ItemRow
-                    key={item.id}
-                    projectId={project.id}
-                    item={item}
-                    template={loadedTemplate}
-                    connections={connectionsOf(item.id)}
-                    groups={getGroupsOfItem(item.id, groups.groups)}
-                    warnings={warnings.get(item.id) ?? []}
-                  />
-                ))}
-              </ul>
-            )}
+            <ul className={styles.list}>
+              {section.items.map((item) => (
+                <ItemRow
+                  key={item.id}
+                  projectId={project.id}
+                  item={item}
+                  template={loadedTemplate}
+                  connections={connectionsOf(item.id)}
+                  groups={getGroupsOfItem(item.id, groups.groups)}
+                  warnings={warnings.get(item.id) ?? []}
+                />
+              ))}
+            </ul>
           </section>
         ))}
       </div>
+
+      {/* "No items yet: ● Testing ● Assets". Not shown when the whole project is empty (the message above says it). */}
+      {items.items.length > 0 && emptySections.length > 0 && (
+        <p className={styles.emptySections}>
+          No items yet:
+          {emptySections.map((section) => (
+            // The dot is in the section's color, with the name next to it so the color never stands alone
+            <span key={section.key} className={styles.emptyName} style={typeColorVar(section.color ?? undefined)}>
+              {section.title}
+            </span>
+          ))}
+        </p>
+      )}
     </section>
   );
 }

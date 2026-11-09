@@ -112,6 +112,31 @@
   opacity: 0.8;
 }
 
+/* The one line with the empty categories (or groups), at the bottom */
+.emptySections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* A name with a dot in front in the section's color (--type-color), grey for "Unknown" and "No group" */
+.emptyName {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-h);
+}
+.emptyName::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--type-color, var(--border));
+  border-radius: 50%;
+}
+
 .empty {
   margin: 8px 0 0;
   font-size: 0.9rem;
