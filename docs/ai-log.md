@@ -1330,3 +1330,33 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Safari may not apply `accent-color` to `<progress>`, so the progress bars could keep the default color there.
 - `npm run lint` fails on one older error in `features/moodboard/ItemMoodboard.tsx:52` (`preserve-caught-error`), not touched in this session.
 - `CLAUDE.md` does not yet describe the template's `color` and `groupColors` fields, or the `groups` table.
+
+## 2026-11-09: Cleaner Items list and map controls
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** The Items (list) view looked messy and hard to read, and on the map the filters and the "Add item" button took a lot of space.
+
+**What was generated:**
+- **A review first:** the list had group management (every group, edit/delete, add-item dropdowns and a "New group" form) between the filters and the items, controls spread over three or four rows, an unstyled filter bar, and rows that showed everything at once (status text, group chips, full description, every connection with a type badge). On the map, the add button, filters, delete box and errors were all above the map and pushed it down. The AI proposed four steps and asked me two questions (see Decisions).
+- **Filter pills** (`style: show item filters as compact pills with dropdown menus`): `ItemFilterBar.module.css` replaces inline styles. Each filter is a pill ("Type (2)", outlined when active) whose checkbox list floats under it (`position: absolute`). The `<details>` elements share `name="item-filters"`, a built-in HTML feature that keeps only one open at a time.
+- **One toolbar in the list** (`feat: put the item list controls in one toolbar and hide groups behind a button`): title, count, Category/Group switch, filters, and "Manage groups" / "+ Add item" on one wrapping row. `GroupSection` is only rendered while `managingGroups` is true (button with `aria-expanded` and `aria-controls`).
+- **Compact rows** (`style: make item rows in the list compact (one line, group dots, connection count)`): status icon only, title cut with "…", group dots, "3 connections", warning and MVP on one line, description cut to one line. Full text and the connection list are in `title` tooltips. New `GroupDots` in `GroupChip.tsx`: each dot has the group name as `title`, and the set has one `aria-label`, so the color never stands alone.
+- **Map panels** (`feat: float the map toolbar, add form and messages over the map in panels`): React Flow `Panel`s for the toolbar and add form (top left), the connection prompt (top center) and the delete box, errors and empty state (bottom center). The map height is `calc(100vh - 220px)` with `min-height: 400px` instead of `70vh`. `ConnectionPrompt` returns a fragment instead of a `<div>` so its parts sit on one line in the panel box.
+
+**Decisions:**
+- **Groups behind a "Manage groups" button** (my choice, of: behind a button, only in Group mode, collapsible at the bottom).
+- **Compact rows** (my choice, of: compact, medium with a short connection line, keep as is). The item page still shows everything.
+
+**What I changed or corrected:**
+- (Fill in after checking in the browser.)
+
+**What went wrong:**
+- **Indentation:** moving the JSX into the panels left the `ReactFlow` props two spaces too deep (there is no Prettier in the project). Fixed by hand before the commit.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck, lint and the 82 frontend tests pass.
+
+**Known limitations:**
+- An open filter menu does not close on a click outside it (only by clicking its pill or opening another one).
+- The `220px` in the map height is an estimate of the bars above the map.
+- Closing the group panel throws away a half-filled "New group" form.
+- Noticed, not changed: `MapView` has no `deleteKeyCode` or `onBeforeDelete`, so pressing Backspace on a selected node removes it from the map (not from the database) until the page is reloaded.
