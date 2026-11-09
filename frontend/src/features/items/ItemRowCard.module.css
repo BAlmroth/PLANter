@@ -28,6 +28,7 @@
 
 .tags {
   display: flex;
+  align-items: center;
   flex-shrink: 0;
   gap: 6px;
 }
@@ -37,20 +38,6 @@
   font-family: var(--mono);
   font-size: 0.7rem;
   border-radius: 4px;
-}
-
-/* One colour per status. The names match the status keys. */
-.planned {
-  color: var(--text);
-  background: var(--bg-dark);
-}
-.in_progress {
-  color: var(--accent);
-  background: rgb(217 119 6 / 12%);
-}
-.done {
-  color: var(--primary);
-  background: rgb(62 101 84 / 12%);
 }
 
 .mvp {

@@ -5,7 +5,8 @@ import type { Warning } from "../warnings/types";
 import { WarningBadge } from "../warnings/WarningBadge";
 import { TypeBadge } from "./TypeBadge";
 import { typeColorStyle } from "./typeColor";
-import { STATUS_LABELS, type Item, type Template } from "./types";
+import { StatusIcon } from "./StatusIcon";
+import type { Item, Template } from "./types";
 import styles from "./ItemRowCard.module.css";
 
 type Props = {
@@ -32,8 +33,7 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
         <span className={styles.tags}>
           <WarningBadge messages={warnings.map((warning) => warning.message)} />
           {item.isMvp && <span className={`${styles.tag} ${styles.mvp}`}>MVP</span>}
-          {/* The class has the same name as the status, for example styles.in_progress */}
-          <span className={`${styles.tag} ${styles[item.status]}`}>{STATUS_LABELS[item.status]}</span>
+          <StatusIcon status={item.status} showLabel />
         </span>
       </div>
       {groups.length > 0 && <p className={styles.groups}>{groups.map((group) => group.name).join(", ")}</p>}

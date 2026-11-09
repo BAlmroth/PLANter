@@ -1,0 +1,16 @@
+/* Icon and optional text on one line, in the surrounding text color */
+.status {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+}

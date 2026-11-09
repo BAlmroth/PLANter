@@ -4,7 +4,7 @@ import type { Group } from "../groups/types";
 import { useGroups } from "../groups/useGroups";
 import type { Project } from "../projects/types";
 import { typeColorStyle } from "./typeColor";
-import { STATUS_LABELS } from "./types";
+import { StatusIcon } from "./StatusIcon";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileSidebar.module.css";
@@ -94,7 +94,7 @@ export function FileSidebar({ project }: { project: Project }) {
                         {item.title}
                         <GroupNames itemId={item.id} groups={groups.groups} />
                       </span>
-                      <span className={styles.status}>{STATUS_LABELS[item.status]}</span>
+                      <StatusIcon status={item.status} />
                     </Link>
                   </li>
                 ))}
