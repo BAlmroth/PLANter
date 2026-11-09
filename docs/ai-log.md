@@ -1286,3 +1286,47 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Switching view remounts the view that is left, so the filters and the group mode of the list reset, and the map refetches its data.
 - `CLAUDE.md` and the docs still say "File view".
 - Both views keep their own page header under the toggle, so there is a little duplicate labelling.
+
+## 2026-11-09: Color coordination (item type colors, status icons, group colors)
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** The map and the item list were messy and hard to read. I wanted each item type to have a color used as an indicator through the whole app (for example the type circled in its color on the item detail view), asked if groups could be color coordinated too, and asked for a review of the best and most user friendly color coordination.
+
+**What was generated:**
+- **A review first:** the main problem was that color meant different things in different places. The map border showed the status (grey/amber/green), amber meant both "in progress" and MVP, green was also the brand color, and selection used purple and blue, while the item type had no color at all. Proposal: one visual channel per meaning: item type = hue, status = icon shape, MVP = the only filled badge, groups = a dot, connections neutral until selected.
+- **Type colors in the template** (`feat: add a color per item type to the template`): a `color` per item type in `web.ts`, sent with `GET /api/templates/:key`, so no item types are hard-coded in the frontend and a game template can bring its own colors. 9 colors in related families (page/component blue-teal, design/asset magenta-orange). The AI checked every color with a small script that computes WCAG contrast: at least 4.5:1 on white, on `--bg` and on its own 12% tint. Data tests check `#RRGGBB` and that no two types share a color.
+- **`TypeBadge`** (`feat: show the item type as a colored badge in the detail view`): the type as a pill, colored with a CSS variable (`--type-color`) and `color-mix()` for the tint. Unknown types fall back to grey.
+- **Type colors everywhere** (`feat: color the File view, sidebar, connections and progress by item type`): a colored strip on each File view row, a colored top border on category cards, dots in the sidebar, badges on connections and colored progress bars (`accent-color`). `Connection` now carries the other item's type key instead of its label. Shared helper `typeColor.ts` with tests.
+- **Status icons** (`feat: show item status as icons instead of colors`): `StatusIcon` with inline SVGs (empty circle, half circle, filled circle with a check), using `currentColor`, with `aria-label`/`title` when shown without text.
+- **Map** (`feat: color the map by item type, add legend and minimap, fade filtered items`): node styles moved to a CSS module (left strip in the type color, dashed border while planned), selected connections in the source item's type color, React Flow's `MiniMap` colored by type, and a collapsible legend in a `Panel`.
+- **Group colors** (`feat: add a color to groups, chosen from the template's group colors` and `feat: show group colors as chips, swatches, card borders and map dots`):
+  - Migration `20261109105411_group_color`: Prisma generated `ADD COLUMN color TEXT NOT NULL`, which fails on existing rows. The AI rewrote it as three steps: add the column as nullable, color existing groups per project in creation order (`row_number() OVER (PARTITION BY project_id ...)`), then `SET NOT NULL`. No RLS line was needed (a column, not a table).
+  - `groupColors` (8 lighter colors, 3.2–4:1, enough for non-text) in the template. Zod checks `#RRGGBB` (the palette's hex schema, now exported and shared), and the groups service checks that the color is one of the template's group colors (400 otherwise). Without a color, `pickGroupColor` picks the next unused one. The demo seed uses the same rule.
+  - Frontend: `GroupColorPicker` (hidden radio buttons drawn as swatches, `useId` for the radio name), `GroupChip` ("● name") in rows, sidebar, detail view and the Groups card, group colored card borders in "Group" mode (`FileSection.color`), and group dots on map nodes.
+  - New tests: 8 backend (automatic color, chosen color in lower case, `"red"` and a type color rejected, edit, user B gets 404, `pickGroupColor`), 2 frontend for section colors.
+
+**Decisions:**
+- **Colors live in the template, not in the frontend:** keeps the "never hard-code item types" rule, and colors are presentation like labels, so they can change without a migration.
+- **Status as shape, not color:** so it never competes with the type colors and is readable without color vision. Text is always kept next to the color.
+- **Groups (option 1 of 3, my choice):** a color per group shown as a dot or border. Rejected: drawing groups as areas on the map (an item can be in several groups) and picking from the project palette (mixes product design colors with UI labels).
+- **Fixed set of group colors (my choice) instead of a free color picker:** a free picker would let a group look like an item type. A group stores the hex itself, so changing the template list later does not change existing groups.
+
+**What I changed or corrected:**
+- **Legend:** it was open by default and in the way, and "(dashed border)" made it too wide. Now closed by default, with the note on its own line under "Planned".
+- **Filter on the map:** the outline on matching items was hard to see (and the old purple outline looked like the Function color). I asked for a better way, so non-matching items and connections now fade instead.
+- **Filter plus selection:** with a filter on, clicking an item made its filtered-out connections stay grey. I asked for a "half state", so those are now at 60%. Then I found that clicking an item while filtering dimmed the filtered items too, so the filter stopped working. Now the filter decides, and a selection only adds to it.
+- **Tech stack note:** the AI noticed that `ProjectOverview.tsx` hard-codes the `"tech_stack"` key. I asked for it to go in `docs/todo.md` to handle later.
+
+**What went wrong:**
+- **`docs/todo.md` is gitignored**, so the tech stack note is saved locally but not committed. The AI did not force-add it.
+- **The migration was only tested on an empty database:** the AI ran it on `planter_test`, which has no groups, so the step that colors existing rows was first really run when I applied it to Supabase (11 groups). The AI did not run `prisma migrate` against Supabase itself, and asked me to run both commands.
+- **Small mistakes caught by the typecheck:** making `GroupInput.name` optional by accident (reverted), a non-null assertion (`!`) replaced with a narrowed variable, and `allowed[i]` possibly being `undefined` in `pickGroupColor` (now throws a clear error if a template has no group colors).
+- **A CSS class clash:** the first version put the colored top border on `.card` in the File view, which the "Add item" form also uses. Moved to a separate `.sectionCard` class.
+- **Browser checks:** the AI did not open the app in a browser. I checked the map changes myself (the feedback above). Everything else was checked by typecheck and tests: 82 frontend and 249 backend tests pass.
+
+**Known limitations:**
+- Swatches are read by screen readers as "Color 1"–"Color 8", because the template stores only hex values. Names would need `groupColors` as `{ hex, label }` objects.
+- Safari may not apply `accent-color` to `<progress>`, so the progress bars could keep the default color there.
+- `npm run lint` fails on one older error in `features/moodboard/ItemMoodboard.tsx:52` (`preserve-caught-error`), not touched in this session.
+- `CLAUDE.md` does not yet describe the template's `color` and `groupColors` fields, or the `groups` table.
