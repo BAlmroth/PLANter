@@ -23,6 +23,11 @@ itemTypes: [
   { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true, color: "#436C0D" },
   { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563" },
 ],
+  // Group colors: shown as dots and card borders, never as text, so they need 3:1 contrast
+  // (WCAG, non-text) instead of 4.5:1. All are between 3.2:1 and 4:1 on white, lighter than the
+  // type colors above (5:1 and up), so the two sets look different.
+  // In order: sky, mint, lavender, gold, rose, sea, sand, lime. New groups take the next unused one.
+  groupColors: ["#3D8FD1", "#2E9A6E", "#8C6FD1", "#B08A1E", "#D45A8A", "#2B9A9A", "#A5835A", "#6F9A2A"],
   relationshipTypes: [
     // A component cannot contain the thing it uses so no cycles
     { key: "belongs_to", label: "used by", inverseLabel: "uses", allowCycles: false },

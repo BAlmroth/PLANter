@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
+import { pickGroupColor } from "../services/groups.js";
 import { getTemplate } from "../templates/index.js";
 import {
   DEMO_COLUMN_WIDTH,
@@ -76,7 +77,14 @@ export async function seedDemoProject(userId: string) {
       data: demoInspirations.map((i) => ({ projectId, title: i.title, url: i.url ?? null, text: i.text ?? null })),
     }),
     prisma.group.createMany({
-      data: groups.map((g) => ({ id: g.id, projectId, name: g.name, description: g.description ?? null })),
+      // Each group takes the next color, the same rule as when a user creates groups one by one
+      data: groups.map((g, i) => ({
+        id: g.id,
+        projectId,
+        name: g.name,
+        description: g.description ?? null,
+        color: pickGroupColor(template.groupColors, template.groupColors.slice(0, i)),
+      })),
     }),
     prisma.groupItem.createMany({
       data: groups.flatMap((g) => g.items.map((ref) => ({ groupId: g.id, itemId: idOf(ref), projectId }))),

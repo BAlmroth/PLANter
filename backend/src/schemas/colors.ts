@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 // Only "#RRGGBB" is allowed, and it is stored in upper case. Because nothing else gets through,
-// a color is safe to use in a style attribute in the frontend.
-const hex = z
+// a color is safe to use in a style attribute in the frontend. Also used for group colors.
+export const hexColorSchema = z
   .string()
   .trim()
   .regex(/^#[0-9a-f]{6}$/i, "color must look like #3E6554")
@@ -10,7 +10,7 @@ const hex = z
 
 // zod schema for a palette color. No projectId: it comes from the URL.
 export const createColorSchema = z.object({
-  hex,
+  hex: hexColorSchema,
   name: z.string().trim().max(100).optional(),
 });
 export type CreateColorInput = z.infer<typeof createColorSchema>;

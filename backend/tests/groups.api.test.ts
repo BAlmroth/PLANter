@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
+import { pickGroupColor } from "../src/services/groups.js";
 
 // Own users (...40 and ...41), because test files run in parallel and share one database
 const USER_A = "00000000-0000-4000-8000-000000000040";
@@ -42,7 +43,7 @@ afterAll(async () => {
 
 async function setup(userId = USER_A) {
   const project = await prisma.project.create({ data: { userId, name: "P", template: "web" } });
-  const group = await prisma.group.create({ data: { projectId: project.id, name: "Navigation" } });
+  const group = await prisma.group.create({ data: { projectId: project.id, name: "Navigation", color: "#3D8FD1" } });
   const item = await prisma.item.create({ data: { projectId: project.id, type: "component", title: "Header" } });
   return { projectId: project.id, groupId: group.id, itemId: item.id };
 }
@@ -81,7 +82,7 @@ describe("groups API", () => {
 
   it("adds an item to several groups, and removes it from one", async () => {
     const { projectId, groupId, itemId } = await setup();
-    const other = await prisma.group.create({ data: { projectId, name: "Layout" } });
+    const other = await prisma.group.create({ data: { projectId, name: "Layout", color: "#2E9A6E" } });
 
     expect((await request(app).put(`/api/groups/${groupId}/items/${itemId}`).set(asA)).status).toBe(204);
     // Adding the same item twice is not an error and does not add a second row
@@ -134,5 +135,66 @@ describe("groups API", () => {
     expect((await request(app).delete(`/api/groups/${groupId}`).set(asB)).status).toBe(404);
     expect(await prisma.group.count({ where: { id: groupId } })).toBe(1);
     expect(await prisma.groupItem.count({ where: { groupId } })).toBe(1);
+  });
+});
+
+describe("group colors", () => {
+  it("gives a new group the next unused color when none is chosen", async () => {
+    // setup() made "Navigation" with the 1st color (#3D8FD1), so the next free one is the 2nd
+    const { projectId } = await setup();
+    const res = await request(app).post(`/api/projects/${projectId}/groups`).set(asA).send({ name: "Forms" });
+    expect(res.status).toBe(201);
+    expect(res.body.color).toBe("#2E9A6E");
+  });
+
+  it("accepts a chosen group color, also in lower case, and stores it in upper case", async () => {
+    const { projectId } = await setup();
+    const res = await request(app)
+      .post(`/api/projects/${projectId}/groups`)
+      .set(asA)
+      .send({ name: "Forms", color: "#8c6fd1" });
+    expect(res.status).toBe(201);
+    expect(res.body.color).toBe("#8C6FD1");
+  });
+
+  it("rejects a color that is not one of the group colors", async () => {
+    const { projectId, groupId } = await setup();
+    const url = `/api/projects/${projectId}/groups`;
+    // Not a hex color at all (Zod)
+    expect((await request(app).post(url).set(asA).send({ name: "G", color: "red" })).status).toBe(400);
+    // A valid hex, but an item type color (Page), so a group could look like an item type (service)
+    expect((await request(app).post(url).set(asA).send({ name: "G", color: "#2563A8" })).status).toBe(400);
+    expect((await request(app).patch(`/api/groups/${groupId}`).set(asA).send({ color: "#000000" })).status).toBe(400);
+  });
+
+  it("changes the color of a group", async () => {
+    const { groupId } = await setup();
+    const res = await request(app).patch(`/api/groups/${groupId}`).set(asA).send({ color: "#D45A8A" });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ name: "Navigation", color: "#D45A8A" });
+  });
+
+  it("gives user B 404 when changing the color of user A's group", async () => {
+    const { groupId } = await setup();
+    expect((await request(app).patch(`/api/groups/${groupId}`).set(asB).send({ color: "#D45A8A" })).status).toBe(404);
+    expect((await prisma.group.findUnique({ where: { id: groupId } }))?.color).toBe("#3D8FD1");
+  });
+});
+
+describe("pickGroupColor", () => {
+  const allowed = ["#111111", "#222222", "#333333"];
+
+  it("picks the first color no group has yet", () => {
+    expect(pickGroupColor(allowed, [])).toBe("#111111");
+    expect(pickGroupColor(allowed, ["#111111", "#333333"])).toBe("#222222");
+  });
+
+  it("starts over when every color is taken", () => {
+    expect(pickGroupColor(allowed, ["#111111", "#222222", "#333333"])).toBe("#111111");
+    expect(pickGroupColor(allowed, ["#111111", "#222222", "#333333", "#111111"])).toBe("#222222");
+  });
+
+  it("throws when the template has no group colors", () => {
+    expect(() => pickGroupColor([], [])).toThrow();
   });
 });

@@ -191,6 +191,8 @@ model Group {
   name        String
   // Optional short text about the group (max length is checked by Zod)
   description String?
+  // "#RRGGBB", one of the template's groupColors (checked by Zod and the groups service)
+  color       String
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
   // Deleting the project deletes its groups

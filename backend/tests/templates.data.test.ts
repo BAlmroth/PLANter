@@ -65,6 +65,16 @@ describe("web template data", () => {
     const colors = webTemplate.itemTypes.map((t) => t.color);
     expect(new Set(colors).size).toBe(colors.length);
   });
+
+  it("has unique #RRGGBB group colors that are not item type colors", () => {
+    const typeColors = webTemplate.itemTypes.map((t) => t.color);
+    expect(webTemplate.groupColors.length).toBeGreaterThan(0);
+    expect(new Set(webTemplate.groupColors).size).toBe(webTemplate.groupColors.length);
+    for (const color of webTemplate.groupColors) {
+      expect(color).toMatch(/^#[0-9A-F]{6}$/);
+      expect(typeColors, `group color ${color}`).not.toContain(color);
+    }
+  });
 });
 
 describe("getTemplate", () => {

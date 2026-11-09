@@ -14,6 +14,10 @@ export type Template = {
     // Presentation only, like the label: it can be changed without a migration.
     color: string;
   }[];
+  // The colors a group can have ("#RRGGBB"). Lighter than the item type colors, so a group
+  // never looks like an item type. A group stores the hex itself, so changing this list
+  // does not change existing groups (only which colors new choices can use).
+  groupColors: string[];
   relationshipTypes: {
     key: string;
     label: string;        // shown on the source item "uses: Button"
