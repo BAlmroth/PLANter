@@ -6,6 +6,7 @@ const template: Template = {
   key: "web",
   label: "Web",
   itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" }],
+  groupColors: [],
   relationshipTypes: [],
   allowedCombinations: [],
 };

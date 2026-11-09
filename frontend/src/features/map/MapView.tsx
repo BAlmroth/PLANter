@@ -4,6 +4,7 @@ import { Background, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Co
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
+import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { ItemForm } from "../items/ItemForm";
 import { createItem, updateItem } from "../items/itemsApi";
@@ -72,11 +73,12 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
           categoryLabel: itemTypes.find((type) => type.key === item.type)?.label ?? "Unknown",
           color: itemTypes.find((type) => type.key === item.type)?.color,
           status: item.status,
+          groups: getGroupsOfItem(item.id, groups.groups).map(({ id, name, color }) => ({ id, name, color })),
           warnings: (warnings.get(item.id) ?? []).map((warning) => warning.message),
         },
       };
     });
-  }, [template.template, items.items, warnings]);
+  }, [template.template, items.items, groups.groups, warnings]);
 
   // The ids of the items that match the filters, or null when no filter is set (nothing fades)
   const matchingIds = useMemo(() => {

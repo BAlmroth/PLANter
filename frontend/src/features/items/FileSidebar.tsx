@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { GroupChips } from "../groups/GroupChip";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import type { Group } from "../groups/types";
 import { useGroups } from "../groups/useGroups";
@@ -13,7 +14,11 @@ import styles from "./FileSidebar.module.css";
 function GroupNames({ itemId, groups }: { itemId: string; groups: Group[] }) {
   const itemGroups = getGroupsOfItem(itemId, groups);
   if (itemGroups.length === 0) return null;
-  return <span className={styles.groups}>{itemGroups.map((group) => group.name).join(", ")}</span>;
+  return (
+    <span className={styles.groups}>
+      <GroupChips groups={itemGroups} />
+    </span>
+  );
 }
 
 // The short file list on the left of every project page: category, item name, groups and status.

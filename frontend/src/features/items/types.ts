@@ -52,6 +52,8 @@ export type Template = {
     // "#RRGGBB", the type's color in the whole UI
     color: string;
   }[];
+  // The colors a group can have, "#RRGGBB"
+  groupColors: string[];
   relationshipTypes: {
     key: string;
     label: string;

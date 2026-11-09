@@ -13,7 +13,7 @@ import { createItem } from "./itemsApi";
 import { getFileSections, type FileViewMode } from "./fileSections";
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
-import { typeColorStyle } from "./typeColor";
+import { typeColorVar } from "./typeColor";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileView.module.css";
@@ -125,16 +125,19 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
 
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
 
-      <GroupSection projectId={project.id} groups={groups.groups} setGroups={groups.setGroups} items={items.items} />
+      <GroupSection
+        projectId={project.id}
+        groups={groups.groups}
+        setGroups={groups.setGroups}
+        items={items.items}
+        groupColors={loadedTemplate.groupColors}
+      />
 
       <div className={styles.grid}>
         {sections.map((section) => (
-          // In "Category" mode the section key is the type key, so the card gets the type's color on top
-          <section
-            key={section.key}
-            className={mode === "category" ? `${styles.card} ${styles.categoryCard}` : styles.card}
-            style={mode === "category" ? typeColorStyle(loadedTemplate, section.key) : undefined}
-          >
+          // A top border in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
+          // --type-color is reused for both: CSS only needs "the color of this card".
+          <section key={section.key} className={`${styles.card} ${styles.sectionCard}`} style={typeColorVar(section.color ?? undefined)}>
             <h2 className={styles.label}>
               {section.title} <span className={styles.labelCount}>{section.items.length}</span>
             </h2>

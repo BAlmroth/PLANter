@@ -3,7 +3,7 @@ import { getGroupsOfItem } from "./itemGroups";
 import type { Group } from "./types";
 
 function group(id: string, itemIds: string[]): Group {
-  return { id, projectId: "p1", name: id, description: null, createdAt: "2026-11-04T10:00:00Z", itemIds };
+  return { id, projectId: "p1", name: id, description: null, color: "#3D8FD1", createdAt: "2026-11-04T10:00:00Z", itemIds };
 }
 
 describe("getGroupsOfItem", () => {

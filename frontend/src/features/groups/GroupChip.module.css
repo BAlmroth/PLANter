@@ -1,0 +1,23 @@
+/* Group name with a round dot in the group color (--group-color, set by GroupChip).
+   Font and text color are inherited, so the chip fits wherever it is placed. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.chip::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--group-color, var(--border));
+  border-radius: 50%;
+}
+
+/* A row of chips that wraps to the next line when it is too long */
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}

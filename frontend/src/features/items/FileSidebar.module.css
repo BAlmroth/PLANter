@@ -96,14 +96,9 @@
   min-width: 0;
 }
 
-/* The groups of the item: small, on one line, cut off with ... when too long */
+/* The groups of the item as small colored chips (GroupChips), wrapping when there are many */
 .groups {
-  overflow: hidden;
-  font-family: var(--mono);
   font-size: 0.7rem;
-  color: var(--text);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .empty {

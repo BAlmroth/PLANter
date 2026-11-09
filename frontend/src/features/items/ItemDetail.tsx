@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
+import { GroupChips } from "../groups/GroupChip";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
@@ -260,7 +261,9 @@ export function ItemDetail({ project, itemId }: { project: Project; itemId: stri
         </div>
         <h1 className={styles.title}>{item.title}</h1>
         {itemGroups.length > 0 && (
-          <p className={styles.groups}>Groups: {itemGroups.map((group) => group.name).join(", ")}</p>
+          <p className={styles.groups}>
+            Groups: <GroupChips groups={itemGroups} />
+          </p>
         )}
         {item.description && <p className={styles.description}>{item.description}</p>}
 

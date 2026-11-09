@@ -61,8 +61,9 @@
   border-radius: 12px;
 }
 
-/* In "Category" mode: a top border in the type's color (--type-color), grey for "Unknown" */
-.categoryCard {
+/* A top border in the card's color (--type-color, set by FileView): the item type in "Category" mode,
+   the group in "Group" mode. Grey for "Unknown" and "No group". */
+.sectionCard {
   border-top: 4px solid var(--type-color, var(--border));
 }
 

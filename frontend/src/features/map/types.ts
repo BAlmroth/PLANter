@@ -8,6 +8,7 @@ export type ItemNodeData = {
   categoryLabel: string; // the label from the template, or "Unknown"
   color: string | undefined; // the type's color from the template, undefined for an unknown type
   status: ItemStatus;
+  groups: { id: string; name: string; color: string }[]; // the groups the item is in, shown as dots
   warnings: string[]; // what might be missing, shown behind a "!" badge. Empty = no badge.
 };
 

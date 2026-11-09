@@ -10,6 +10,8 @@ export type FileSection = {
   title: string;
   // Only groups have one
   description: string | null;
+  // "#RRGGBB": the item type's color or the group's color. null for "Unknown" and "No group".
+  color: string | null;
   items: Item[];
 };
 
@@ -22,11 +24,12 @@ export function getFileSections(mode: FileViewMode, items: Item[], template: Tem
       key: group.id,
       title: group.name,
       description: group.description,
+      color: group.color,
       items: items.filter((item) => group.itemIds.includes(item.id)),
     }));
     const noGroup = items.filter((item) => !groups.some((group) => group.itemIds.includes(item.id)));
     return noGroup.length > 0
-      ? [...sections, { key: "no-group", title: "No group", description: null, items: noGroup }]
+      ? [...sections, { key: "no-group", title: "No group", description: null, color: null, items: noGroup }]
       : sections;
   }
 
@@ -34,11 +37,12 @@ export function getFileSections(mode: FileViewMode, items: Item[], template: Tem
     key: type.key,
     title: type.pluralLabel,
     description: null,
+    color: type.color,
     items: items.filter((item) => item.type === type.key),
   }));
   const knownKeys = template.itemTypes.map((type) => type.key);
   const unknown = items.filter((item) => !knownKeys.includes(item.type));
   return unknown.length > 0
-    ? [...sections, { key: "unknown", title: "Unknown", description: null, items: unknown }]
+    ? [...sections, { key: "unknown", title: "Unknown", description: null, color: null, items: unknown }]
     : sections;
 }

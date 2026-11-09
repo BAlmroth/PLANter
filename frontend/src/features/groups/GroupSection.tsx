@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
 import { addItemToGroup, createGroup, deleteGroup, removeItemFromGroup, updateGroup } from "./groupsApi";
+import { GroupChip } from "./GroupChip";
+import { GroupColorPicker } from "./GroupColorPicker";
 import type { Group } from "./types";
 import styles from "./GroupSection.module.css";
 
@@ -11,31 +13,39 @@ type Props = {
   // From useGroups in the parent
   setGroups: (next: (current: Group[]) => Group[]) => void;
   items: Item[];
+  // The template's groupColors, offered as swatches
+  groupColors: string[];
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
+// color "" = none chosen (only on create: the backend then picks the next unused one)
+type FormValues = { name: string; description: string; color: string };
+
 type FormProps = {
-  initial: { name: string; description: string };
+  initial: FormValues;
+  colors: string[];
   submitLabel: string;
   busy: boolean;
   // Resolves to true when it worked
-  onSubmit: (input: { name: string; description: string }) => Promise<boolean>;
+  onSubmit: (input: FormValues) => Promise<boolean>;
   onCancel?: () => void;
 };
 
-// The name and description fields, used to create and to edit a group
-function GroupForm({ initial, submitLabel, busy, onSubmit, onCancel }: FormProps) {
+// The name, description and color fields, used to create and to edit a group
+function GroupForm({ initial, colors, submitLabel, busy, onSubmit, onCancel }: FormProps) {
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
+  const [color, setColor] = useState(initial.color);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const ok = await onSubmit({ name, description });
+    const ok = await onSubmit({ name, description, color });
     // Only the create form (no cancel button) starts empty again. The edit form closes itself.
     if (ok && !onCancel) {
       setName("");
       setDescription("");
+      setColor("");
     }
   }
 
@@ -54,6 +64,7 @@ function GroupForm({ initial, submitLabel, busy, onSubmit, onCancel }: FormProps
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
+      <GroupColorPicker colors={colors} value={color} onChange={setColor} disabled={busy} />
       <div className={styles.formButtons}>
         <button type="submit" disabled={busy}>
           {submitLabel}
@@ -69,7 +80,7 @@ function GroupForm({ initial, submitLabel, busy, onSubmit, onCancel }: FormProps
 }
 
 // Create, edit and delete the groups of a project, and choose which items are in each group.
-export function GroupSection({ projectId, groups, setGroups, items }: Props) {
+export function GroupSection({ projectId, groups, setGroups, items, groupColors }: Props) {
   // The group being edited
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,16 +101,20 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
     }
   }
 
-  // The description is left out when empty on create
-  function handleAdd({ name, description }: { name: string; description: string }) {
+  // The description and the color are left out when empty on create
+  function handleAdd({ name, description, color }: FormValues) {
     return run(async () => {
-      const group = await createGroup(projectId, { name, ...(description !== "" && { description }) });
+      const group = await createGroup(projectId, {
+        name,
+        ...(description !== "" && { description }),
+        ...(color !== "" && { color }),
+      });
       setGroups((current) => [...current, group]);
     });
   }
 
-  // "" clears the description
-  async function handleEdit(group: Group, input: { name: string; description: string }) {
+  // "" clears the description. The color is always set when editing (it starts as the group's color).
+  async function handleEdit(group: Group, input: FormValues) {
     const ok = await run(async () => {
       const updated = await updateGroup(group.id, input);
       setGroups((current) => current.map((g) => (g.id === updated.id ? updated : g)));
@@ -152,7 +167,8 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
               <li key={group.id} className={styles.group}>
                 {editingId === group.id ? (
                   <GroupForm
-                    initial={{ name: group.name, description: group.description ?? "" }}
+                    initial={{ name: group.name, description: group.description ?? "", color: group.color }}
+                    colors={groupColors}
                     submitLabel="Save"
                     busy={busy}
                     onSubmit={(input) => handleEdit(group, input)}
@@ -161,7 +177,9 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
                 ) : (
                   <>
                     <div className={styles.row}>
-                      <span className={styles.name}>{group.name}</span>
+                      <span className={styles.name}>
+                        <GroupChip group={group} />
+                      </span>
                       <span className={styles.actions}>
                         <button
                           type="button"
@@ -222,7 +240,13 @@ export function GroupSection({ projectId, groups, setGroups, items }: Props) {
         </ul>
       )}
       <h3 className={styles.subLabel}>New group</h3>
-      <GroupForm initial={{ name: "", description: "" }} submitLabel="Add group" busy={busy} onSubmit={handleAdd} />
+      <GroupForm
+        initial={{ name: "", description: "", color: "" }}
+        colors={groupColors}
+        submitLabel="Add group"
+        busy={busy}
+        onSubmit={handleAdd}
+      />
       {error && <p role="alert">{error}</p>}
     </section>
   );

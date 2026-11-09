@@ -20,6 +20,7 @@ const group: Group = {
   id: "g1",
   projectId: "p1",
   name: "Navigation",
+  color: "#3D8FD1",
   description: null,
   createdAt: "2026-11-05T00:00:00.000Z",
   itemIds: ["i1"],

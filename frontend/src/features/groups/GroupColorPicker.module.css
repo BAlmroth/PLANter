@@ -1,0 +1,59 @@
+/* A row of round swatches, without the default fieldset frame */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+/* .form label in GroupSection.module.css makes labels block elements, this wins because it is
+   more specific (two classes) */
+.picker .swatch {
+  /* relative: the hidden radio (position: absolute) stays inside its own swatch */
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* The real radio button: invisible, but still there for the keyboard and screen readers.
+   width and display override the global input style in index.css. */
+.swatch input {
+  position: absolute;
+  display: inline;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+/* The visible circle in the group color, with a white gap and a thin outer ring */
+.circle {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: var(--group-color);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* The chosen color gets a dark ring */
+.swatch input:checked + .circle {
+  box-shadow: 0 0 0 2px var(--text-h);
+}
+
+/* Keyboard focus: the same focus ring as the rest of the app */
+.swatch input:focus-visible + .circle {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

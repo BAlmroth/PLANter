@@ -7,6 +7,7 @@ const template: Template = {
   key: "web",
   label: "Web",
   itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" }],
+  groupColors: [],
   relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true }],
   allowedCombinations: [],
 };
@@ -58,6 +59,7 @@ describe("getConnectOptions", () => {
       { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#2563A8" },
       { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8" },
     ],
+    groupColors: [],
     relationshipTypes: [
       { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
       { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false },
@@ -107,6 +109,7 @@ describe("getConnectOptions", () => {
 describe("getAllowedRelationshipTypes", () => {
   const withRules: Template = {
     ...template,
+    groupColors: [],
     relationshipTypes: [
       { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
       { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true },

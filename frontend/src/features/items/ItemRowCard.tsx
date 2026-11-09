@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { GroupChips } from "../groups/GroupChip";
 import type { Group } from "../groups/types";
 import type { Connection } from "../relationships/connections";
 import type { Warning } from "../warnings/types";
@@ -36,7 +37,11 @@ export function ItemRow({ projectId, item, template, connections, groups, warnin
           <StatusIcon status={item.status} showLabel />
         </span>
       </div>
-      {groups.length > 0 && <p className={styles.groups}>{groups.map((group) => group.name).join(", ")}</p>}
+      {groups.length > 0 && (
+        <p className={styles.groups}>
+          <GroupChips groups={groups} />
+        </p>
+      )}
       {item.description && <p className={styles.description}>{item.description}</p>}
       {connections.length > 0 && (
         <ul className={styles.connections}>
