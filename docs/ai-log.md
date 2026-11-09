@@ -1349,7 +1349,8 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - **Compact rows** (my choice, of: compact, medium with a short connection line, keep as is). The item page still shows everything.
 
 **What I changed or corrected:**
-- (Fill in after checking in the browser.)
+- **Groups panel:** each group took the full width and was hard to tell apart. I asked for groups that stand out more, two per row. Now each group is a card with a 5px left border and an 8% `color-mix()` tint in its color, a name with an item count, white item tags, and a 2-column grid (1 column under 700px). The "New group" form is in a dashed box under the cards (`style: show each group as a colored card, two per row`).
+- **Items list:** with many items of one type, that column got very long and left gaps next to the shorter ones. I asked for a better layout. The AI offered three (sections with an item grid, masonry cards with CSS `columns`, or a table), and I picked sections: each type (or group) is a full-width section with a heading line in its color, and its items are small cards in an `auto-fill` grid (min 260px), filled left to right (`style: show the item list as full-width sections with a grid of item cards`).
 
 **What went wrong:**
 - **Indentation:** moving the JSX into the panels left the `ReactFlow` props two spaces too deep (there is no Prettier in the project). Fixed by hand before the commit.
