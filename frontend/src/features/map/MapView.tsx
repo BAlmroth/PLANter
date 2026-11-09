@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Background, Controls, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
+import { Background, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
 import { useGroups } from "../groups/useGroups";
 import { ItemForm } from "../items/ItemForm";
 import { createItem, updateItem } from "../items/itemsApi";
+import { getTypeColor } from "../items/typeColor";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
@@ -16,10 +17,16 @@ import { ConnectionPrompt } from "./ConnectionPrompt";
 import { ItemFilterBar } from "../filters/ItemFilterBar";
 import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { ItemNode } from "./ItemNode";
+import { MapLegend } from "./MapLegend";
 import type { ItemNodeType } from "./types";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
+
+// How faded the items and connections are that are not in focus (filtered out, or not connected to the selection)
+const FADED = 0.2;
+// The "half state": an item connected to the selected item, but filtered out
+const HALF_FADED = 0.6;
 
 // The relationship map: items as nodes, relationships as arrows.
 // Click a node to open the item's detail view. Drag a node to move it: the new position is saved
@@ -41,7 +48,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [pending, setPending] = useState<{ sourceId: string; targetId: string } | null>(null);
   // The node that was clicked: it and its connections light up (impact view)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  // Items that match the filters get a purple outline, the rest of the map stays as it is
+  // Items that do not match the filters fade, so the matching ones stand out
   const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
@@ -63,6 +70,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
           category: item.type,
           // An unknown key is shown as "Unknown" instead of crashing (see CLAUDE.md)
           categoryLabel: itemTypes.find((type) => type.key === item.type)?.label ?? "Unknown",
+          color: itemTypes.find((type) => type.key === item.type)?.color,
           status: item.status,
           warnings: (warnings.get(item.id) ?? []).map((warning) => warning.message),
         },
@@ -70,11 +78,26 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     });
   }, [template.template, items.items, warnings]);
 
+  // The ids of the items that match the filters, or null when no filter is set (nothing fades)
+  const matchingIds = useMemo(() => {
+    if (!hasFilters(filters)) return null;
+    return new Set(items.items.filter((item) => matchesFilters(item, filters, groups.groups)).map((item) => item.id));
+  }, [items.items, groups.groups, filters]);
+
   const edges = useMemo(() => {
+    // Item id -> item, to find the type (and so the color) of an edge's source item
+    const itemsById = new Map(items.items.map((item) => [item.id, item]));
+
     return relationships.relationships.map((relationship): Edge => {
       // Impact view: with a node selected, its own connections light up and the rest fade
       const touchesSelected =
         relationship.sourceItemId === selectedNodeId || relationship.targetItemId === selectedNodeId;
+      // With a filter, a connection stays visible when at least one end matches,
+      // so you can see what the matching items are connected to
+      const touchesMatch =
+        !matchingIds || matchingIds.has(relationship.sourceItemId) || matchingIds.has(relationship.targetItemId);
+      const source = itemsById.get(relationship.sourceItemId);
+      const sourceColor = template.template && source ? getTypeColor(template.template, source.type) : undefined;
       return {
         id: relationship.id,
         source: relationship.sourceItemId,
@@ -86,14 +109,18 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
           template.template?.relationshipTypes.find((type) => type.key === relationship.type)?.label ??
           "Unknown",
         animated: touchesSelected,
-        style: selectedNodeId
-          ? touchesSelected
-            ? { stroke: "#2563eb", strokeWidth: 3 }
-            : { opacity: 0.2 }
-          : undefined,
+        // A lit-up connection takes the color of its source item's type ("page uses design": page blue).
+        // Unknown types fall back to the brand color.
+        // With a filter, the filter decides what fades. Without one, the selection does.
+        style:
+          selectedNodeId && touchesSelected
+            ? { stroke: sourceColor ?? "var(--primary)", strokeWidth: 3 }
+            : (matchingIds ? !touchesMatch : selectedNodeId !== null)
+              ? { opacity: FADED }
+              : undefined,
       };
     });
-  }, [template.template, relationships.relationships, selectedNodeId]);
+  }, [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds]);
 
   // Fires once when a drag ends: save the new position of every node that was dragged
   // (several if a selection was dragged). If a save fails, reload the saved positions.
@@ -121,27 +148,35 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [nodes, setNodes, onNodesChange] = useNodesState<ItemNodeType>([]);
   useEffect(() => setNodes(itemNodes), [itemNodes, setNodes]);
 
-  // The selected node and the nodes directly connected to it stay bright, the others fade
+  // Fading instead of hiding keeps the whole map and its connections in view.
+  // With a filter, the filter decides and a selection only adds to it:
+  // - Matches the filter: never faded, even when another item is selected.
+  // - Filtered out, but connected to the selected item: half faded, so the connections can still be read.
+  // - Filtered out and not connected: faded.
+  // Without a filter: items not connected to the selected item fade.
+  // The selected item itself is never faded: you clicked it.
   const shownNodes = useMemo(() => {
-    // Filters outline the matching items instead of hiding the others, so the connections stay visible
-    const matchingIds = new Set(
-      items.items.filter((item) => matchesFilters(item, filters, groups.groups)).map((item) => item.id),
-    );
-    const visibleNodes = hasFilters(filters)
-      ? nodes.map((node) =>
-          matchingIds.has(node.id)
-            ? { ...node, style: { outline: "3px solid #7c3aed", outlineOffset: 2, borderRadius: 8 } }
-            : node,
-        )
-      : nodes;
-    if (!selectedNodeId) return visibleNodes;
-    const connectedIds = new Set<string>([selectedNodeId]);
-    for (const r of relationships.relationships) {
-      if (r.sourceItemId === selectedNodeId) connectedIds.add(r.targetItemId);
-      if (r.targetItemId === selectedNodeId) connectedIds.add(r.sourceItemId);
+    let connectedIds: Set<string> | null = null;
+    if (selectedNodeId) {
+      connectedIds = new Set([selectedNodeId]);
+      for (const r of relationships.relationships) {
+        if (r.sourceItemId === selectedNodeId) connectedIds.add(r.targetItemId);
+        if (r.targetItemId === selectedNodeId) connectedIds.add(r.sourceItemId);
+      }
     }
-    return visibleNodes.map((node) => (connectedIds.has(node.id) ? node : { ...node, style: { ...node.style, opacity: 0.3 } }));
-  }, [nodes, items.items, groups.groups, filters, relationships.relationships, selectedNodeId]);
+    return nodes.map((node) => {
+      const connected = connectedIds?.has(node.id) ?? false;
+      let opacity: number | undefined;
+      if (node.id === selectedNodeId) {
+        opacity = undefined;
+      } else if (matchingIds) {
+        if (!matchingIds.has(node.id)) opacity = connected ? HALF_FADED : FADED;
+      } else if (connectedIds && !connected) {
+        opacity = FADED;
+      }
+      return opacity === undefined ? node : { ...node, style: { ...node.style, opacity } };
+    });
+  }, [nodes, relationships.relationships, selectedNodeId, matchingIds]);
 
   // Creates the connection that was dragged. Returns an error message, or null when it worked.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
@@ -287,6 +322,21 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         >
           <Background />
           <Controls />
+          {/* Overview in the corner: every item as a small block in its type's color. Drag or scroll it to move the map. */}
+          {/* Panel places its content on top of the map, in a corner that does not move with the map */}
+          {template.template && (
+            <Panel position="top-right">
+              <MapLegend template={template.template} />
+            </Panel>
+          )}
+          <MiniMap<ItemNodeType>
+            // The MiniMap sets an SVG fill attribute, which can't read CSS variables, so the
+            // fallback for unknown types is a hex value (the same as --borderDark)
+            nodeColor={(node) => node.data.color ?? "#bdae99"}
+            nodeBorderRadius={4}
+            pannable
+            zoomable
+          />
         </ReactFlow>
       </div>
     </>
