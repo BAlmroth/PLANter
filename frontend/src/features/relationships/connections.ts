@@ -108,3 +108,13 @@ export function getAllowedRelationshipTypes(sourceType: string, targetType: stri
     ),
   );
 }
+
+// The connections of one item grouped by their label, for example all "uses" in one box and all
+// "used by" in another. Groups keep the order in which their first connection appears.
+export function groupConnectionsByLabel(connections: Connection[]): { label: string; connections: Connection[] }[] {
+  const groups = new Map<string, Connection[]>();
+  for (const connection of connections) {
+    groups.set(connection.label, [...(groups.get(connection.label) ?? []), connection]);
+  }
+  return [...groups].map(([label, list]) => ({ label, connections: list }));
+}

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Item, Template } from "../items/types";
-import { getAllowedRelationshipTypes, getConnectOptions, getConnections } from "./connections";
+import {
+  getAllowedRelationshipTypes,
+  getConnectOptions,
+  getConnections,
+  groupConnectionsByLabel,
+  type Connection,
+} from "./connections";
 import type { Relationship } from "./types";
 
 const template: Template = {
@@ -126,5 +132,22 @@ describe("getAllowedRelationshipTypes", () => {
 
   it("is directional and returns nothing for a combination that is not allowed", () => {
     expect(getAllowedRelationshipTypes("component", "page", withRules)).toEqual([]);
+  });
+});
+
+describe("groupConnectionsByLabel", () => {
+  const uses1: Connection = { id: "a", label: "uses", otherTitle: "Button", otherType: "component" };
+  const usedBy: Connection = { id: "b", label: "used by", otherTitle: "Home", otherType: "page" };
+  const uses2: Connection = { id: "c", label: "uses", otherTitle: "Navbar", otherType: "component" };
+
+  it("puts connections with the same label together, in first-seen order", () => {
+    expect(groupConnectionsByLabel([uses1, usedBy, uses2])).toEqual([
+      { label: "uses", connections: [uses1, uses2] },
+      { label: "used by", connections: [usedBy] },
+    ]);
+  });
+
+  it("returns no groups for no connections", () => {
+    expect(groupConnectionsByLabel([])).toEqual([]);
   });
 });
