@@ -152,11 +152,13 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
 
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
 
-      <div className={styles.grid}>
+      {/* One full-width section per category (or group), stacked. The items of a section fill a grid,
+          so a big section gets more rows instead of one long column. */}
+      <div className={styles.sections}>
         {sections.map((section) => (
-          // A top border in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
-          // --type-color is reused for both: CSS only needs "the color of this card".
-          <section key={section.key} className={`${styles.card} ${styles.sectionCard}`} style={typeColorVar(section.color ?? undefined)}>
+          // The heading line is in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
+          // --type-color is reused for both: CSS only needs "the color of this section".
+          <section key={section.key} style={typeColorVar(section.color ?? undefined)}>
             <h2 className={styles.label}>
               {section.title} <span className={styles.labelCount}>{section.items.length}</span>
             </h2>

@@ -1,12 +1,12 @@
-/* One item: a single line (status, title, tags), then the description cut to one line.
-   The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
+/* One item as a small card in the section's grid: a single line (status, title, tags), then the description
+   cut to one line. The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
-  padding: 8px 0 8px 10px;
-  border-bottom: 1px solid var(--bg-dark);
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-left: 4px solid var(--type-color, var(--border));
-}
-.row:last-child {
-  border-bottom: 0;
+  border-radius: 6px;
 }
 
 .top {

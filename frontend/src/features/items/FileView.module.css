@@ -58,12 +58,11 @@
   font-size: 0.85rem;
 }
 
-/* Two or more cards side by side when there is room, one on a narrow screen */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  align-items: start;
-  gap: 16px;
+/* The sections, one under the other */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .card {
@@ -73,40 +72,42 @@
   border-radius: 12px;
 }
 
-/* A top border in the card's color (--type-color, set by FileView): the item type in "Category" mode,
-   the group in "Group" mode. Grey for "Unknown" and "No group". */
-.sectionCard {
-  border-top: 4px solid var(--type-color, var(--border));
-}
-
-/* Small caps category label, the same as on the overview */
+/* Small caps section label with a line under it in the section's color (--type-color, set by FileView):
+   the item type in "Category" mode, the group in "Group" mode. Grey for "Unknown" and "No group". */
 .label {
   display: flex;
-  justify-content: space-between;
-  margin: 0 0 4px;
-  padding-bottom: 8px;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+  border-bottom: 2px solid var(--type-color, var(--border));
 }
 
 .labelCount {
   font-weight: 400;
+  color: var(--text);
 }
 
+/* The item cards of a section: as many 260px+ columns as fit, filled left to right, top to bottom.
+   min(100%, 260px): on a screen narrower than 260px, one column that fits instead of overflowing. */
 .list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* The description of a group, under its label */
+/* The description of a group, between its label and its items */
 .description {
-  margin: 8px 0 0;
+  margin: 0 0 10px;
   font-size: 0.9rem;
   opacity: 0.8;
 }
