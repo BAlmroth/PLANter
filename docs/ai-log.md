@@ -1363,3 +1363,27 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The `220px` in the map height is an estimate of the bars above the map.
 - Closing the group panel throws away a half-filled "New group" form.
 - ~~Pressing Backspace on a selected node removed it from the map (not from the database) until the page was reloaded.~~ Fixed (`fix: stop Backspace from removing nodes from the map`): React Flow's `deleteKeyCode` defaults to `"Backspace"`, and `useNodesState` applied the remove change locally. Now `deleteKeyCode={null}`. Making Backspace really delete was rejected: the confirmation must list tasks and moodboard entries, which the map does not load, and a one-key delete is easy to trigger by mistake.
+
+## 2026-11-09: Item page layout from a reference screenshot
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** Make the item detail page look like a screenshot I made (a design mock-up of a "LoginForm" component page). I liked where the parts were placed and the styling of the moodboard card.
+
+**What was generated:**
+- **Mapping the screenshot onto PLANter:** the mock-up's left "Directory" is the file list PLANter already has. The "Wireframe preview" became the item's main photo, "Details & Attributes" became four tiles with data the item already has (status, type, number of connections, tasks done), "Connected Relations" became the connections, "Description & Purpose", "Low-Key Warnings" and "Inspiration & Moodboard" went in the side column. Parts of the mock-up with no data in PLANter (versions, "Sync: Live", "Prototype", states/variations, complexity, "Key UX imperatives", the AI audit) were left out.
+- **Header** (`ItemDetail.tsx`): breadcrumb (project / category / item), the title with type badge, MVP badge and groups, and on the right the status pills, Delete and "Edit item". The old "← Back" link is replaced by the breadcrumb.
+- **Two columns** (`ItemDetail.module.css`): a CSS grid `minmax(0, 1fr) 320px`. Main column: main photo on a grey "stage", details tiles (`<dl>`), connections, tasks. Side column: description, warnings, moodboard. Under 1200px wide the columns stack.
+- **Connections grouped by label:** new `groupConnectionsByLabel` in `connections.ts` (with two tests) puts all "uses" in one box, all "used by" in another, and so on. Each connection is a pill with a dot in the item type's color, the title, the type label (so the color never stands alone) and a × to remove it.
+- **Warnings on the item page:** `ItemPage` now takes the project and the warnings from the Outlet context (`useProjectContext`) instead of loading the project a second time, and passes this item's warnings to `ItemDetail`. They are shown as "<item> <message>" with a `--danger` left border.
+- **Compact moodboard card** (`MoodboardCard.module.css`) for the 320px column: smaller link rows with the note cut with "…", 44px swatches, two image cards per row with a 4:3 crop, and a small fixed-size color picker. `ProjectPalette` shares the swatch classes, so the swatches on the Inspiration page are also smaller.
+
+**What I changed or corrected:** (to fill in)
+
+**What went wrong:**
+- The first script to change `ItemDetail.tsx` read a file that had not been written yet and stopped before changing anything. It was run again after the file was written.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck, lint and the 84 frontend tests pass.
+
+**Known limitations:**
+- The 1200px breakpoint is a guess: below it the file list (320px) plus both columns do not fit well.
+- The warnings are loaded with the project and are not reloaded after a change on the item page (for example after adding a task) until you go to another page.
