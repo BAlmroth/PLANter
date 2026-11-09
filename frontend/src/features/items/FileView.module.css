@@ -5,11 +5,13 @@
   gap: 16px;
 }
 
-/* "Files", the number of items, and "Add item" on the right */
-.header {
+/* One row: "Items", the count, Category | Group, the filters, and the actions on the right.
+   flex-wrap: on a narrow screen the parts move onto new rows instead of squeezing. */
+.toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
 .title {
@@ -25,8 +27,18 @@
   border-radius: 4px;
 }
 
-.addButton {
+/* "Manage groups" and "Add item". margin-left: auto takes all free space to the left, pushing them right. */
+.actions {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
+}
+
+/* An outline button for actions that are not the main one */
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
 }
 
 /* Category | Group switch: the active one is filled, the other one is an outline */

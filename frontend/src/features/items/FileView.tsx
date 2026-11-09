@@ -27,6 +27,8 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
   const groups = useGroups(project.id);
   // true while the add form is open
   const [adding, setAdding] = useState(false);
+  // true while the group panel is open. Closed by default, so the page starts with the items.
+  const [managingGroups, setManagingGroups] = useState(false);
   // How the items are divided into cards
   const [mode, setMode] = useState<FileViewMode>("category");
   // Items that do not match are left out of the cards
@@ -70,7 +72,9 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
 
   return (
     <section className={styles.page}>
-      <div className={styles.header}>
+      {/* One toolbar row: title and count, how the cards are divided, the filters, and the two actions on the right.
+          It wraps onto more rows on a narrow screen. */}
+      <div className={styles.toolbar}>
         <h1 className={styles.title}>Items</h1>
         <span className={styles.count}>
           {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
@@ -88,12 +92,37 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
             </button>
           ))}
         </div>
-        {!adding && (
-          <button type="button" className={styles.addButton} onClick={() => setAdding(true)}>
-            + Add item
+        <ItemFilterBar filters={filters} onChange={setFilters} template={loadedTemplate} groups={groups.groups} />
+        <div className={styles.actions}>
+          {/* aria-expanded tells screen readers whether the panel this button controls is open */}
+          <button
+            type="button"
+            className={styles.secondary}
+            aria-expanded={managingGroups}
+            aria-controls="group-panel"
+            onClick={() => setManagingGroups((open) => !open)}
+          >
+            {managingGroups ? "Close groups" : "Manage groups"}
           </button>
-        )}
+          {!adding && (
+            <button type="button" onClick={() => setAdding(true)}>
+              + Add item
+            </button>
+          )}
+        </div>
       </div>
+
+      {managingGroups && (
+        <div id="group-panel">
+          <GroupSection
+            projectId={project.id}
+            groups={groups.groups}
+            setGroups={groups.setGroups}
+            items={items.items}
+            groupColors={loadedTemplate.groupColors}
+          />
+        </div>
+      )}
 
       {/* ItemForm is shared with the map and the item page, so it is styled from here (.addForm) */}
       {adding && (
@@ -121,17 +150,7 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
         </div>
       )}
 
-      <ItemFilterBar filters={filters} onChange={setFilters} template={loadedTemplate} groups={groups.groups} />
-
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
-
-      <GroupSection
-        projectId={project.id}
-        groups={groups.groups}
-        setGroups={groups.setGroups}
-        items={items.items}
-        groupColors={loadedTemplate.groupColors}
-      />
 
       <div className={styles.grid}>
         {sections.map((section) => (
