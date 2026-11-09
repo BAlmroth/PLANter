@@ -5,7 +5,15 @@ import { webTemplate } from "./web.js";
 export type Template = {
   key: string;
   label: string;
-  itemTypes: { key: string; label: string; pluralLabel: string; countsTowardProgress: boolean }[];
+  itemTypes: {
+    key: string;
+    label: string;
+    pluralLabel: string;
+    countsTowardProgress: boolean;
+    // "#RRGGBB". The type's color everywhere in the UI (pill, map node, progress bar).
+    // Presentation only, like the label: it can be changed without a migration.
+    color: string;
+  }[];
   relationshipTypes: {
     key: string;
     label: string;        // shown on the source item "uses: Button"

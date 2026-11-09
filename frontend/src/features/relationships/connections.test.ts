@@ -6,7 +6,7 @@ import type { Relationship } from "./types";
 const template: Template = {
   key: "web",
   label: "Web",
-  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true }],
+  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" }],
   relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true }],
   allowedCombinations: [],
 };
@@ -54,9 +54,9 @@ describe("getConnectOptions", () => {
     key: "web",
     label: "Web",
     itemTypes: [
-      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true },
-      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true },
-      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true },
+      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
+      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#2563A8" },
+      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8" },
     ],
     relationshipTypes: [
       { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },

@@ -8,17 +8,20 @@ export const webTemplate: Template = {
   key: "web",
   label: "Web Project",
 
-  // The order here is the order of the categories in the File view
+  // The order here is the order of the categories in the File view.
+  // Colors: related types share a color family (page/component blue-teal, design/asset
+  // magenta-orange). Each color has at least 4.5:1 contrast (WCAG AA) on white, on --bg
+  // and on its own 12% tint, so it can be used as text inside a pill of the same color.
 itemTypes: [
-  { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true },
-  { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true },
-  { key: "function", label: "Function", pluralLabel: "Functions", countsTowardProgress: true },
-  { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true },
-  { key: "authentication", label: "Authentication", pluralLabel: "Authentication", countsTowardProgress: true },
-  { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true },
-  { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true },
-  { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true },
-  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true },
+  { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
+  { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673" },
+  { key: "function", label: "Function", pluralLabel: "Functions", countsTowardProgress: true, color: "#6D4BB3" },
+  { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true, color: "#8A5A0B" },
+  { key: "authentication", label: "Authentication", pluralLabel: "Authentication", countsTowardProgress: true, color: "#B4234F" },
+  { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true, color: "#A3368F" },
+  { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#A8380A" },
+  { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true, color: "#436C0D" },
+  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563" },
 ],
   relationshipTypes: [
     // A component cannot contain the thing it uses so no cycles

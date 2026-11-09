@@ -53,6 +53,18 @@ describe("web template data", () => {
       expect(r.inverseLabel).not.toBe("");
     }
   });
+
+  it("has a #RRGGBB color for every item type", () => {
+    // The color ends up in a style attribute, so it must be a plain hex color
+    for (const t of webTemplate.itemTypes) {
+      expect(t.color, `color of "${t.key}"`).toMatch(/^#[0-9A-F]{6}$/);
+    }
+  });
+
+  it("has a different color for every item type", () => {
+    const colors = webTemplate.itemTypes.map((t) => t.color);
+    expect(new Set(colors).size).toBe(colors.length);
+  });
 });
 
 describe("getTemplate", () => {

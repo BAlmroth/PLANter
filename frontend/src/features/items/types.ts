@@ -49,6 +49,8 @@ export type Template = {
     label: string;
     pluralLabel: string;
     countsTowardProgress: boolean;
+    // "#RRGGBB", the type's color in the whole UI
+    color: string;
   }[];
   relationshipTypes: {
     key: string;

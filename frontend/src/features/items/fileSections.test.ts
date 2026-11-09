@@ -7,8 +7,8 @@ const template: Template = {
   key: "web",
   label: "Web",
   itemTypes: [
-    { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true },
-    { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true },
+    { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
+    { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8" },
   ],
   relationshipTypes: [],
   allowedCombinations: [],
