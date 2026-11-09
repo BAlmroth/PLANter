@@ -3,15 +3,18 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px;
+  padding: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
 }
 
+/* Same look as the other card titles on the item page: a line under it */
 .heading {
   margin: 0;
-  font-size: 1.25rem;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--bg-dark);
 }
 
 /* The small caps section label ("COLOR PALETTE") */
@@ -33,13 +36,14 @@
   list-style: none;
 }
 
-/* A row: the title as a link, and the note on the right */
+/* A row: the title as a link, and the note on the right (cut with "…" when too long) */
 .link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-  padding: 10px 14px;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 4px 6px 12px;
+  font-size: 0.9rem;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -51,14 +55,20 @@
 }
 .note {
   font-family: var(--mono);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text);
+}
+.link .note {
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 .swatch {
   display: flex;
@@ -66,37 +76,37 @@
   align-items: center;
   gap: 4px;
   position: relative;
-  padding: 8px;
+  padding: 4px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 .chip {
-  width: 64px;
-  height: 40px;
+  width: 44px;
+  height: 32px;
   background: var(--bg-dark);
   border: 1px solid var(--border);
   border-radius: 6px;
 }
 .hex {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-h);
 }
 
-/* Two cards per row, one on a narrow screen */
+/* Two small cards per row in the side column */
 .references {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
 }
 .reference {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
+  gap: 6px;
+  padding: 4px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -104,7 +114,7 @@
 .image {
   display: block;
   width: 100%;
-  max-height: 200px;
+  aspect-ratio: 4 / 3; /* every card the same height, the image is cropped to fit */
   object-fit: cover;
   border-radius: 6px;
 }
@@ -112,7 +122,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
   padding: 0 4px 4px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
 }
 
 /* The small x button. On a swatch or a reference it sits in the corner. */
@@ -131,6 +145,9 @@
   position: absolute;
   top: 2px;
   right: 2px;
+  padding: 0 5px;
+  background: var(--surface); /* stays readable on top of an image or a color */
+  border-radius: 4px;
 }
 
 .form {
@@ -141,6 +158,12 @@
 .formButtons {
   display: flex;
   gap: 8px;
+}
+/* The color picker keeps a small fixed size, the name field takes the rest */
+.formButtons input[type="color"] {
+  flex-shrink: 0;
+  width: 44px;
+  padding: 2px;
 }
 .secondary {
   align-self: flex-start;
