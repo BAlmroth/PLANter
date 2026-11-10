@@ -49,7 +49,8 @@ export function ItemMoodboard({ projectId, itemId, details }: Props) {
       details.setDetails((current) => [...current, withImage]);
     } catch (err) {
       details.setDetails((current) => [...current, created]);
-      throw new Error(`Added, but the image was not: ${messageFrom(err)}`);
+      // cause: keeps the original error attached (for debugging), the card only shows the message
+      throw new Error(`Added, but the image was not: ${messageFrom(err)}`, { cause: err });
     }
   }
 

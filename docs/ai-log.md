@@ -1384,6 +1384,7 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What went wrong:**
 - The first script to change `ItemDetail.tsx` read a file that had not been written yet and stopped before changing anything. It was run again after the file was written.
 - **Browser checks:** the AI did not open the app in a browser. Typecheck, lint and the 84 frontend tests pass.
+- **An old lint error:** `npm run lint` failed on `ItemMoodboard.tsx` (`preserve-caught-error`, from the moodboard commit `7d420b6`), because a new error was thrown in a `catch` without the original. Fixed with `new Error(message, { cause: err })` (`fix: keep the original error as cause in the moodboard image upload`).
 
 **Known limitations:**
 - The 1200px breakpoint is a guess: below it the file list (320px) plus both columns do not fit well.
