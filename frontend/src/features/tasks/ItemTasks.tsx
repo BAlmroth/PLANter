@@ -11,12 +11,14 @@ type Props = {
   tasks: Task[];
   // From useTasks in the parent, which also needs the tasks (for the delete message)
   setTasks: (next: (current: Task[]) => Task[]) => void;
+  // Called after a task was saved, for example to load the warnings again
+  onTaskAdded?: () => void;
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // The tasks of one item, shown on its detail view. New tasks here are linked to the item.
-export function ItemTasks({ projectId, itemId, tasks, setTasks }: Props) {
+export function ItemTasks({ projectId, itemId, tasks, setTasks, onTaskAdded }: Props) {
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,6 +35,7 @@ export function ItemTasks({ projectId, itemId, tasks, setTasks }: Props) {
       const task = await createTask(projectId, { title, itemId });
       setTasks((current) => [...current, task]);
       setTitle("");
+      onTaskAdded?.();
     } catch (err) {
       setError(messageFrom(err));
     } finally {

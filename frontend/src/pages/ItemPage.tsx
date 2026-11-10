@@ -10,5 +10,5 @@ export function ItemPage() {
   const { project, warnings } = useProjectContext();
   const itemWarnings = warnings.byItem.get(itemId) ?? [];
 
-  return <ItemDetail project={project} itemId={itemId} warnings={itemWarnings} />;
+  return <ItemDetail project={project} itemId={itemId} warnings={itemWarnings} refreshWarnings={warnings.refetch} />;
 }

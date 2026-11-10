@@ -40,13 +40,15 @@ type Props = {
   itemId: string;
   // The warnings of this item only (from the project's warnings in ProjectPage)
   warnings: Warning[];
+  // Loads the project's warnings again, after a change that can add or remove one
+  refreshWarnings: () => void;
 };
 
 // The detail view of one item: this is where an item is edited and deleted, and where its
 // connections are added and removed. The File view only shows items.
 // Layout: a header (breadcrumb, title, actions), then a wide main column (photo, details,
 // connections, tasks) and a narrow side column (description, warnings, moodboard).
-export function ItemDetail({ project, itemId, warnings }: Props) {
+export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props) {
   const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
@@ -440,7 +442,14 @@ export function ItemDetail({ project, itemId, warnings }: Props) {
 
           {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
           <section className={`${styles.card} ${styles.tasks}`}>
-            <ItemTasks projectId={project.id} itemId={item.id} tasks={itemTasks} setTasks={tasks.setTasks} />
+            {/* A new task can remove a warning ("is part of the MVP but has no tasks"), so ask again */}
+            <ItemTasks
+              projectId={project.id}
+              itemId={item.id}
+              tasks={itemTasks}
+              setTasks={tasks.setTasks}
+              onTaskAdded={refreshWarnings}
+            />
           </section>
         </div>
 

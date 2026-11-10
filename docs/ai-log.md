@@ -1386,4 +1386,4 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 
 **Known limitations:**
 - The 1200px breakpoint is a guess: below it the file list (320px) plus both columns do not fit well.
-- The warnings are loaded with the project and are not reloaded after a change on the item page (for example after adding a task) until you go to another page.
+- ~~The warnings are loaded with the project and are not reloaded after a change on the item page (for example after adding a task) until you go to another page.~~ Partly fixed on 2026-11-10 (`fix: refresh the warnings after adding a task on the item page`): `ItemTasks` got an optional `onTaskAdded` callback, and the item page passes `warnings.refetch` from the Outlet context. Deleting a task or changing a connection still does not reload them.
