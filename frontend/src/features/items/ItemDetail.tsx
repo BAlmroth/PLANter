@@ -42,13 +42,15 @@ type Props = {
   warnings: Warning[];
   // Loads the project's warnings again, after a change that can add or remove one
   refreshWarnings: () => void;
+  // Loads the progress numbers again (shown in the sub header), after a change to an item's status or type
+  refreshProgress: () => void;
 };
 
 // The detail view of one item: this is where an item is edited and deleted, and where its
 // connections are added and removed. The File view only shows items.
 // Layout: a header (breadcrumb, title, actions), then a wide main column (photo, details,
 // connections, tasks) and a narrow side column (description, warnings, moodboard).
-export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props) {
+export function ItemDetail({ project, itemId, warnings, refreshWarnings, refreshProgress }: Props) {
   const navigate = useNavigate();
   const template = useTemplate(project.template);
   const items = useItems(project.id);
@@ -113,13 +115,14 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
   }
 
   // Sends the changed fields and shows the saved item. Used by the status checkboxes.
-  // A new status can change the warnings, so they are loaded again.
+  // A new status changes the progress and can change the warnings, so both are loaded again.
   async function save(changes: UpdateItemInput) {
     setError(null);
     setBusy(true);
     try {
       replaceItem(await updateItem(item!.id, changes));
       refreshWarnings();
+      refreshProgress();
     } catch (err) {
       setError(messageFrom(err));
     } finally {
@@ -145,6 +148,9 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
     setBusy(true);
     try {
       await deleteItem(item!.id);
+      // The item and its warnings are gone, so the project page needs fresh numbers
+      refreshProgress();
+      refreshWarnings();
       navigate(`/projects/${project.id}`);
     } catch (err) {
       setError(messageFrom(err));
@@ -187,6 +193,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
       items.setItems((current) => [...current, newItem]);
       relationships.setRelationships((current) => [...current, relationship]);
       refreshWarnings();
+      refreshProgress(); // the new item counts as planned
       return null;
     } catch (err) {
       // Undo: remove the item we just created
@@ -260,6 +267,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
               replaceItem(saved);
               // The title, type or MVP flag may have changed, and with them the warnings
               refreshWarnings();
+              refreshProgress(); // a new type moves the item to another category
               setEditing(false);
               return null;
             } catch (err) {

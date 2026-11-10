@@ -4,11 +4,19 @@ import { useProjectContext } from "../features/projects/useProjectContext";
 
 // The detail view of one item: /projects/:projectId/items/:itemId
 // ProjectPage has already loaded the project, so it comes from the Outlet context,
-// together with the project's warnings (the item shows its own).
+// together with the project's warnings (the item shows its own) and progress (refreshed after changes).
 export function ItemPage() {
   const { itemId } = useParams() as { itemId: string };
-  const { project, warnings } = useProjectContext();
+  const { project, warnings, progress } = useProjectContext();
   const itemWarnings = warnings.byItem.get(itemId) ?? [];
 
-  return <ItemDetail project={project} itemId={itemId} warnings={itemWarnings} refreshWarnings={warnings.refetch} />;
+  return (
+    <ItemDetail
+      project={project}
+      itemId={itemId}
+      warnings={itemWarnings}
+      refreshWarnings={warnings.refetch}
+      refreshProgress={progress.refetch}
+    />
+  );
 }
