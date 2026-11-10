@@ -112,12 +112,14 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
     items.setItems((current) => current.map((i) => (i.id === updated.id ? updated : i)));
   }
 
-  // Sends the changed fields and shows the saved item. Used by the checkboxes.
+  // Sends the changed fields and shows the saved item. Used by the status checkboxes.
+  // A new status can change the warnings, so they are loaded again.
   async function save(changes: UpdateItemInput) {
     setError(null);
     setBusy(true);
     try {
       replaceItem(await updateItem(item!.id, changes));
+      refreshWarnings();
     } catch (err) {
       setError(messageFrom(err));
     } finally {
@@ -254,9 +256,10 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
                 saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
                 // The server deleted some connections, so load the list again
                 relationships.refetch();
-                refreshWarnings();
               }
               replaceItem(saved);
+              // The title, type or MVP flag may have changed, and with them the warnings
+              refreshWarnings();
               setEditing(false);
               return null;
             } catch (err) {
