@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
@@ -82,6 +83,7 @@ function GroupForm({ initial, colors, submitLabel, busy, onSubmit, onCancel }: F
 
 // Create, edit and delete the groups of a project, and choose which items are in each group.
 export function GroupSection({ projectId, groups, setGroups, items, groupColors }: Props) {
+  const { confirm, modal } = useConfirm();
   // The group being edited
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +129,7 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
   async function handleDelete(group: Group) {
     const count = group.itemIds.length;
     const alsoChanges = count === 0 ? "" : ` Its ${count === 1 ? "item stays" : `${count} items stay`}.`;
-    if (!window.confirm(`Delete the group "${group.name}"?${alsoChanges}`)) return;
+    if (!(await confirm({ title: "Delete group?", message: `"${group.name}" will be deleted.${alsoChanges}` }))) return;
     await run(async () => {
       await deleteGroup(group.id);
       setGroups((current) => current.filter((g) => g.id !== group.id));
@@ -154,6 +156,7 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
 
   return (
     <section className={styles.card}>
+      {modal}
       <h2 className={styles.label}>
         Groups <span className={styles.labelCount}>{groups.length}</span>
       </h2>

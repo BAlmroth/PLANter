@@ -1390,3 +1390,26 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The 1200px breakpoint is a guess: below it the file list (320px) plus both columns do not fit well.
 - ~~The warnings are loaded with the project and are not reloaded after a change on the item page (for example after adding a task) until you go to another page.~~ Partly fixed on 2026-11-10 (`fix: refresh the warnings after adding a task on the item page`): `ItemTasks` got an optional `onTaskAdded` callback, and the item page passes `warnings.refetch` from the Outlet context. Then also after deleting a task and changing connections (`fix: refresh the warnings after deleting a task or changing connections`): the callback was renamed `onTasksChanged`, the shared `TaskRow` got an optional `onDeleted`, and `ItemDetail` calls `refreshWarnings()` after removing a connection, adding a connected item, connecting an existing item, and a type change that deleted connections. Then also after saving the edit form and after changing the status (`fix: refresh the warnings after editing an item or changing its status`): `refreshWarnings()` is called in `save()` (used by the status checkboxes) and after a successful edit, which also covers a type change that deleted connections. Ticking a task done does not reload them, on purpose (see below).
 - **Progress refresh** (`fix: refresh the progress after status, type and item changes on the item page`): I asked for the progress to reload after a status change and after ticking a task. The AI checked the backend first and pointed out that ticking a task changes neither the progress (only item statuses count, `services/progress.ts`) nor the warnings (the MVP rule only checks if an item has tasks, not if they are done), so that refresh would be a wasted request and was not added. It added a `refreshProgress` prop (`progress.refetch` from the Outlet context) called after a status change, after the edit form (a new type moves the item to another category), after "Add connected item" (a new planned item), and after deleting the item (together with the warnings, before going back to the project page).
+
+## 2026-11-10: Confirmation modal for all deletes
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** Deletes used to use our own modal instead of the browser's built-in alert, but every delete except "delete project" used `window.confirm` again.
+
+**What was generated:**
+- **Finding the cause:** the AI searched for `window.confirm` (8 places) and then the git history. The modal (`ConfirmModal`, `useConfirm`) was made in commit `a69fded` on `feature/errorUi`, which was never merged into the branch I work on. So the code was not lost by a change, it was never here. The project delete is not affected: it has its own inline two-step confirmation in `ProjectSettings`.
+- **Restoring:** `ConfirmModal.tsx`, `ConfirmModal.module.css` and `useConfirm.tsx` were copied from `a69fded` with `git checkout a69fded -- <files>`. Only these three files, not the rest of that commit (form validation with `FormField`).
+- **Using it:** `if (!window.confirm(...))` became `if (!(await confirm({ title, message })))` in `TaskRow`, `SprintSection`, `GroupSection`, `ProjectPalette`, `MapView` and `ItemDetail` (item delete, remove connection, and the "changing the type deletes connections" prompt). Each component calls `useConfirm()` and renders `{modal}`. The warning texts (counts of tasks, connections, entries) are the same as before.
+- `useConfirm` works like `window.confirm`: `confirm()` returns a promise that resolves to `true` or `false`, so the handlers did not need to be restructured.
+
+**What I changed or corrected:** (to fill in)
+
+**What went wrong:**
+- The first replacement script did not add `{modal}` to three components (`GroupSection`, `MapView`, and the edit form branch in `ItemDetail`), because their JSX did not match the pattern. Without it the dialog would never have shown and the delete would have stopped silently. This was found by reading the code and fixed in a second step.
+- `npx tsc --noEmit -p .` printed nothing because the frontend uses project references, so it checked nothing. `npx tsc -b` is the check that works.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck and the 84 frontend tests pass.
+
+**Known limitations:**
+- The modal is not used by project delete (it keeps its own confirmation).
+- No component test: it needs `@testing-library/react`, which is not in the plan.

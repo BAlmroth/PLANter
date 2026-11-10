@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Background, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
@@ -43,6 +44,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   // Shown above the map when saving a position or deleting a connection fails
   const [saveError, setSaveError] = useState<string | null>(null);
   // true while the add item form is open
+  const { confirm, modal } = useConfirm();
   const [adding, setAdding] = useState(false);
   // The connection that was clicked, which offers a delete button
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
@@ -200,7 +202,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   }
 
   async function handleDeleteConnection(id: string) {
-    if (!window.confirm("Remove this connection?")) return;
+    if (!(await confirm({ title: "Remove connection?", message: "This connection will be removed.", confirmLabel: "Remove" }))) return;
     setSaveError(null);
     try {
       await deleteRelationship(id);
@@ -246,6 +248,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     // The controls float over the map in Panels instead of taking space above it.
     // A Panel stays in its corner when the map is moved or zoomed.
     <div className={styles.map}>
+      {modal}
       <ReactFlow
         nodes={shownNodes}
         edges={edges}

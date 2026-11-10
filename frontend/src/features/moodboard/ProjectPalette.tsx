@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/api";
 import { createColor, deleteColor } from "../colors/colorsApi";
@@ -13,6 +14,7 @@ const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "
 export function ProjectPalette({ projectId, editable }: { projectId: string; editable: boolean }) {
   const { colors, links, loading, error, refetch, setColors, setLinks } = useColors(projectId);
   // The browser's color picker always gives "#rrggbb", which the backend accepts
+  const { confirm, modal } = useConfirm();
   const [hex, setHex] = useState("#3e6554");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,7 +42,7 @@ export function ProjectPalette({ projectId, editable }: { projectId: string; edi
     // Say what else the delete does, like the item delete does
     const used = links.filter((link) => link.colorId === color.id).length;
     const alsoRemoves = used === 0 ? "" : ` It is used by ${used} ${used === 1 ? "item" : "items"} and is removed from them.`;
-    if (!window.confirm(`Delete ${color.name ?? color.hex}?${alsoRemoves}`)) return;
+    if (!(await confirm({ title: "Delete color?", message: `${color.name ?? color.hex} will be deleted.${alsoRemoves}` }))) return;
     setActionError(null);
     setBusy(true);
     try {
@@ -56,6 +58,7 @@ export function ProjectPalette({ projectId, editable }: { projectId: string; edi
 
   return (
     <div>
+      {modal}
       <h3 className={styles.label}>Color palette</h3>
       {loading && <p>Loading…</p>}
       {error && (

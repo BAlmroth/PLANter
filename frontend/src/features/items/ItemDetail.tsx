@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
@@ -60,6 +61,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const details = useItemDetails(itemId);
 
   // true while the edit form is open
+  const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
   // Which connect form is open: a new item, an existing item, or none
   const [connecting, setConnecting] = useState<"new" | "existing" | null>(null);
@@ -143,7 +145,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
         `${details.details.length} moodboard ${details.details.length === 1 ? "entry" : "entries"}`,
     ].filter(Boolean);
     const alsoDeletes = parts.length === 0 ? "" : ` This also deletes ${parts.join(" and ")}.`;
-    if (!window.confirm(`Delete "${item!.title}"?${alsoDeletes}`)) return;
+    if (!(await confirm({ title: "Delete item?", message: `"${item!.title}" will be deleted.${alsoDeletes}` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -159,7 +161,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   async function handleRemoveConnection(connection: Connection) {
-    if (!window.confirm(`Remove the connection "${connection.label}: ${connection.otherTitle}"?`)) return;
+    if (!(await confirm({ title: "Remove connection?", message: `"${connection.label}: ${connection.otherTitle}" will be removed.`, confirmLabel: "Remove" }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -227,6 +229,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   if (editing) {
     return (
       <section className={styles.card}>
+        {modal}
         <h1 className={styles.title}>Edit {item.title}</h1>
         <ItemForm
           types={loadedTemplate.itemTypes}
@@ -257,7 +260,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
                 if (count === null) throw err;
                 const newLabel = loadedTemplate.itemTypes.find((t) => t.key === type)?.label ?? type;
                 const what = count === 1 ? "1 connection that is" : `${count} connections that are`;
-                if (!window.confirm(`Changing the type to ${newLabel} deletes ${what} no longer allowed. Continue?`)) {
+                if (!(await confirm({ title: "Change type?", message: `Changing the type to ${newLabel} deletes ${what} no longer allowed.`, confirmLabel: "Change type" }))) {
                   return "The type was not changed.";
                 }
                 saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
@@ -284,6 +287,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
 
   return (
     <div className={styles.page}>
+      {modal}
       {/* --- Header: breadcrumb and title on the left, status and actions on the right --- */}
       <header className={styles.header}>
         <div className={styles.heading}>

@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
@@ -24,6 +25,7 @@ const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
 export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Props) {
+  const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   // "" means no item
@@ -64,7 +66,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Pr
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete the task "${task.title}"?`)) return;
+    if (!(await confirm({ title: "Delete task?", message: `"${task.title}" will be deleted.` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -79,6 +81,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Pr
 
   return (
     <li className={styles.row}>
+      {modal}
       {editing ? (
         <form onSubmit={handleSaveTitle} className={styles.editForm}>
           <input
