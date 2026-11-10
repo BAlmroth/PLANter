@@ -16,12 +16,14 @@ type Props = {
   items?: Item[];
   // The same for the sprint
   sprints?: Sprint[];
+  // Called after the task was deleted, for example to load the warnings again
+  onDeleted?: () => void;
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
-export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
+export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Props) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   // "" means no item
@@ -68,6 +70,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
     try {
       await deleteTask(task.id);
       setTasks((current) => current.filter((t) => t.id !== task.id));
+      onDeleted?.();
     } catch (err) {
       setError(messageFrom(err));
       setBusy(false);

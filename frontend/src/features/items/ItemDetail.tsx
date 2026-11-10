@@ -157,6 +157,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
     try {
       await deleteRelationship(connection.id);
       relationships.setRelationships((current) => current.filter((r) => r.id !== connection.id));
+      refreshWarnings();
     } catch (err) {
       setError(messageFrom(err));
     } finally {
@@ -183,6 +184,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
       });
       items.setItems((current) => [...current, newItem]);
       relationships.setRelationships((current) => [...current, relationship]);
+      refreshWarnings();
       return null;
     } catch (err) {
       // Undo: remove the item we just created
@@ -206,6 +208,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
         type: option.relationshipType,
       });
       relationships.setRelationships((current) => [...current, relationship]);
+      refreshWarnings();
       return null;
     } catch (err) {
       return messageFrom(err);
@@ -251,6 +254,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
                 saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
                 // The server deleted some connections, so load the list again
                 relationships.refetch();
+                refreshWarnings();
               }
               replaceItem(saved);
               setEditing(false);
@@ -442,13 +446,13 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings }: Props
 
           {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
           <section className={`${styles.card} ${styles.tasks}`}>
-            {/* A new task can remove a warning ("is part of the MVP but has no tasks"), so ask again */}
+            {/* Adding or deleting a task can add or remove a warning ("is part of the MVP but has no tasks"), so ask again */}
             <ItemTasks
               projectId={project.id}
               itemId={item.id}
               tasks={itemTasks}
               setTasks={tasks.setTasks}
-              onTaskAdded={refreshWarnings}
+              onTasksChanged={refreshWarnings}
             />
           </section>
         </div>
