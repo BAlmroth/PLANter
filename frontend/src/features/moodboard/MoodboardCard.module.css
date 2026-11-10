@@ -9,12 +9,65 @@
   border-radius: 12px;
 }
 
-/* Same look as the other card titles on the item page: a line under it */
+/* The title on the left and the edit button on the right, with a line under both
+   (the same look as the other card titles on the item page) */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--bg-dark);
+}
 .heading {
   margin: 0;
-  padding-bottom: 10px;
   font-size: 1.1rem;
-  border-bottom: 1px solid var(--bg-dark);
+}
+
+/* The pencil button: a small square, filled green while the card is in edit mode */
+.editButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.editButton:hover {
+  color: var(--text-h);
+  border-color: var(--borderDark);
+}
+.editButton.active {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* The two choices in edit mode, side by side */
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The open form (color, or link/text/image) in a light box, so it is clearly separate from the content */
+.editBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px dashed var(--borderDark);
+  border-radius: var(--radius);
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
 }
 
 /* The small caps section label ("COLOR PALETTE") */

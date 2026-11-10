@@ -1379,6 +1379,7 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - **Compact moodboard card** (`MoodboardCard.module.css`) for the 320px column: smaller link rows with the note cut with "…", 44px swatches, two image cards per row with a 4:3 crop, and a small fixed-size color picker. `ProjectPalette` shares the swatch classes, so the swatches on the Inspiration page are also smaller.
 
 **What I changed or corrected:** (to fill in)
+- **Moodboard edit mode** (`feat: hide the moodboard forms behind an edit button`): the color form and the "+ Add link or image" button were always shown and took a lot of space in the side column. I asked for an edit icon at the top of the card that opens the choices. Now the header has a pencil button (an inline SVG, no icon library, `aria-pressed` and an `aria-label`). It opens edit mode with two choices, "+ Color" and "+ Link, text or image", and each shows only its own form in a dashed box, with a "Back" button. The AI also suggested showing the × delete buttons only in edit mode, so the normal view is just the content. "Color palette" is only shown when the item has colors, and an empty card says how to add something. After adding an entry the card goes back to the two choices.
 
 **What went wrong:**
 - The first script to change `ItemDetail.tsx` read a file that had not been written yet and stopped before changing anything. It was run again after the file was written.

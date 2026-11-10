@@ -25,10 +25,31 @@ type Props = {
 const messageFrom = (err: unknown) =>
   err instanceof ApiError || err instanceof Error ? err.message : "Something went wrong.";
 
+// What the card shows: only the content (null), the two edit choices ("menu"),
+// the color form ("color"), or the form for a link, text or image ("entry").
+type Mode = null | "menu" | "color" | "entry";
+
+// A pencil, drawn with currentColor so it takes the button's text color
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path
+        d="M11 2.5 L13.5 5 L5.5 13 L2.5 13.5 L3 10.5 Z M9.5 4 L12 6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // The inspiration and moodboard card: links with notes, a color palette, and visual references (images).
-// Used for one item, and for the whole project. Add and delete buttons are inside the card.
+// Normally it only shows the content. The edit button in the header opens the edit mode: two choices
+// (add a color, add a link/text/image), and the delete buttons on every entry and color.
 export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEntry, onRemoveColor, colorForm }: Props) {
-  const [adding, setAdding] = useState(false);
+  const [mode, setMode] = useState<Mode>(null);
+  const editing = mode !== null;
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
@@ -77,7 +98,8 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
       setText("");
       setImage(null);
       setFileInputKey((key) => key + 1);
-      setAdding(false);
+      // Back to the two choices, so it is easy to add one more
+      setMode("menu");
     });
   }
 
@@ -93,7 +115,63 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
 
   return (
     <section className={styles.card}>
-      <h2 className={styles.heading}>{heading}</h2>
+      <div className={styles.header}>
+        <h2 className={styles.heading}>{heading}</h2>
+        <button
+          type="button"
+          className={editing ? `${styles.editButton} ${styles.active}` : styles.editButton}
+          onClick={() => {
+            setMode(editing ? null : "menu");
+            setError(null);
+          }}
+          aria-label={editing ? `Stop editing ${heading}` : `Edit ${heading}`}
+          aria-pressed={editing}
+          title={editing ? "Done" : "Edit"}
+        >
+          <EditIcon />
+        </button>
+      </div>
+
+      {/* The two choices, and the form of the chosen one */}
+      {mode === "menu" && (
+        <div className={styles.menu}>
+          <button type="button" className={styles.secondary} onClick={() => setMode("color")}>
+            + Color
+          </button>
+          <button type="button" className={styles.secondary} onClick={() => setMode("entry")}>
+            + Link, text or image
+          </button>
+        </div>
+      )}
+      {mode === "color" && (
+        <div className={styles.editBox}>
+          {colorForm}
+          <button type="button" className={styles.secondary} onClick={() => setMode("menu")}>
+            Back
+          </button>
+        </div>
+      )}
+      {mode === "entry" && (
+        <form onSubmit={handleAdd} className={`${styles.form} ${styles.editBox}`}>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={100} />
+          <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
+          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Short description (optional)" aria-label="Description" maxLength={2000} rows={2} />
+          <input key={fileInputKey} type="file" accept={IMAGE_TYPES.join(",")} onChange={(e) => pickImage(e.target.files?.[0])} aria-label="Image" />
+          <div className={styles.formButtons}>
+            <button type="submit" disabled={busy}>
+              {busy ? "Adding…" : "Add"}
+            </button>
+            <button type="button" className={styles.secondary} onClick={() => setMode("menu")} disabled={busy}>
+              Back
+            </button>
+          </div>
+        </form>
+      )}
+      {error && <p role="alert" className={styles.error}>{error}</p>}
+
+      {entries.length === 0 && colors.length === 0 && !editing && (
+        <p className={styles.empty}>Nothing here yet. Use the edit button to add colors, links or images.</p>
+      )}
 
       {links.length > 0 && (
         <ul className={styles.links}>
@@ -101,30 +179,35 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
             <li key={entry.id} className={styles.link}>
               <span className={styles.linkTitle}>{label(entry)}</span>
               {entry.text && <span className={styles.note}>{entry.text}</span>}
-              <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onDeleteEntry(entry.id))} aria-label={`Delete ${entry.title}`}>
-                ×
-              </button>
+              {editing && (
+                <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onDeleteEntry(entry.id))} aria-label={`Delete ${entry.title}`}>
+                  ×
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
 
-      <h3 className={styles.label}>Color palette</h3>
       {colors.length > 0 && (
-        <ul className={styles.swatches}>
-          {colors.map((color) => (
-            <li key={color.id} className={styles.swatch} title={color.name ?? undefined}>
-              {/* The color only reaches the style attribute when it is a valid #RRGGBB */}
-              <span className={styles.chip} style={isHexColor(color.hex) ? { background: color.hex } : undefined} />
-              <span className={styles.hex}>{color.hex}</span>
-              <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onRemoveColor(color.id))} aria-label={`Remove ${color.hex}`}>
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <h3 className={styles.label}>Color palette</h3>
+          <ul className={styles.swatches}>
+            {colors.map((color) => (
+              <li key={color.id} className={styles.swatch} title={color.name ?? undefined}>
+                {/* The color only reaches the style attribute when it is a valid #RRGGBB */}
+                <span className={styles.chip} style={isHexColor(color.hex) ? { background: color.hex } : undefined} />
+                <span className={styles.hex}>{color.hex}</span>
+                {editing && (
+                  <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onRemoveColor(color.id))} aria-label={`Remove ${color.hex}`}>
+                    ×
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
-      {colorForm}
 
       {references.length > 0 && (
         <>
@@ -139,36 +222,16 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
                   {/* Rendered as text only (React escapes it) */}
                   {entry.text && <span className={styles.note}>{entry.text}</span>}
                 </div>
-                <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onDeleteEntry(entry.id))} aria-label={`Delete ${entry.title}`}>
-                  ×
-                </button>
+                {editing && (
+                  <button type="button" className={styles.remove} disabled={busy} onClick={() => run(() => onDeleteEntry(entry.id))} aria-label={`Delete ${entry.title}`}>
+                    ×
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         </>
       )}
-
-      {adding ? (
-        <form onSubmit={handleAdd} className={styles.form}>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={100} />
-          <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Short description (optional)" aria-label="Description" maxLength={2000} rows={2} />
-          <input key={fileInputKey} type="file" accept={IMAGE_TYPES.join(",")} onChange={(e) => pickImage(e.target.files?.[0])} aria-label="Image" />
-          <div className={styles.formButtons}>
-            <button type="submit" disabled={busy}>
-              {busy ? "Adding…" : "Add"}
-            </button>
-            <button type="button" className={styles.secondary} onClick={() => setAdding(false)} disabled={busy}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button type="button" className={styles.secondary} onClick={() => setAdding(true)}>
-          + Add link or image
-        </button>
-      )}
-      {error && <p role="alert" className={styles.error}>{error}</p>}
     </section>
   );
 }
