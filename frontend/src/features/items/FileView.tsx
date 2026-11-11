@@ -76,7 +76,6 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
       {/* One toolbar row: title and count, how the cards are divided, the filters, and the two actions on the right.
           It wraps onto more rows on a narrow screen. */}
       <div className={styles.toolbar}>
-        <h1 className={styles.title}>Items</h1>
         <span className={styles.count}>
           {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
         </span>

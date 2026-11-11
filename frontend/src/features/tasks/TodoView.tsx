@@ -97,7 +97,6 @@ export function TodoView({ project }: { project: Project }) {
   return (
     <section className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Tasks</h1>
         <span className={styles.count}>{tasks.tasks.filter((task) => !task.done).length} pending</span>
       </div>
 

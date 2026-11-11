@@ -109,7 +109,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   if (!item) {
     return (
       <>
-        <h1>Item not found</h1>
+        <h2>Item not found</h2>
         <p>
           <Link to={`/projects/${project.id}`}>Back to {project.name}</Link>
         </p>

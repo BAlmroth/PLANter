@@ -14,11 +14,6 @@
   gap: 8px 12px;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
 .count {
   padding: 2px 8px;
   font-family: var(--mono);
