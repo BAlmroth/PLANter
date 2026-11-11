@@ -15,7 +15,7 @@ export const webTemplate: Template = {
 itemTypes: [
   { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
   { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673" },
-  { key: "function", label: "Function", pluralLabel: "Functions", countsTowardProgress: true, color: "#6D4BB3" },
+  { key: "function", label: "Functionality", pluralLabel: "Functionality", countsTowardProgress: true, color: "#6D4BB3" },
   { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true, color: "#8A5A0B" },
   { key: "authentication", label: "Authentication", pluralLabel: "Authentication", countsTowardProgress: true, color: "#B4234F" },
   { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true, color: "#A3368F" },

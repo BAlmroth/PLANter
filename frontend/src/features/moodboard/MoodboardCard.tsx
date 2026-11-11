@@ -19,7 +19,11 @@ type Props = {
   onDeleteEntry: (id: string) => Promise<void>;
   onRemoveColor: (id: string) => Promise<void>;
   // The form for adding a color. It differs per page (an item picks from the palette, the project adds to it).
-  colorForm: ReactNode;
+  // Without it the card has no colors, and the edit button opens the entry form directly.
+  colorForm?: ReactNode;
+  // Which fields the entry form has (both by default). The project moodboard has no link, the inspiration card no image.
+  allowUrl?: boolean;
+  allowImage?: boolean;
 };
 
 const messageFrom = (err: unknown) =>
@@ -30,7 +34,7 @@ const messageFrom = (err: unknown) =>
 type Mode = null | "menu" | "color" | "entry";
 
 // A pencil, drawn with currentColor so it takes the button's text color
-function EditIcon() {
+export function EditIcon() {
   return (
     <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
       <path
@@ -47,9 +51,21 @@ function EditIcon() {
 // The inspiration and moodboard card: links with notes, a color palette, and visual references (images).
 // Normally it only shows the content. The edit button in the header opens the edit mode: two choices
 // (add a color, add a link/text/image), and the delete buttons on every entry and color.
-export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEntry, onRemoveColor, colorForm }: Props) {
+export function MoodboardCard({
+  heading,
+  entries,
+  colors,
+  onAddEntry,
+  onDeleteEntry,
+  onRemoveColor,
+  colorForm,
+  allowUrl = true,
+  allowImage = true,
+}: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const editing = mode !== null;
+  // Where edit mode starts: the two choices, or the entry form when there is no color form
+  const home: Mode = colorForm ? "menu" : "entry";
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
@@ -57,6 +73,9 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
   // A file input cannot be cleared from React, so changing its key makes a fresh one
   const [fileInputKey, setFileInputKey] = useState(0);
   const [busy, setBusy] = useState(false);
+  // "+ Link, text or image", with the parts the form does not have left out
+  const entryParts = [allowUrl && "link", "text", allowImage && "image"].filter(Boolean).join(", ");
+  const entryLabel = `+ ${entryParts.replace(/, ([^,]*)$/, " or $1").replace(/^./, (c) => c.toUpperCase())}`;
   const [error, setError] = useState<string | null>(null);
 
   // An entry with an image is a visual reference. All the others are links and notes.
@@ -99,7 +118,7 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
       setImage(null);
       setFileInputKey((key) => key + 1);
       // Back to the two choices, so it is easy to add one more
-      setMode("menu");
+      setMode(home);
     });
   }
 
@@ -121,7 +140,7 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
           type="button"
           className={editing ? `${styles.editButton} ${styles.active}` : styles.editButton}
           onClick={() => {
-            setMode(editing ? null : "menu");
+            setMode(editing ? null : home);
             setError(null);
           }}
           aria-label={editing ? `Stop editing ${heading}` : `Edit ${heading}`}
@@ -133,17 +152,17 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
       </div>
 
       {/* The two choices, and the form of the chosen one */}
-      {mode === "menu" && (
+      {mode === "menu" && colorForm && (
         <div className={styles.menu}>
           <button type="button" className={styles.secondary} onClick={() => setMode("color")}>
             + Color
           </button>
           <button type="button" className={styles.secondary} onClick={() => setMode("entry")}>
-            + Link, text or image
+            {entryLabel}
           </button>
         </div>
       )}
-      {mode === "color" && (
+      {mode === "color" && colorForm && (
         <div className={styles.editBox}>
           {colorForm}
           <button type="button" className={styles.secondary} onClick={() => setMode("menu")}>
@@ -154,23 +173,29 @@ export function MoodboardCard({ heading, entries, colors, onAddEntry, onDeleteEn
       {mode === "entry" && (
         <form onSubmit={handleAdd} className={`${styles.form} ${styles.editBox}`}>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={100} />
-          <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
+          {allowUrl && (
+            <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />
+          )}
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Short description (optional)" aria-label="Description" maxLength={2000} rows={2} />
-          <input key={fileInputKey} type="file" accept={IMAGE_TYPES.join(",")} onChange={(e) => pickImage(e.target.files?.[0])} aria-label="Image" />
+          {allowImage && (
+            <input key={fileInputKey} type="file" accept={IMAGE_TYPES.join(",")} onChange={(e) => pickImage(e.target.files?.[0])} aria-label="Image" />
+          )}
           <div className={styles.formButtons}>
             <button type="submit" disabled={busy}>
               {busy ? "Adding…" : "Add"}
             </button>
-            <button type="button" className={styles.secondary} onClick={() => setMode("menu")} disabled={busy}>
-              Back
-            </button>
+            {colorForm && (
+              <button type="button" className={styles.secondary} onClick={() => setMode("menu")} disabled={busy}>
+                Back
+              </button>
+            )}
           </div>
         </form>
       )}
       {error && <p role="alert" className={styles.error}>{error}</p>}
 
       {entries.length === 0 && colors.length === 0 && !editing && (
-        <p className={styles.empty}>Nothing here yet. Use the edit button to add colors, links or images.</p>
+        <p className={styles.empty}>Nothing here yet. Use the edit button to add something.</p>
       )}
 
       {links.length > 0 && (

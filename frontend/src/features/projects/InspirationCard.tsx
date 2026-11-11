@@ -14,8 +14,8 @@ export function InspirationCard({ projectId }: { projectId: string }) {
 
   return (
     <OverviewCard
-      label="Inspiration"
-      to="inspiration"
+      label="Moodboard & inspiration"
+      to="moodboard"
       aside={!loading && !error && <span className={styles.meta}>{inspirations.length}</span>}
     >
       {loading && <p>Loading…</p>}

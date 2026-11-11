@@ -1413,3 +1413,34 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **Known limitations:**
 - The modal is not used by project delete (it keeps its own confirmation).
 - No component test: it needs `@testing-library/react`, which is not in the plan.
+
+## 2026-11-11: Moodboard page, "Functionality" label
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. The Inspiration card on the overview should be called "Moodboard & inspiration". The Inspiration page should have a "Moodboard" section on top and the inspiration lower down.
+2. The item type "Function" should be labelled "Functionality", because it is easier to understand.
+3. Then: I should be able to add images and texts to the moodboard too, the input form should be hidden behind an edit icon until it is pressed, and the tab should be called "Moodboard".
+
+**What was generated:**
+- **Label** (`backend/src/templates/web.ts`): the item type with key `function` now has the label and plural label "Functionality". The key is unchanged (keys are permanent, only labels change), so no migration is needed.
+- **Overview card:** `InspirationCard` is labelled "Moodboard & inspiration" and links to the new `/moodboard` route.
+- **Tab and route:** the project tab is "Moodboard" and the route `inspiration` was renamed to `moodboard` (`App.tsx`, `ProjectSubHeader.tsx`).
+- **Decision:** the AI noticed that a project moodboard with images and texts needs somewhere to store them and asked me, because a new table needs a migration and CLAUDE.md says to ask before adding things. I chose to reuse `project_inspirations`: a row with a link is inspiration, a row without a link is moodboard.
+- **`MoodboardCard`** (already used on the item page) got three optional props: `allowUrl`, `allowImage`, and an optional `colorForm`. Without `colorForm` the edit button opens the entry form directly. The label of the add button is built from the allowed fields. `EditIcon` is exported.
+- **New `ProjectMoodboard.tsx`:** the project's moodboard card with the color palette (add, delete with the same "used by N items" confirmation as before) and text/image entries (two requests: the row, then the image). It has no link field.
+- **`InspirationPageCard.tsx`** was rewritten: one `useInspirations` call, `ProjectMoodboard` on top (entries without a url) and a `MoodboardCard` titled "Inspiration" below (entries with a url, no image field, no colors). Both hide their forms behind the pencil button.
+
+**What I changed or corrected:** (to fill in)
+
+**What went wrong:**
+- The first `sed -i` calls to rename the route failed on macOS (they need `-i ''`), so the renames were redone with a small Python script. Until then, the tab and route were out of sync for one step.
+- **Browser checks:** the AI did not open the app in a browser. `npx tsc -b`, `npm run build` and the 84 frontend tests pass. The backend test output was not read, but the only backend change is a label.
+
+**Known limitations:**
+- Entries with both a link and an image (made before this change) now show under Inspiration, which has no image field, so their image is not shown.
+- The old inline edit of an inspiration entry (title, link, notes, replace image) is gone: `MoodboardCard` can only add and delete.
+- The old `/inspiration` URL no longer works.
+- `ProjectPalette` still has an `editable` branch that nothing uses now.
+- Moodboard and inspiration are told apart only by whether a link exists, not by a stored column.

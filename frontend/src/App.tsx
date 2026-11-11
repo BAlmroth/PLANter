@@ -31,7 +31,7 @@ export function App() {
           <Route path="/projects/:projectId" element={<ProjectPage />}>
             <Route index element={<ProjectOverview />} />
             <Route path="description" element={<DescriptionPage />} />
-            <Route path="inspiration" element={<InspirationPage />} />
+            <Route path="moodboard" element={<InspirationPage />} />
             <Route path="plan" element={<PlanPage />} />
             {/* Old addresses (bookmarks, links) now open the combined page */}
             <Route path="files" element={<Navigate to="../plan?view=list" replace />} />

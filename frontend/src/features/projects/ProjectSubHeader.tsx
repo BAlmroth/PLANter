@@ -27,9 +27,9 @@ export function ProjectSubHeader({ project, progress, onNavigate }: Props) {
         <NavLink to="" end className={linkClass} onClick={onNavigate}>
           Overview
         </NavLink>
-      <NavLink to="inspiration" className={linkClass} onClick={onNavigate}>
-        Inspiration
-      </NavLink>
+        <NavLink to="moodboard" className={linkClass} onClick={onNavigate}>
+          Moodboard
+        </NavLink>
         <NavLink to="plan" className={linkClass} onClick={onNavigate}>
           Items
         </NavLink>
