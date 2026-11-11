@@ -20,6 +20,7 @@ const PAGE_TITLES: Record<string, string> = {
   moodboard: "Moodboard",
   plan: "Items",
   tasks: "Tasks & progress",
+  checklist: "Checklist",
 };
 
 // The bar under the header on every project page: the trail and title of the page we are on, and the progress.
@@ -37,6 +38,14 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
     crumbs = [
       { label: project.name, to: base },
       { label: itemCrumb?.typeLabel ?? "Items", to: `${base}/plan?view=list` },
+      { label: title },
+    ];
+  } else if (section === "checklist") {
+    // The checklist is opened from Tasks & progress (not from the nav), so the trail goes back there
+    title = PAGE_TITLES.checklist;
+    crumbs = [
+      { label: project.name, to: base },
+      { label: PAGE_TITLES.tasks, to: `${base}/tasks` },
       { label: title },
     ];
   } else if (section === "") {

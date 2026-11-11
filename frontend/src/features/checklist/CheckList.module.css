@@ -1,0 +1,79 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Same small caps style as the other card labels, with "3 / 5" next to it */
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-h);
+}
+
+.count {
+  font-weight: 400;
+  color: var(--text);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One check: mark, label, and the link pushed to the right. Wraps on a narrow screen. */
+.passed,
+.failed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 0.95rem;
+}
+
+.mark {
+  width: 1.2em;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ✗ in the warning color. ✓ in the brand color, and the label is quieter: it is done. */
+.failed .mark {
+  color: var(--danger);
+}
+.passed .mark {
+  color: var(--primary);
+}
+.failed .label {
+  color: var(--text-h);
+}
+.passed .label {
+  color: var(--text);
+}
+
+.link {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+/* Read by screen readers, not shown on screen */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

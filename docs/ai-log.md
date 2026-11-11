@@ -1545,3 +1545,19 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - **File name clash:** `YetToPlan.tsx` (component) and `yetToPlan.ts` (helper) differ only in case. macOS file names are case-insensitive, so the import found the helper. The typecheck caught it once the component was imported. The helper was renamed to `missingCategories.ts`.
 - **Vite cache:** after the rename, the running dev server still used the old resolution ("does not provide an export named 'YetToPlan'"). Restarting the dev server fixed it.
 - Frontend typecheck, lint, 93 tests and the build pass. I checked the page in the browser after each round.
+
+## 2026-11-11: Checklist page (step 4)
+
+**What I asked:** The full checklist page that "See full checklist" and "and N more" link to. Then: the "Fix missing connections" and "Add tasks to every MVP item" checks should point to the item warnings on the same page instead of to the map and the tasks page, so you see which items are the problem instead of guessing.
+
+**What was generated:**
+- `pages/ChecklistPage.tsx`: "Before you start programming" (summary "6 of 9 done", groups "Categories" and "Ready to build") and "Item warnings" (the full list, no limit). Loading and error states on both cards. Route `checklist`, not in the nav. The sub header trail is Project › Tasks & progress › Checklist.
+- `features/checklist/CheckList.tsx`: ✓ (`--primary`) or ✗ (`--danger`) per check, hidden from screen readers, which get "Done:" / "Not done:" as text instead.
+- `features/checklist/checkLinks.ts` (+ tests): where a failed check links to. Category checks go to the item list (by `kind`, so a new template needs no code change), the sprint check to Tasks & progress, and the MVP tasks and connections checks to `#item-warnings` on the same page (a plain `<a href>`, the browser scrolls by itself). Unknown keys get no link. Navigation only, the rules stay in the backend.
+
+**What I changed or corrected:**
+- The AI first linked "Fix missing connections" to the map and "Add tasks to every MVP item" to the tasks page. I changed both to jump to the item warnings below, which name the exact items.
+
+**What went wrong:** Nothing. Frontend typecheck, lint, 97 tests and the build pass, and I checked the page in the browser.
+
+**Result of the warnings redesign (steps 1–4):** the backend has a project checklist (`GET /api/projects/:id/checklist`) next to the item warnings. The item list shows progress per category. Tasks & progress is one page: progress, "Yet to plan" and item warnings on top, tasks and sprints below, with a toggle that jumps between them. The checklist page shows everything with ✓/✗ and links to where each thing is fixed. The separate Progress page is gone (`/progress` redirects), and total and per-category progress (a Must) are still shown.

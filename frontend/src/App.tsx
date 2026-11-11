@@ -6,6 +6,7 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { ItemPage } from "./pages/ItemPage";
 import { DescriptionPage, InspirationPage, PlanPage } from "./pages/ProjectViews";
 import { TasksPage } from "./pages/TasksPage";
+import { ChecklistPage } from "./pages/ChecklistPage";
 import { ProjectOverview } from "./features/projects/ProjectOverview";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
@@ -40,6 +41,7 @@ export function App() {
             <Route path="tasks" element={<TasksPage />} />
             {/* Progress is now on the Tasks & progress page */}
             <Route path="progress" element={<Navigate to="../tasks" replace />} />
+            <Route path="checklist" element={<ChecklistPage />} />
             <Route path="items/:itemId" element={<ItemPage />} />
           </Route>
           </Route>
