@@ -11,6 +11,8 @@ import styles from "./ProjectOverview.module.css";
 
 // How many pending tasks the todo card lists
 const TODO_LIMIT = 5;
+// How many tech stack items the tech stack card lists
+const TECH_LIMIT = 5;
 
 // The first page of a project: cards with the description, inspiration, tech stack (top row), todo list and sprints (bottom row).
 // Every card is a summary: a click on it opens its own page, a click on an item opens the item.
@@ -52,7 +54,7 @@ export function ProjectOverview() {
           <p>No tech stack items yet.</p>
         ) : (
           <ul className={styles.list}>
-            {techItems.map((item) => (
+            {techItems.slice(0, TECH_LIMIT).map((item) => (
               <li key={item.id} className={styles.listRow}>
                 <Link to={`items/${item.id}`} className={styles.itemLink}>
                   {item.title}

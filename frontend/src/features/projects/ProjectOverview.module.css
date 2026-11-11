@@ -107,6 +107,14 @@
   border-bottom: 1px solid var(--bg-dark);
 }
 
+/* A row that never wraps: a long title is cut with "…" so the card stays short */
+.oneLine {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Inspiration image: never wider than its card, and never taller than 240px */
 .inspirationImage {
   display: block;

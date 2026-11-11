@@ -4,7 +4,7 @@ import { OverviewCard } from "./OverviewCard";
 import styles from "./ProjectOverview.module.css";
 
 // How many entries the overview card lists, the rest is on the inspiration page
-const INSPIRATION_LIMIT = 5;
+const INSPIRATION_LIMIT = 3;
 
 // Summary of the project's moodboard on the overview (text titles and the color palette). A click opens the inspiration page.
 // Not items, so they never count toward progress.
@@ -31,7 +31,7 @@ export function InspirationCard({ projectId }: { projectId: string }) {
       {!loading && !error && texts.length > 0 && (
         <ul className={styles.list}>
           {texts.slice(0, INSPIRATION_LIMIT).map((entry) => (
-            <li key={entry.id} className={styles.listRow}>
+            <li key={entry.id} className={`${styles.listRow} ${styles.oneLine}`}>
               {entry.title}
             </li>
           ))}
