@@ -81,4 +81,14 @@ itemTypes: [
     // A function nothing triggers is probably never run
     { key: "function_not_triggered", itemType: "function", relationship: "triggers", direction: "incoming", message: "is not triggered by anything" },
   ],
+
+  // The categories people tend to forget until the end. Assets are left out on purpose:
+  // some projects really have none, and a check that is often wrong gets ignored.
+  checklistItemTypes: [
+    { itemType: "design", label: "Plan the design" },
+    { itemType: "tech_stack", label: "Choose the tech stack" },
+    { itemType: "data", label: "Plan the data" },
+    { itemType: "authentication", label: "Plan authentication" },
+    { itemType: "testing", label: "Plan the tests" },
+  ],
 };

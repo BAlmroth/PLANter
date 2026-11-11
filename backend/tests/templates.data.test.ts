@@ -92,6 +92,22 @@ describe("getTemplate", () => {
   });
 });
 
+describe("web template checklist types", () => {
+  const itemKeys = webTemplate.itemTypes.map((t) => t.key);
+
+  it("only uses item types that exist", () => {
+    // A check for a type that does not exist could never pass
+    for (const entry of webTemplate.checklistItemTypes) {
+      expect(itemKeys, `item type "${entry.itemType}"`).toContain(entry.itemType);
+    }
+  });
+
+  it("lists each item type once", () => {
+    const types = webTemplate.checklistItemTypes.map((e) => e.itemType);
+    expect(new Set(types).size).toBe(types.length);
+  });
+});
+
 describe("web template warning rules", () => {
   const itemKeys = webTemplate.itemTypes.map((t) => t.key);
   const relationshipKeys = webTemplate.relationshipTypes.map((t) => t.key);

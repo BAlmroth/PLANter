@@ -57,9 +57,9 @@ export function findWarnings(
   return warnings;
 }
 
-// GET PROJECT WARNINGS
+// Loads what findWarnings needs. Shared with the checklist, so both always look at the same data.
 // The ownership check runs first. Its 404 is the same answer for "not yours" and "does not exist".
-export async function getProjectWarnings(projectId: string, userId: string): Promise<Warning[]> {
+export async function loadWarningInput(projectId: string, userId: string) {
   const project = await getOwnedProject(projectId, userId);
 
   // A project with an unknown template is a data bug, not a user mistake, so it throws a plain Error (500)
@@ -79,5 +79,11 @@ export async function getProjectWarnings(projectId: string, userId: string): Pro
     prisma.task.findMany({ where: { projectId, itemId: { not: null } }, select: { itemId: true } }),
   ]);
 
+  return { template, items, relationships, tasks };
+}
+
+// GET PROJECT WARNINGS
+export async function getProjectWarnings(projectId: string, userId: string): Promise<Warning[]> {
+  const { template, items, relationships, tasks } = await loadWarningInput(projectId, userId);
   return findWarnings(template, items, relationships, tasks);
 }

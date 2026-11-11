@@ -1479,3 +1479,28 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The earlier limitation "moodboard and inspiration are told apart only by whether a link exists" no longer applies: there is now a `section` column.
 - The section of an entry cannot be changed after it is created (no edit, only delete and add again).
 - Entries with both a link and an image made before this change are now under Inspiration, and show their image since the Inspiration card allows images.
+
+## 2026-11-11: Project checklist ("Yet to plan" and "Before you start programming"), backend
+
+**What I asked:**
+1. Explain what the current warnings warn about.
+2. How to add warnings for things you usually forget (tests, authentication...) without cluttering the UI.
+3. A redesign: combine the Tasks and Progress pages, remove the separate Progress page, add a progress bar per category in the item list and a progress ring (total) on the combined page, a short "yet to plan" bulletin and a separate page with the full checklist ("before you start programming").
+4. Start with step 1 (backend).
+
+**What was generated:**
+- **Advice before building:** the AI split "forgot" into two kinds: a whole category missing (project level, little noise) and a single item not covered, e.g. "page not protected" (a lot of noise, since many pages are public). It advised building the project-level checks first and only narrow item-level rules later. It flagged that progress is a Must, so removing the Progress page is only fine if total and per-category progress stay visible elsewhere, and that a ring split into type colors would mix "share of items" and "progress". I chose ring (a): one ring for total progress, category bars next to it.
+- **Template data:** `checklistItemTypes` in `Template` and `web.ts`: Design, Tech stack, Data, Authentication, Tests (not Assets, some projects have none). Labels are written as todos ("Plan the tests").
+- **Service** `services/checklist.ts`: pure function `buildChecklist` that returns every check with `passed`, kind `category` (one per checklist type) or `readiness` (`has_mvp`, `mvp_has_tasks`, `has_sprint`, `connections`). Two readiness checks reuse `findWarnings`, so the checklist and the "!" badges always agree. An empty project or an empty MVP never counts as passed. `getProjectChecklist` loads the data.
+- **Refactor:** the queries of `getProjectWarnings` moved to `loadWarningInput` (ownership check first), shared by warnings and checklist.
+- **Route:** `GET /api/projects/:id/checklist` (requireAuth, Zod params, 404 for another user's project).
+- **Tests:** `tests/checklist.test.ts` (11 unit tests), `tests/checklist.api.test.ts` (401, 400, 404, two users, ✗ to ✓ as a project is planned, other projects ignored), and two template data tests that every checklist type exists.
+
+**What I changed or corrected:**
+- The AI first suggested making `itemId` optional on `Warning`. It changed this to a separate checklist endpoint, so the item warnings and the frontend badges did not need to change.
+- (to fill in)
+
+**What went wrong:**
+- Nothing so far. Backend typecheck and all 270 tests pass. No frontend change yet.
+
+**Next:** category progress bars in the item list, the combined Tasks & progress page with the ring and the bulletin, and the checklist page.

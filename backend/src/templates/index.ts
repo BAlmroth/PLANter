@@ -37,6 +37,13 @@ export type Template = {
     direction: "incoming" | "outgoing";
     message: string; // shown after the item title, e.g. "Home: has no components"
   }[];
+  // Categories a project usually needs and that are easy to forget (tests, auth...).
+  // The project checklist has one check per entry: passed when the project has at least one item of `itemType`.
+  // `label` is written as a todo ("Plan the tests"), so it reads well both as "yet to plan" and with a ✓.
+  checklistItemTypes: {
+    itemType: string;
+    label: string;
+  }[];
 };
 
 const templates = new Map<string, Template>([["web", webTemplate]]);
