@@ -22,28 +22,6 @@
   min-width: 0;
 }
 
-/* "Project / Pages / Login": small mono text with slashes between */
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 4px;
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text);
-}
-.breadcrumb a {
-  color: var(--text);
-  text-decoration: none;
-}
-.breadcrumb a:hover {
-  color: var(--text-h);
-  text-decoration: underline;
-}
-.breadcrumb [aria-current] {
-  color: var(--text-h);
-}
-
 /* The title with the type badge, MVP badge and groups beside it */
 .titleRow {
   display: flex;

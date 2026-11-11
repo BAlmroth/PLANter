@@ -1,5 +1,5 @@
 import { useConfirm } from "../../components/useConfirm";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
@@ -15,6 +15,7 @@ import {
   type ConnectOption,
   type Connection,
 } from "../relationships/connections";
+import { useProjectContext } from "../projects/useProjectContext";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 import { useItemDetails } from "../itemDetails/useItemDetails";
@@ -49,7 +50,7 @@ type Props = {
 
 // The detail view of one item: this is where an item is edited and deleted, and where its
 // connections are added and removed. The File view only shows items.
-// Layout: a header (breadcrumb, title, actions), then a wide main column (photo, details,
+// Layout: a header (badges, actions), then a wide main column (photo, details,
 // connections, tasks) and a narrow side column (description, warnings, moodboard).
 export function ItemDetail({ project, itemId, warnings, refreshWarnings, refreshProgress }: Props) {
   const navigate = useNavigate();
@@ -59,6 +60,16 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const tasks = useTasks(project.id);
   const groups = useGroups(project.id);
   const details = useItemDetails(itemId);
+  const { setItemCrumb } = useProjectContext();
+
+  // The sub header shows this item's title and type in its trail. Runs again when either changes.
+  const crumbItem = items.items.find((i) => i.id === itemId);
+  const crumbTitle = crumbItem?.title;
+  const crumbTypeLabel = template.template?.itemTypes.find((t) => t.key === crumbItem?.type)?.pluralLabel ?? "Unknown";
+  useEffect(() => {
+    setItemCrumb(crumbTitle ? { title: crumbTitle, typeLabel: crumbTypeLabel } : null);
+    return () => setItemCrumb(null);
+  }, [crumbTitle, crumbTypeLabel, setItemCrumb]);
 
   // true while the edit form is open
   const { confirm, modal } = useConfirm();
@@ -230,7 +241,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
     return (
       <section className={styles.card}>
         {modal}
-        <h1 className={styles.title}>Edit {item.title}</h1>
+        <h2 className={styles.title}>Edit {item.title}</h2>
         <ItemForm
           types={loadedTemplate.itemTypes}
           showMvp
@@ -288,18 +299,11 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   return (
     <div className={styles.page}>
       {modal}
-      {/* --- Header: breadcrumb and title on the left, status and actions on the right --- */}
+      {/* --- Header: badges on the left, status and actions on the right --- */}
       <header className={styles.header}>
         <div className={styles.heading}>
-          <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
-            <Link to={`/projects/${project.id}`}>{project.name}</Link>
-            <span aria-hidden="true">/</span>
-            <Link to={`/projects/${project.id}/plan?view=list`}>{typeInfo?.pluralLabel ?? "Unknown"}</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">{item.title}</span>
-          </nav>
+          {/* The title and the trail are in the sub header */}
           <div className={styles.titleRow}>
-            <h1 className={styles.title}>{item.title}</h1>
             <TypeBadge typeKey={item.type} template={loadedTemplate} />
             {item.isMvp && <span className={styles.mvp}>MVP</span>}
             <GroupChips groups={itemGroups} />

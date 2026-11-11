@@ -1,10 +1,11 @@
-import { Link, Outlet, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
 import { useWarnings } from "../features/warnings/useWarnings";
 import { ProjectSubHeader } from "../features/projects/ProjectSubHeader";
 import type { Project } from "../features/projects/types";
-import type { ProjectContext } from "../features/projects/useProjectContext";
+import type { ItemCrumb, ProjectContext } from "../features/projects/useProjectContext";
 import { useProject } from "../features/projects/useProject";
 import styles from "./ProjectPage.module.css";
 
@@ -58,18 +59,28 @@ function ProjectFrame({ project, setProject }: FrameProps) {
   // Shared by the File view and the map, so both show the same badges
   const warnings = useWarnings(project.id);
 
-  const context: ProjectContext = { project, setProject, progress, warnings };
+  // Set by the item page, shown in the sub header
+  const [itemCrumb, setItemCrumb] = useState<ItemCrumb | null>(null);
 
-  // Items, connections and tasks may have changed, so ask for fresh numbers and warnings
-  function refresh() {
-    progress.refetch();
-    warnings.refetch();
-  }
+  const context: ProjectContext = { project, setProject, progress, warnings, setItemCrumb };
+
+  // Items, connections and tasks may have changed when the user moves to another page, so ask
+  // for fresh numbers and warnings. The ref skips the first render, where the hooks above
+  // have just loaded everything.
+  const { pathname } = useLocation();
+  const lastPath = useRef(pathname);
+  const { refetch: refetchProgress } = progress;
+  const { refetch: refetchWarnings } = warnings;
+  useEffect(() => {
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    refetchProgress();
+    refetchWarnings();
+  }, [pathname, refetchProgress, refetchWarnings]);
 
   return (
     <div className={styles.project}>
-      {/* Each click on a page link asks for fresh numbers, because items may have changed */}
-      <ProjectSubHeader project={project} progress={progress.progress} onNavigate={refresh} />
+      <ProjectSubHeader project={project} progress={progress.progress} itemCrumb={itemCrumb} />
 
       <div className={styles.body}>
         <aside className={styles.sidebar}>
