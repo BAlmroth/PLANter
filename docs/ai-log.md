@@ -1561,3 +1561,17 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What went wrong:** Nothing. Frontend typecheck, lint, 97 tests and the build pass, and I checked the page in the browser.
 
 **Result of the warnings redesign (steps 1–4):** the backend has a project checklist (`GET /api/projects/:id/checklist`) next to the item warnings. The item list shows progress per category. Tasks & progress is one page: progress, "Yet to plan" and item warnings on top, tasks and sprints below, with a toggle that jumps between them. The checklist page shows everything with ✓/✗ and links to where each thing is fixed. The separate Progress page is gone (`/progress` redirects), and total and per-category progress (a Must) are still shown.
+
+## 2026-11-11: CLAUDE.md updated for warnings and checklist
+
+**What I asked:** Update CLAUDE.md after the warnings redesign, so future sessions know about it.
+
+**What was generated:**
+- Templates section: the template's `warningRules` and `checklistItemTypes` are described (they were missing; `warningRules` existed before this session too).
+- Progress section: where progress is shown now (ring and bars on Tasks & progress, a bar per category in the item list), and that `/progress` redirects to `/tasks`.
+- New section "Warnings and checklist": the two endpoints and services, check kinds and keys, that the checklist reuses `findWarnings`, that empty never counts as passed, the UI (one page with two sections and a jump toggle, no scroll snap, checklist page not in the nav), and the guideline to only add rules that are almost always right, to avoid clutter.
+- Project structure: `checklist` in services, `warnings`, `checklist` and `tasks` in features.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing. Documentation only, no code changed.

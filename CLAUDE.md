@@ -54,6 +54,8 @@ Login, registration and logout are done in the frontend directly against Supabas
   - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), and `allowCycles`
   - the allowed combinations of source type, relationship type and target type
   - `groupColors`: the colors a group can have (`#RRGGBB`). Lighter than the item type colors and never the same, so a group never looks like an item type
+  - `warningRules`: an item of `itemType` with no `relationship` in a `direction` (`incoming`/`outgoing`) gets a warning with `message` (for example a page with no component belonging to it)
+  - `checklistItemTypes`: the categories people tend to forget (`itemType` + `label`, written as a todo like "Plan the tests"). The checklist has one check per entry, passed when the project has at least one item of that type
 - Colors are presentation, like labels: they can be changed at any time without a migration. The database never stores a type color. A group stores its own hex, so changing `groupColors` does not change existing groups.
 - Keys are permanent, labels are free. The database stores only keys (`items.type`, `relationships.type`, `projects.template`). The UI only shows labels, so a label can be changed at any time. A key is never renamed or removed in code alone: that needs a data migration (`UPDATE ... SET type = ...`) in a Prisma migration. If the frontend meets an unknown key, it shows it as "Unknown" instead of crashing.
 - The frontend gets the template from `GET /api/templates/:key` (uses `requireAuth` like every other route). The template is never copied into the frontend.
@@ -96,6 +98,17 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 - Completion = `done / (planned + in_progress + done)`, per item type and in total. In-progress items count as not finished.
 - Only item types that count toward progress in the template are included. Project inspiration and item details are not items and never count.
 - A project or category with no items is 0%, never a division by zero.
+- Shown on the Tasks & progress page (a ring for the total, a bar per category) and as a slim bar on each category heading in the item list. There is no separate Progress page (`/progress` redirects to `/tasks`).
+
+### Warnings and checklist
+
+The tool should help you remember what is usually forgotten, without clutter. Both are pure functions in `services/` (no database, unit tested) and read their rules from the template where possible.
+
+- Item warnings (`GET /api/projects/:id/warnings`, `services/warnings.ts`): one warning per item and broken rule. The template's `warningRules`, plus "an MVP item that is not done and has no tasks" (in code, not tied to a type). Shown as a "!" badge on the item in the list and on the map, and as a list on Tasks & progress and on the checklist page.
+- Project checklist (`GET /api/projects/:id/checklist`, `services/checklist.ts`): every check with `passed`, never only the failed ones. `kind: "category"` (one per `checklistItemTypes` entry) or `kind: "readiness"` (`has_mvp`, `mvp_has_tasks`, `has_sprint`, `connections`). The readiness checks reuse `findWarnings`, so the checklist and the badges always agree. Empty never counts as passed (no MVP, no items).
+- Check keys are stable like other keys, labels can change. The frontend only uses keys for navigation (`features/checklist/checkLinks.ts`).
+- UI: Tasks & progress is one page with two sections and a sticky toggle that jumps between them (no scroll snap): "Progress & warnings" (progress, "Yet to plan" = the failed category checks, item warnings max 5) on top, "Tasks & sprints" below (New task and Sprints behind buttons). The checklist page (`/projects/:id/checklist`, not in the nav) shows every check with ✓/✗ and a link to where it is fixed, and all item warnings.
+- Add only rules where a missing link is almost always a real mistake. A rule that is often wrong (for example "every page must be protected", when many pages are public) gets ignored and clutters the UI.
 
 ## Scope (MoSCoW)
 
@@ -131,7 +144,7 @@ planter/
       lib/              supabaseClient.ts, api.ts (fetch wrapper that adds the token)
       auth/             AuthProvider, Login, Register, ProtectedRoute
       pages/            top-level pages
-      features/         projects, items, relationships, map, file-view, progress
+      features/         projects, items, relationships, map, file-view, progress, warnings, checklist, tasks
       components/       shared UI components
       types/
   backend/
@@ -143,7 +156,7 @@ planter/
       config/           env.ts (validates environment variables with Zod)
       middleware/       requireAuth.ts, validate.ts, errorHandler.ts
       routes/           projects.ts, items.ts, relationships.ts, tasks.ts, sprints.ts
-      services/         business logic: ownership, relationships, progress, warnings
+      services/         business logic: ownership, relationships, progress, warnings, checklist
       schemas/          Zod schemas
       templates/        web.ts, index.ts
       lib/              prisma.ts, supabase.ts
