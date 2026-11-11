@@ -1444,3 +1444,38 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The old `/inspiration` URL no longer works.
 - `ProjectPalette` still has an `editable` branch that nothing uses now.
 - Moodboard and inspiration are told apart only by whether a link exists, not by a stored column.
+
+## 2026-11-11: Separate moodboard and inspiration, overview limits, toggle and navigation placement
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. Long texts in the moodboard are cut off: they should wrap. The moodboard card on the overview should only show the color palette and text titles, no inspiration.
+2. Text I added under Inspiration showed up under Moodboard. Moodboard and Inspiration should be separate: moodboard has images and text, inspiration has images, text and links (the link is optional).
+3. Limit the overview cards: at most 3 text lines on the moodboard card and 5 items on the tech stack card.
+4. Move the List / Map toggle of the Items page to the sub header (at the left), and the project navigation in the header to the right.
+5. Commit after each step.
+
+**What was generated:**
+- **Wrapping** (`MoodboardCard.module.css`): the note on a link row had `nowrap` and an ellipsis. It now wraps (`overflow-wrap: anywhere`) and the row is aligned to the top.
+- **Overview card** (`InspirationCard.tsx`): lists only text entries (no link, no image) and the palette. Limit 3 entries, each on one line cut with "…" (`.oneLine`). The tech stack card got `TECH_LIMIT = 5`.
+- **Separate sections:** the AI first made the link required in the Inspiration form, which I rejected because it should accept text and images too. The old rule ("a row with a link is inspiration") cannot tell a text note in Inspiration from one in Moodboard, so a stored value is needed. This changes the data model, so the AI explained why before building it:
+  - Prisma: enum `InspirationSection` (`moodboard`, `inspiration`) and column `section` on `project_inspirations`, default `moodboard`. Migration `20261111120000_inspiration_section` also sets `inspiration` on existing rows that have a url.
+  - Zod: `section` in `createInspirationSchema` (default `moodboard`, other values give 400). The service stores it. The demo seed sets it from the url.
+  - Frontend: `Inspiration.section` type. `ProjectMoodboard` sends `moodboard`. `InspirationPageCard` sends `inspiration`, now has the image field (create the row, then upload the image) and both cards filter on `section`.
+  - Test: a new backend test for the default, the stored value and the 400.
+- **Layout:** the toggle moved into new `PlanViewToggle.tsx` and `usePlanView.ts` (shared URL state `?view=map`, separate files because of the `react-refresh/only-export-components` lint rule). `ProjectSubHeader` shows it on the `plan` page. `Header.tsx` wraps the project navigation and the log out button in a `.right` group.
+
+**What I changed or corrected:**
+- Rejected the first attempt (link required in the Inspiration form).
+- I said "text titles" and "no moodboard titles" in the same message, which is contradictory. The AI kept the titles of text entries and left out link and image titles, and said so.
+- (to fill in: anything I change after looking at it in the browser)
+
+**What went wrong:**
+- **Browser checks:** the AI did not open the app in a browser. Frontend typecheck, lint and 84 tests pass, backend typecheck and the inspiration and seed tests pass.
+- The migration was applied to the local test database only. It must be run against Supabase (`prisma migrate deploy`) before deploying.
+
+**Known limitations:**
+- The earlier limitation "moodboard and inspiration are told apart only by whether a link exists" no longer applies: there is now a `section` column.
+- The section of an entry cannot be changed after it is created (no edit, only delete and add again).
+- Entries with both a link and an image made before this change are now under Inspiration, and show their image since the Inspiration card allows images.
