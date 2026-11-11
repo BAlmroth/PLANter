@@ -15,9 +15,12 @@ export function Header() {
         <span className={styles.mark}>P</span>
         PLANter
       </Link>
-      {projectId && <ProjectNav projectId={projectId} />}
-      <div className={styles.user}>
-        <LogoutButton />
+      {/* The page links and the log out button together at the right */}
+      <div className={styles.right}>
+        {projectId && <ProjectNav projectId={projectId} />}
+        <div className={styles.user}>
+          <LogoutButton />
+        </div>
       </div>
     </header>
   );

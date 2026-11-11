@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { Breadcrumb, type Crumb } from "../../components/Breadcrumb";
 import { ProgressBar } from "../progress/ProgressBar";
 import type { Progress } from "../progress/types";
+import { PlanViewToggle } from "./PlanViewToggle";
 import { ProjectSettings } from "./ProjectSettings";
 import type { Project } from "./types";
 import type { ItemCrumb } from "./useProjectContext";
@@ -53,6 +54,9 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
         <Breadcrumb crumbs={crumbs} />
         <h1 className={styles.title}>{title}</h1>
       </div>
+
+      {/* Next to the title, at the left */}
+      {section === "plan" && <PlanViewToggle />}
 
       <div className={styles.right}>
         {progress && <ProgressBar progress={progress} label="Project progress" />}

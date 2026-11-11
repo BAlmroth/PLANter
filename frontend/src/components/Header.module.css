@@ -33,6 +33,13 @@
   border-radius: var(--radius);
 }
 
+.right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
 .user {
   display: flex;
   align-items: center;

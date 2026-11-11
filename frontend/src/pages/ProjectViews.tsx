@@ -1,8 +1,8 @@
-import { useSearchParams } from "react-router-dom";
 import { FileView } from "../features/items/FileView";
 import { MapView } from "../features/map/MapView";
 import { ProgressOverview } from "../features/progress/ProgressOverview";
 import { InspirationPageCard } from "../features/projects/InspirationPageCard";
+import { usePlanView } from "../features/projects/usePlanView";
 import { ProjectDescriptionCard } from "../features/projects/ProjectDescriptionCard";
 import { useProjectContext } from "../features/projects/useProjectContext";
 import { TodoView } from "../features/tasks/TodoView";
@@ -21,29 +21,13 @@ export function InspirationPage() {
   return <InspirationPageCard projectId={project.id} />;
 }
 
-// The list and the map show the same items, so they share one page with a toggle. The choice is kept in
-// the URL (?view=map), so a refresh or a shared link opens the same view. The list is the default.
+// The list and the map show the same items, so they share one page. The List / Map toggle is in the sub header.
 export function PlanPage() {
   const { project, warnings } = useProjectContext();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const view = searchParams.get("view") === "map" ? "map" : "list";
+  const { view } = usePlanView();
 
   return (
     <div className={styles.page}>
-      <div className={styles.toggle} role="group" aria-label="Plan view">
-        {(["list", "map"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            className={option === view ? `${styles.option} ${styles.active}` : styles.option}
-            aria-pressed={option === view}
-            // replace: switching views should not fill up the back button history
-            onClick={() => setSearchParams({ view: option }, { replace: true })}
-          >
-            {option === "list" ? "List" : "Map"}
-          </button>
-        ))}
-      </div>
       {view === "list" ? (
         <FileView project={project} warnings={warnings.byItem} />
       ) : (

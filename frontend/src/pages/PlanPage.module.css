@@ -3,33 +3,3 @@
   flex-direction: column;
   gap: 16px;
 }
-
-/* The List / Map switch: one rounded group, same look as the page links in the sub header */
-.toggle {
-  display: flex;
-  align-self: flex-start;
-  gap: 4px;
-  padding: 4px;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.option {
-  padding: 6px 16px;
-  font-size: 0.9rem;
-  color: var(--text);
-  background: none;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.option:hover {
-  color: var(--text-h);
-}
-
-.active {
-  color: var(--text-h);
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
-}
