@@ -19,12 +19,14 @@ type Props = {
   sprints?: Sprint[];
   // Called after the task was deleted, for example to load the warnings again
   onDeleted?: () => void;
+  // Called after a change was saved (for example a new item link), for the same reason
+  onSaved?: () => void;
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
-export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Props) {
+export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSaved }: Props) {
   const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -41,6 +43,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted }: Pr
     try {
       const updated = await updateTask(task.id, changes);
       setTasks((current) => current.map((t) => (t.id === task.id ? updated : t)));
+      onSaved?.();
       return true;
     } catch (err) {
       setError(messageFrom(err));

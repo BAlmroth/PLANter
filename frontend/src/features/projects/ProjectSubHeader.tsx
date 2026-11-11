@@ -19,8 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   description: "Description",
   moodboard: "Moodboard",
   plan: "Items",
-  tasks: "Tasks",
-  progress: "Progress",
+  tasks: "Tasks & progress",
 };
 
 // The bar under the header on every project page: the trail and title of the page we are on, and the progress.

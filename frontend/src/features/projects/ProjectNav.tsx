@@ -23,10 +23,7 @@ export function ProjectNav({ projectId }: Props) {
         Items
       </NavLink>
       <NavLink to={`${base}/tasks`} className={linkClass}>
-        Tasks
-      </NavLink>
-      <NavLink to={`${base}/progress`} className={linkClass}>
-        Progress
+        Tasks & progress
       </NavLink>
     </nav>
   );

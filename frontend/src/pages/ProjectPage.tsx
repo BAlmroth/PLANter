@@ -54,7 +54,7 @@ type FrameProps = { project: Project; setProject: (project: Project) => void };
 // The sub header, the file list on the left, and the current page (overview, files, map, tasks,
 // progress or an item) on the right.
 function ProjectFrame({ project, setProject }: FrameProps) {
-  // Shared by the sub header and the Progress page, so both show the same numbers
+  // Shared by the sub header, the item list and the Tasks & progress page, so all show the same numbers
   const progress = useProgress(project.id);
   // Shared by the File view and the map, so both show the same badges
   const warnings = useWarnings(project.id);

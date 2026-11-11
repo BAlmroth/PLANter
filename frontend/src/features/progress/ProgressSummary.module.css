@@ -1,0 +1,38 @@
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Same small caps style as the other section labels */
+.title {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-h);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The category name on the left, the bar and "3/5 done" on the right */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.name {
+  color: var(--text-h);
+}

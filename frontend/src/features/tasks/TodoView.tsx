@@ -24,8 +24,14 @@ function ItemLink({ project, itemId, items }: { project: Project; itemId: string
   );
 }
 
+type Props = {
+  project: Project;
+  // Called after a task was added, changed or deleted, for example to load the warnings above again
+  onTasksChanged?: () => void;
+};
+
 // The todo list of a project: tasks that can be linked to an item.
-export function TodoView({ project }: { project: Project }) {
+export function TodoView({ project, onTasksChanged }: Props) {
   const tasks = useTasks(project.id);
   const items = useItems(project.id);
   const sprints = useSprints(project.id);
@@ -36,6 +42,9 @@ export function TodoView({ project }: { project: Project }) {
   // Shown under the form when adding fails (errors of a task are shown on its row)
   const [actionError, setActionError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  // Which panels are open. The New task form stays open after adding, so several tasks can be added in a row.
+  const [addingTask, setAddingTask] = useState(false);
+  const [managingSprints, setManagingSprints] = useState(false);
 
   const loading = tasks.loading || items.loading || sprints.loading;
   const error = tasks.error ?? items.error ?? sprints.error;
@@ -55,6 +64,7 @@ export function TodoView({ project }: { project: Project }) {
         ...(sprintId !== "" && { sprintId }),
       });
       tasks.setTasks((current) => [...current, task]);
+      onTasksChanged?.();
       setTitle("");
       setItemId("");
       setSprintId("");
@@ -98,58 +108,87 @@ export function TodoView({ project }: { project: Project }) {
     <section className={styles.page}>
       <div className={styles.header}>
         <span className={styles.count}>{tasks.tasks.filter((task) => !task.done).length} pending</span>
+        {/* The forms are closed by default, so the page starts with the tasks.
+            aria-expanded tells screen readers whether the panel each button controls is open. */}
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.secondary}
+            aria-expanded={managingSprints}
+            aria-controls="sprint-panel"
+            onClick={() => setManagingSprints((open) => !open)}
+          >
+            {managingSprints ? "Close sprints" : "Manage sprints"}
+          </button>
+          <button
+            type="button"
+            aria-expanded={addingTask}
+            aria-controls="new-task-panel"
+            onClick={() => setAddingTask((open) => !open)}
+          >
+            {addingTask ? "Close new task" : "+ New task"}
+          </button>
+        </div>
       </div>
 
-      <div className={styles.top}>
-        <SprintSection
-          projectId={project.id}
-          sprints={sprints.sprints}
-          setSprints={sprints.setSprints}
-          tasks={tasks.tasks}
-          setTasks={tasks.setTasks}
-        />
-        <section className={styles.card}>
-          <h2 className={styles.label}>New task</h2>
-          <form onSubmit={handleAdd} className={styles.addForm}>
-            <label className={styles.titleField}>
-              Title
-              <input
-                type="text"
-                required
-                maxLength={100}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+      {(managingSprints || addingTask) && (
+        <div className={styles.top}>
+          {managingSprints && (
+            <div id="sprint-panel">
+              <SprintSection
+                projectId={project.id}
+                sprints={sprints.sprints}
+                setSprints={sprints.setSprints}
+                tasks={tasks.tasks}
+                setTasks={tasks.setTasks}
               />
-            </label>
-            <label>
-              Item (optional)
-              <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-                <option value="">No item</option>
-                {items.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Sprint (optional)
-              <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-                <option value="">No sprint</option>
-                {sprints.sprints.map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" disabled={adding}>
-              {adding ? "Adding…" : "Add task"}
-            </button>
-          </form>
-          {actionError && <p role="alert">{actionError}</p>}
-        </section>
-      </div>
+            </div>
+          )}
+          {addingTask && (
+            <section id="new-task-panel" className={styles.card}>
+              <h2 className={styles.label}>New task</h2>
+              <form onSubmit={handleAdd} className={styles.addForm}>
+                <label className={styles.titleField}>
+                  Title
+                  <input
+                    type="text"
+                    required
+                    maxLength={100}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Item (optional)
+                  <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
+                    <option value="">No item</option>
+                    {items.items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Sprint (optional)
+                  <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
+                    <option value="">No sprint</option>
+                    {sprints.sprints.map((sprint) => (
+                      <option key={sprint.id} value={sprint.id}>
+                        {sprint.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="submit" disabled={adding}>
+                  {adding ? "Adding…" : "Add task"}
+                </button>
+              </form>
+              {actionError && <p role="alert">{actionError}</p>}
+            </section>
+          )}
+        </div>
+      )}
 
       {groups.map((group) => (
         <section key={group.id} className={styles.card}>
@@ -171,6 +210,8 @@ export function TodoView({ project }: { project: Project }) {
                   items={items.items}
                   sprints={sprints.sprints}
                   extra={task.itemId && <ItemLink project={project} itemId={task.itemId} items={items.items} />}
+                  onSaved={onTasksChanged}
+                  onDeleted={onTasksChanged}
                 />
               ))}
             </ul>

@@ -1517,3 +1517,31 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What I changed or corrected:** Nothing. I checked it in the browser and it looked good.
 
 **What went wrong:** Nothing. Frontend typecheck, lint and 84 tests pass.
+
+## 2026-11-11: Tasks & progress page (step 3)
+
+**What I asked:**
+1. Combine the Tasks and Progress pages, remove the Progress page, show total progress as a ring (option a: one neutral ring, category bars next to it) and a short "Yet to plan" bulletin.
+2. After seeing it: more focus on the warnings. Progress and warnings on top, tasks and sprints below, a toggle to move between them, and the New task and Sprints forms hidden behind buttons. Item warnings under "Yet to plan".
+3. Then: one page with two clearly separate sections, and the toggle jumps between them. First with scroll snap, then I asked to remove the automatic snap so scrolling is free and only the toggle jumps.
+
+**What was generated:**
+- `features/checklist/`: `checklistApi.ts` (+ test), `useChecklist.ts` (loaded by the page, not the project context), `missingCategories.ts` (`getYetToPlan`, + test), `YetToPlan.tsx` (max 4 lines, "See full checklist →", loading and error states, one line when everything is planned).
+- `features/progress/`: `ringOffset.ts` (+ test, the `stroke-dashoffset` math), `ProgressRing.tsx` (SVG, `--primary`, `aria-hidden` with the numbers as text, no fill at 0%, no animation with reduced motion), `ProgressSummary.tsx` (ring + compact bar per category with items). `ProgressOverview.tsx` deleted.
+- `features/warnings/ItemWarningsList.tsx`: every item warning as one line linking to the item, max 5 with "and N more".
+- `components/ViewToggle.tsx` (generic, from the List / Map toggle, also used by `PlanViewToggle`) and `components/useActiveSection.ts` (IntersectionObserver: highlights the section in view).
+- `pages/TasksPage.tsx`: sticky toggle, "Progress & warnings" section (Progress | Yet to plan + Item warnings), "Tasks & sprints" in a tinted panel. The toggle scrolls with `scrollIntoView` (instant with reduced motion).
+- `TodoView`: "Manage sprints" and "+ New task" buttons, both closed by default. New `onTasksChanged` prop (and `onSaved` on `TaskRow`) reloads the warnings and the checklist when a task is added, changed or deleted.
+- Nav: "Tasks & progress" instead of Tasks and Progress. `/progress` redirects to `/tasks`.
+
+**What I changed or corrected:**
+- The first layout (tasks left, progress column right) did not focus enough on the warnings, so I asked for the warnings on top.
+- A version with the item warnings across the full width looked wonky, so they moved under "Yet to plan".
+- The AI first built the toggle as two separate views (`?view=tasks`). I wanted one page with two sections, so it was rebuilt and the `?view=` files removed.
+- I removed the automatic scroll snap: snapping while scrolling felt like losing control of the page.
+
+**What went wrong:**
+- **CSS bug:** the first `ProgressRing` had a rule meant to hide the dot at 0% whose selector matched 100% instead. The AI noticed before running it and replaced it with "do not draw the circle at 0%".
+- **File name clash:** `YetToPlan.tsx` (component) and `yetToPlan.ts` (helper) differ only in case. macOS file names are case-insensitive, so the import found the helper. The typecheck caught it once the component was imported. The helper was renamed to `missingCategories.ts`.
+- **Vite cache:** after the rename, the running dev server still used the old resolution ("does not provide an export named 'YetToPlan'"). Restarting the dev server fixed it.
+- Frontend typecheck, lint, 93 tests and the build pass. I checked the page in the browser after each round.

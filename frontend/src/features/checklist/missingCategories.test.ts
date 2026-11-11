@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Check } from "./types";
-import { getYetToPlan } from "./yetToPlan";
+import { getYetToPlan } from "./missingCategories";
 
 function check(key: string, kind: Check["kind"], passed: boolean): Check {
   return { key, kind, label: key, passed };

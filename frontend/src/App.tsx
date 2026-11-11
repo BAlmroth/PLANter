@@ -4,7 +4,8 @@ import { ProjectsPage } from "./pages/ProjectsPage";
 import { NewProjectPage } from "./pages/NewProjectPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { ItemPage } from "./pages/ItemPage";
-import { DescriptionPage, InspirationPage, PlanPage, ProgressPage, TasksPage } from "./pages/ProjectViews";
+import { DescriptionPage, InspirationPage, PlanPage } from "./pages/ProjectViews";
+import { TasksPage } from "./pages/TasksPage";
 import { ProjectOverview } from "./features/projects/ProjectOverview";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
@@ -37,7 +38,8 @@ export function App() {
             <Route path="files" element={<Navigate to="../plan?view=list" replace />} />
             <Route path="map" element={<Navigate to="../plan?view=map" replace />} />
             <Route path="tasks" element={<TasksPage />} />
-            <Route path="progress" element={<ProgressPage />} />
+            {/* Progress is now on the Tasks & progress page */}
+            <Route path="progress" element={<Navigate to="../tasks" replace />} />
             <Route path="items/:itemId" element={<ItemPage />} />
           </Route>
           </Route>

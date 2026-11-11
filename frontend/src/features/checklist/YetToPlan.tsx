@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { useChecklist } from "./useChecklist";
-import { getYetToPlan } from "./yetToPlan";
+import { getYetToPlan } from "./missingCategories";
 import styles from "./YetToPlan.module.css";
 
 // At most this many lines, so the bulletin stays small. The rest is on the checklist page.

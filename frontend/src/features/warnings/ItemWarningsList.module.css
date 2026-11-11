@@ -1,0 +1,39 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* A small dot in the warning color before each line, the same as in "Yet to plan".
+   The text says what is wrong, so the color never stands alone. */
+.list li:not(.more)::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: var(--danger);
+  border-radius: 50%;
+}
+
+.item {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.more,
+.note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.more a {
+  color: var(--primary);
+}

@@ -1,4 +1,4 @@
-/* The List / Map switch: one rounded group, same look as the page links in the sub header */
+/* A switch between the views of a page (List / Map, Progress / Tasks): one rounded group */
 .toggle {
   display: flex;
   gap: 4px;
