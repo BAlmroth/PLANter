@@ -19,6 +19,7 @@ export async function createInspiration(projectId: string, userId: string, input
     data: {
       projectId,
       title: input.title,
+      section: input.section,
       ...(input.url !== undefined && { url: input.url }),
       ...(input.text !== undefined && { text: input.text }),
     },

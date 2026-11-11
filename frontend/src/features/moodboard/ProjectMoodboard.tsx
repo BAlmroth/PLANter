@@ -12,20 +12,20 @@ const messageFrom = (err: unknown) => (err instanceof Error ? err.message : "Som
 
 type Props = {
   projectId: string;
-  // The project's inspirations without a link (texts and images), from useInspirations in the parent
+  // The project's entries in the moodboard section, from useInspirations in the parent
   entries: Inspiration[];
   setInspirations: React.Dispatch<React.SetStateAction<Inspiration[]>>;
 };
 
 // The moodboard of the whole project: the color palette, texts and images.
-// Texts and images are rows in project_inspirations (without a url), so no extra table is needed.
+// Texts and images are rows in project_inspirations (section "moodboard"), so no extra table is needed.
 export function ProjectMoodboard({ projectId, entries, setInspirations }: Props) {
   const { colors, links, loading, error, refetch, setColors, setLinks } = useColors(projectId);
   const { confirm, modal } = useConfirm();
 
   // Two requests: the row first, then the image. If the image fails the row stays and the card shows the error.
   async function addEntry(input: NewEntry, image: File | null) {
-    const created = await createInspiration(projectId, input);
+    const created = await createInspiration(projectId, { ...input, section: "moodboard" });
     if (!image) {
       setInspirations((current) => [...current, created]);
       return;

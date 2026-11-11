@@ -74,7 +74,7 @@ export async function seedDemoProject(userId: string) {
       ),
     }),
     prisma.projectInspiration.createMany({
-      data: demoInspirations.map((i) => ({ projectId, title: i.title, url: i.url ?? null, text: i.text ?? null })),
+      data: demoInspirations.map((i) => ({ projectId, title: i.title, url: i.url ?? null, text: i.text ?? null, section: i.url ? "inspiration" : "moodboard" })),
     }),
     prisma.group.createMany({
       // Each group takes the next color, the same rule as when a user creates groups one by one

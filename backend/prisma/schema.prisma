@@ -20,6 +20,12 @@ enum Status {
   done
 }
 
+// Which part of the Moodboard page an entry belongs to
+enum InspirationSection {
+  moodboard
+  inspiration
+}
+
 // A project is the top level. The planned website or app.
 // Everything else (items, relationships, tasks, sprints) belongs to a project.
 model Project {
@@ -171,6 +177,8 @@ model ProjectInspiration {
   title     String
   url       String?
   text      String?
+  // Moodboard or Inspiration on the Moodboard page. Both can hold text, images and links.
+  section   InspirationSection @default(moodboard)
   // Path of the image inside the private Supabase Storage bucket (not a URL). Null = no image.
   // The text field doubles as the image description.
   imagePath String?  @map("image_path")

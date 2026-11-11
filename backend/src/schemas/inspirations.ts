@@ -11,6 +11,8 @@ export const createInspirationSchema = z.object({
   title: z.string().trim().min(1).max(100),
   url: httpUrl.optional(),
   text: z.string().max(2000).optional(),
+  // Which card on the Moodboard page the entry belongs to
+  section: z.enum(["moodboard", "inspiration"]).default("moodboard"),
 });
 export type CreateInspirationInput = z.infer<typeof createInspirationSchema>;
 

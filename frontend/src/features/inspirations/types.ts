@@ -5,6 +5,8 @@ export type Inspiration = {
   title: string;
   url: string | null;
   text: string | null;
+  // Which card on the Moodboard page the entry belongs to
+  section: "moodboard" | "inspiration";
   // A temporary link to the image (stops working after about an hour), or null if there is no image
   imageUrl: string | null;
   createdAt: string;
@@ -15,4 +17,5 @@ export type InspirationInput = {
   title: string;
   url?: string;
   text?: string;
+  section?: "moodboard" | "inspiration";
 };

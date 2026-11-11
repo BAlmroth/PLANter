@@ -51,6 +51,18 @@ describe("inspirations API", () => {
     expect(res.status).toBe(401);
   });
 
+  it("stores the section, defaults to moodboard and rejects an unknown one", async () => {
+    const { projectId } = await setup();
+    const url = `/api/projects/${projectId}/inspirations`;
+    const plain = await request(app).post(url).set(asA).send({ title: "A note" });
+    expect(plain.body.section).toBe("moodboard");
+    const inspo = await request(app).post(url).set(asA).send({ title: "A note", text: "x", section: "inspiration" });
+    expect(inspo.status).toBe(201);
+    expect(inspo.body.section).toBe("inspiration");
+    const bad = await request(app).post(url).set(asA).send({ title: "A note", section: "other" });
+    expect(bad.status).toBe(400);
+  });
+
   it("creates, lists and deletes inspiration", async () => {
     const { projectId } = await setup();
     const url = `/api/projects/${projectId}/inspirations`;
