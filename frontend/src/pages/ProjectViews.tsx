@@ -23,13 +23,18 @@ export function InspirationPage() {
 
 // The list and the map show the same items, so they share one page. The List / Map toggle is in the sub header.
 export function PlanPage() {
-  const { project, warnings } = useProjectContext();
+  const { project, warnings, progress } = useProjectContext();
   const { view } = usePlanView();
 
   return (
     <div className={styles.page}>
       {view === "list" ? (
-        <FileView project={project} warnings={warnings.byItem} />
+        <FileView
+          project={project}
+          warnings={warnings.byItem}
+          progress={progress.progress}
+          onItemAdded={progress.refetch}
+        />
       ) : (
         <MapView project={project} warnings={warnings.byItem} />
       )}

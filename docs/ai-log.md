@@ -1504,3 +1504,16 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Nothing so far. Backend typecheck and all 270 tests pass. No frontend change yet.
 
 **Next:** category progress bars in the item list, the combined Tasks & progress page with the ring and the bulletin, and the checklist page.
+
+## 2026-11-11: Progress bar per category in the item list (step 2)
+
+**What I asked:** Step 2 of the redesign: a small progress bar for each category in the item list.
+
+**What was generated:**
+- `ProgressBar` got a `compact` option: a slim bar with "3/5 done", the full numbers in `title`. The normal version is unchanged.
+- `FileView` gets `progress` and `onItemAdded` from `PlanPage` (the progress was already loaded for the sub header, so no new request). Each category heading shows the compact bar in the type's color. Not in Group mode, not for types that do not count toward progress, and the numbers ignore the filters. Adding an item reloads the progress.
+- CSS: the heading line is now `.labelRow` (label left, bar right, colored line under both). The bar is next to the `<h2>`, not inside it, so screen readers read the heading as before.
+
+**What I changed or corrected:** Nothing. I checked it in the browser and it looked good.
+
+**What went wrong:** Nothing. Frontend typecheck, lint and 84 tests pass.

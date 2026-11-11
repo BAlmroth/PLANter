@@ -8,9 +8,11 @@ import { ItemFilterBar } from "../filters/ItemFilterBar";
 import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { getConnections } from "../relationships/connections";
 import { useRelationships } from "../relationships/useRelationships";
+import { ProgressBar } from "../progress/ProgressBar";
+import type { Progress } from "../progress/types";
 import type { WarningsByItem } from "../warnings/types";
 import { createItem } from "./itemsApi";
-import { getFileSections, type FileViewMode } from "./fileSections";
+import { getFileSections, type FileSection, type FileViewMode } from "./fileSections";
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
 import { typeColorVar } from "./typeColor";
@@ -20,7 +22,14 @@ import styles from "./FileView.module.css";
 
 // The File view: a project's items grouped by category, read-only apart from adding items.
 // Editing, deleting and connecting are done in the detail view of an item.
-export function FileView({ project, warnings }: { project: Project; warnings: WarningsByItem }) {
+type Props = {
+  project: Project;
+  warnings: WarningsByItem;
+  progress: Progress | null; // null while loading: the headings are then shown without bars
+  onItemAdded: () => void; // for example to load the progress again, since a new item changes the totals
+};
+
+export function FileView({ project, warnings, progress, onItemAdded }: Props) {
   const template = useTemplate(project.template);
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
@@ -70,6 +79,23 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
   // Empty sections are collapsed into one line at the bottom instead of a heading each.
   // While filtering they are left out: there "empty" only means "filtered out".
   const emptySections = filtering ? [] : allSections.filter((section) => section.items.length === 0);
+
+  // The slim progress bar in a category heading. Only in "Category" mode: groups are not progress categories.
+  // The numbers come from the backend, so types that do not count toward progress have no entry and get no bar.
+  // They ignore the filters on purpose: a filter hides items, it does not make them done.
+  function categoryBar(section: FileSection) {
+    if (mode !== "category") return null;
+    const category = progress?.categories.find((c) => c.key === section.key);
+    if (!category) return null;
+    return (
+      <ProgressBar
+        progress={category}
+        label={`${section.title} progress`}
+        color={section.color ?? undefined}
+        compact
+      />
+    );
+  }
 
   return (
     <section className={styles.page}>
@@ -141,6 +167,7 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
                 // Show the new item without asking the server for the whole list again
                 items.setItems((current) => [...current, item]);
                 setAdding(false);
+                onItemAdded();
                 return null;
               } catch (err) {
                 return err instanceof ApiError ? err.message : "Something went wrong.";
@@ -160,9 +187,12 @@ export function FileView({ project, warnings }: { project: Project; warnings: Wa
           // The heading line is in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
           // --type-color is reused for both: CSS only needs "the color of this section".
           <section key={section.key} style={typeColorVar(section.color ?? undefined)}>
-            <h2 className={styles.label}>
-              {section.title} <span className={styles.labelCount}>{section.items.length}</span>
-            </h2>
+            <div className={styles.labelRow}>
+              <h2 className={styles.label}>
+                {section.title} <span className={styles.labelCount}>{section.items.length}</span>
+              </h2>
+              {categoryBar(section)}
+            </div>
             {section.description && <p className={styles.description}>{section.description}</p>}
             <ul className={styles.list}>
               {section.items.map((item) => (
