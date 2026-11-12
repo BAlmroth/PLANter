@@ -4,9 +4,7 @@ import { pageKeyFromPath } from "../features/help/pageHelp";
 import { HelpButton } from "../features/tour/HelpButton";
 import { Tour } from "../features/tour/Tour";
 import { TOURS } from "../features/tour/tourSteps";
-import { useTour } from "../features/tour/useTour";
-import { WelcomeOverlay } from "../features/tour/WelcomeOverlay";
-import { FileSidebar } from "../features/items/FileSidebar";
+import { useTour } from "../features/tour/useTour";import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
 import { useWarnings } from "../features/warnings/useWarnings";
 import { ProjectSubHeader } from "../features/projects/ProjectSubHeader";
@@ -105,9 +103,6 @@ function ProjectFrame({ project, setProject }: FrameProps) {
       </div>
 
       <HelpButton onShowTour={helpPage ? tour.start : undefined} onRestart={tour.restart} />
-      {tour.welcome && (
-        <WelcomeOverlay onStart={tour.startFromWelcome} onDismiss={tour.dismissWelcome} onSkipAll={tour.skipAll} />
-      )}
       {/* key: a new page starts a fresh Tour, so nothing from the last page's step is kept */}
       {helpPage && tour.index !== null && (
         <Tour

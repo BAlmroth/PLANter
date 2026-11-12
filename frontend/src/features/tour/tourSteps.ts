@@ -17,7 +17,12 @@ const introStep = (page: PageKey): TourStep => ({ target: null, title: PAGE_HELP
 
 export const TOURS: Record<PageKey, TourStep[]> = {
   overview: [
-    introStep("overview"),
+    // New users land here after creating a project, so this card is the welcome to the whole tutorial
+    {
+      target: null,
+      title: "Welcome to PLANter!",
+      body: "This is your project's overview: the whole plan at a glance. Let's look around. It takes about a minute, and you can skip it any time.",
+    },
     {
       target: "project-nav",
       title: "The parts of your plan",
@@ -57,17 +62,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
 
 // localStorage flags. All start with "tour:", so "Restart the tutorial" clears them in one go.
 const OFF = "tour:off"; // "Skip tutorial": no tour starts by itself any more
-const WELCOME = "tour:welcome"; // the welcome screen has been shown
 const seenKey = (page: PageKey) => `tour:${page}`;
-
-// The welcome screen comes once, before the first tour, unless the tutorial was skipped
-export function shouldShowWelcome(): boolean {
-  return !readFlag(OFF) && !readFlag(WELCOME);
-}
-
-export function markWelcomeSeen(): void {
-  writeFlag(WELCOME, true);
-}
 
 // Should this page's tour start by itself? Not after "Skip tutorial", and only once per page.
 export function shouldAutoStart(page: PageKey): boolean {
