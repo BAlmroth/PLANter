@@ -243,6 +243,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
 
   // The messages that float at the bottom of the map. Only shown when there is at least one.
   const hasMessage = items.items.length === 0 || (selectedEdge && edgeSource && edgeTarget) || saveError;
+  // A new connection is waiting for its relationship type
+  const prompting = Boolean(pendingSource && pendingTarget && template.template);
 
   return (
     // The controls float over the map in Panels instead of taking space above it.
@@ -333,32 +335,34 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
             </Panel>
           </>
         )}
-        {/* Top center: pick a relationship type after dragging an arrow between two nodes */}
-        {pendingSource && pendingTarget && template.template && (
-          <Panel position="top-center" className={`${styles.box} ${styles.message}`}>
-            {/* key: a new prompt (with fresh state) for every new connection */}
-            <ConnectionPrompt
-              key={`${pendingSource.id}-${pendingTarget.id}`}
-              source={pendingSource}
-              target={pendingTarget}
-              template={template.template}
-              onSubmit={connect}
-              onCancel={() => setPending(null)}
-            />
-          </Panel>
-        )}
-        {/* Bottom center: the clicked connection with its delete button, errors, and the empty state */}
-        {hasMessage && (
+        {/* Bottom center, one box for everything that needs an answer, so two never overlap:
+            picking a relationship type after dragging an arrow between two nodes, or else the clicked
+            connection with its delete button, or the empty state. Errors show in both cases. */}
+        {(prompting || hasMessage) && (
           <Panel position="bottom-center" className={`${styles.box} ${styles.message}`}>
-            {items.items.length === 0 && <p>No items yet. Use “+ Add item” to create the first one.</p>}
-            {selectedEdge && edgeSource && edgeTarget && (
+            {pendingSource && pendingTarget && template.template ? (
+              // key: a new prompt (with fresh state) for every new connection
+              <ConnectionPrompt
+                key={`${pendingSource.id}-${pendingTarget.id}`}
+                source={pendingSource}
+                target={pendingTarget}
+                template={template.template}
+                onSubmit={connect}
+                onCancel={() => setPending(null)}
+              />
+            ) : (
               <>
-                <p>
-                  {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}
-                </p>
-                <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
-                  Delete connection
-                </button>
+                {items.items.length === 0 && <p>No items yet. Use “+ Add item” to create the first one.</p>}
+                {selectedEdge && edgeSource && edgeTarget && (
+                  <>
+                    <p>
+                      {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}
+                    </p>
+                    <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
+                      Delete connection
+                    </button>
+                  </>
+                )}
               </>
             )}
             {saveError && <p role="alert">{saveError}</p>}
