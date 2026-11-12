@@ -24,6 +24,8 @@ type Props = {
   // Which fields the entry form has (both by default). The project moodboard has no link, the inspiration card no image.
   allowUrl?: boolean;
   allowImage?: boolean;
+  // data-tour name, when the tutorial points at this card (features/tour/tourSteps.ts)
+  tourId?: string;
 };
 
 const messageFrom = (err: unknown) =>
@@ -61,6 +63,7 @@ export function MoodboardCard({
   colorForm,
   allowUrl = true,
   allowImage = true,
+  tourId,
 }: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const editing = mode !== null;
@@ -133,7 +136,7 @@ export function MoodboardCard({
     );
 
   return (
-    <section className={styles.card}>
+    <section className={styles.card} data-tour={tourId}>
       <div className={styles.header}>
         <h2 className={styles.heading}>{heading}</h2>
         <button

@@ -105,7 +105,8 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
         <span className={styles.count}>
           {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
         </span>
-        <div className={styles.modes} role="group" aria-label="Group items by">
+        {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+        <div className={styles.modes} role="group" aria-label="Group items by" data-tour="file-modes">
           {(["category", "group"] as const).map((option) => (
             <button
               key={option}
@@ -131,7 +132,7 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
             {managingGroups ? "Close groups" : "Manage groups"}
           </button>
           {!adding && (
-            <button type="button" onClick={() => setAdding(true)}>
+            <button type="button" onClick={() => setAdding(true)} data-tour="add-item">
               + Add item
             </button>
           )}
@@ -182,7 +183,7 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
 
       {/* One full-width section per category (or group), stacked. The items of a section fill a grid,
           so a big section gets more rows instead of one long column. */}
-      <div className={styles.sections}>
+      <div className={styles.sections} data-tour="file-sections">
         {sections.map((section) => (
           // The heading line is in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
           // --type-color is reused for both: CSS only needs "the color of this section".

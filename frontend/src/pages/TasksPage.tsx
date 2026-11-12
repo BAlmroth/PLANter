@@ -54,7 +54,8 @@ export function TasksPage() {
         </h2>
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+          <div className={styles.card} data-tour="tasks-progress">
             {progress.loading && <p>Loading progress…</p>}
             {progress.error && (
               <div role="alert">
@@ -69,11 +70,11 @@ export function TasksPage() {
 
           {/* The warnings column: what is missing on top, what is wrong with single items under it */}
           <div className={styles.column}>
-            <div className={styles.card}>
+            <div className={styles.card} data-tour="yet-to-plan">
               <YetToPlan checklist={checklist} checklistPath={CHECKLIST_PATH} />
             </div>
 
-            <section className={styles.card} aria-labelledby="item-warnings">
+            <section className={styles.card} aria-labelledby="item-warnings" data-tour="item-warnings">
               <h3 id="item-warnings" className={styles.title}>
                 Item warnings
                 {!warnings.loading && !warnings.error && (
@@ -103,7 +104,12 @@ export function TasksPage() {
       </section>
 
       {/* A tinted panel, so it is clear where the warnings end and the tasks begin */}
-      <section id="tasks-section" className={`${styles.section} ${styles.tasksSection}`} aria-labelledby="tasks-heading">
+      <section
+        id="tasks-section"
+        className={`${styles.section} ${styles.tasksSection}`}
+        aria-labelledby="tasks-heading"
+        data-tour="tasks-section"
+      >
         <h2 id="tasks-heading" className={styles.sectionTitle}>
           Tasks & sprints
         </h2>

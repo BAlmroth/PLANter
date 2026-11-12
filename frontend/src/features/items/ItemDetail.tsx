@@ -312,7 +312,8 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
 
         <div className={styles.headerActions}>
           {/* Two checkboxes cover three statuses: neither checked means "planned" */}
-          <div className={styles.status}>
+          {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+          <div className={styles.status} data-tour="item-status">
             <label className={styles.toggle}>
               <input
                 type="checkbox"
@@ -335,7 +336,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
           <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
             Delete
           </button>
-          <button type="button" onClick={() => setEditing(true)} disabled={busy}>
+          <button type="button" onClick={() => setEditing(true)} disabled={busy} data-tour="item-edit">
             Edit item
           </button>
         </div>
@@ -383,7 +384,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
             </dl>
           </section>
 
-          <section className={styles.card}>
+          <section className={styles.card} data-tour="item-connections">
             <h2 className={styles.cardTitle}>Connections</h2>
             {connections.length === 0 ? (
               <p className={styles.empty}>No connections yet.</p>
@@ -464,7 +465,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
           </section>
 
           {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
-          <section className={`${styles.card} ${styles.tasks}`}>
+          <section className={`${styles.card} ${styles.tasks}`} data-tour="item-tasks">
             {/* Adding or deleting a task can add or remove a warning ("is part of the MVP but has no tasks"), so ask again */}
             <ItemTasks
               projectId={project.id}

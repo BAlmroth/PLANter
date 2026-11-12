@@ -78,6 +78,7 @@ export function ProjectMoodboard({ projectId, entries, setInspirations }: Props)
       {modal}
       <MoodboardCard
         heading="Moodboard"
+        tourId="moodboard-card"
         entries={entries}
         colors={colors}
         onAddEntry={addEntry}

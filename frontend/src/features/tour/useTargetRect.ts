@@ -33,7 +33,10 @@ export function useTargetRect(target: string | null): TargetState {
     }
 
     function find() {
-      element = document.querySelector(selector);
+      const candidate = document.querySelector(selector);
+      // An element with no size (an empty list, something hidden) counts as not there yet
+      const rect = candidate?.getBoundingClientRect();
+      element = rect && rect.width > 0 && rect.height > 0 ? candidate : null;
       if (element) {
         // Smooth scrolling, unless the user has asked the system for less motion
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

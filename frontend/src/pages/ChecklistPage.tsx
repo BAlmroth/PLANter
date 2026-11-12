@@ -17,7 +17,8 @@ export function ChecklistPage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.card} aria-labelledby="before-you-start">
+      {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+      <section className={styles.card} aria-labelledby="before-you-start" data-tour="checklist-checks">
         <div className={styles.header}>
           <h2 id="before-you-start" className={styles.heading}>
             Before you start programming
@@ -48,7 +49,12 @@ export function ChecklistPage() {
       </section>
 
       {/* ITEM_WARNINGS_ID: the "See item warnings ↓" link of the connections check jumps here */}
-      <section id={ITEM_WARNINGS_ID} className={styles.card} aria-labelledby="all-item-warnings">
+      <section
+        id={ITEM_WARNINGS_ID}
+        className={styles.card}
+        aria-labelledby="all-item-warnings"
+        data-tour="checklist-warnings"
+      >
         <div className={styles.header}>
           <h2 id="all-item-warnings" className={styles.heading}>
             Item warnings

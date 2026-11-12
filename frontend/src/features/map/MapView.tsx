@@ -288,7 +288,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         {template.template && (
           <>
             {/* Top left: the filters and "Add item". The add form opens under them, in the same box. */}
-            <Panel position="top-left" className={styles.box}>
+            {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+            <Panel position="top-left" className={styles.box} data-tour="map-toolbar">
               <div className={styles.toolbar}>
                 <ItemFilterBar
                   filters={filters}
@@ -327,7 +328,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
                 </div>
               )}
             </Panel>
-            <Panel position="top-right">
+            <Panel position="top-right" data-tour="map-legend">
               <MapLegend template={template.template} />
             </Panel>
           </>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { ConnectDemo } from "./ConnectDemo";
 import { placeCard } from "./placeCard";
 import type { TourStep } from "./tourSteps";
 import { useInertRoot } from "./useInertRoot";
@@ -142,6 +143,8 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
             ✕
           </button>
         </div>
+
+        {step.demo === "connect" && <ConnectDemo />}
 
         <p id={bodyId} className={styles.body}>
           {step.body}

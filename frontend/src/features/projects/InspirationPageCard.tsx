@@ -51,6 +51,7 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
       />
       <MoodboardCard
         heading="Inspiration"
+        tourId="inspiration-card"
         entries={inspirations.filter((entry) => entry.section === "inspiration")}
         colors={[]}
         onAddEntry={addEntry}

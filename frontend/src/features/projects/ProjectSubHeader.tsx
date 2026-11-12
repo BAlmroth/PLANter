@@ -64,7 +64,11 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
       </div>
 
       {/* Next to the title, at the left */}
-      {section === "plan" && <PlanViewToggle />}
+      {section === "plan" && (
+        <div data-tour="plan-view-toggle">
+          <PlanViewToggle />
+        </div>
+      )}
 
       <div className={styles.right}>
         {/* data-tour: the tutorial points at the progress */}
