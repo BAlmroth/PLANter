@@ -1,0 +1,148 @@
+/* Covers the whole screen and catches every click, so the page behind cannot be used during the tour */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+/* No element to show: the whole screen is dimmed */
+.dim {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+}
+
+/* A see-through box over the element. The first shadow is a soft glow around it,
+   the second is so big it covers the whole screen: that is the dimming. */
+.spotlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 3px rgb(62 101 84 / 55%),
+    0 0 0 9999px rgb(0 0 0 / 45%);
+  transition:
+    top 0.25s ease,
+    left 0.25s ease,
+    width 0.25s ease,
+    height 0.25s ease;
+}
+
+.card {
+  position: fixed;
+  box-sizing: border-box;
+  padding: 16px 18px 14px;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 25%);
+  transition:
+    top 0.25s ease,
+    left 0.25s ease;
+  animation: pop 0.18s ease-out;
+}
+
+.card:focus {
+  /* Focus is moved here for screen readers. The card is obviously active, so no extra ring. */
+  outline: none;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+/* No sliding or popping for people who asked their system for less motion */
+@media (prefers-reduced-motion: reduce) {
+  .spotlight,
+  .card {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* The little arrow: a square turned 45°, half hidden behind the card, on the side facing the element */
+.arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px;
+  background: var(--surface);
+  rotate: 45deg;
+}
+/* The card is below the element, so the arrow is on the card's top edge, and so on */
+.bottom {
+  top: 0;
+}
+.top {
+  top: 100%;
+}
+.right {
+  left: 0;
+}
+.left {
+  left: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text-h);
+}
+
+.close {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  color: var(--text);
+  background: none;
+  border-radius: var(--radius);
+}
+.close:hover {
+  background: var(--bg-dark);
+}
+
+.body {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.counter {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+/* A quiet text button: always there, never in the way */
+.skip {
+  padding: 4px 2px;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-decoration: underline;
+  background: none;
+}
+
+.buttons {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.secondary {
+  color: var(--primary);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}

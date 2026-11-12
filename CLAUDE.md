@@ -116,10 +116,11 @@ The tool must be understandable for a beginner, without cluttering the UI.
 
 - Help about item types and connections lives in the template (`description`, `example`), never in React.
 - Help about pages lives in `features/help/pageHelp.ts` (one `title` + `intro` per page key). `pageKeyFromPath` picks the key from the URL.
-- `PageIntro` is shown once, above every project page (in `ProjectFrame`). "Got it" shrinks it to an "About this page" button that opens it again.
-- `/help` lists how PLANter works, every page, every category and every connection (from the template), and can show all intros again. Linked from the footer, project settings and every intro.
+- Tutorial (`features/tour/`, own code, no library): each project page has a short tour (`TOURS` in `tourSteps.ts`) that starts by itself the first time the page is opened. A step points at an element with a `data-tour="<name>"` attribute (spotlight + Figma-style card with ✕, "2 of 6", Skip tutorial, Back, Next/Done), or is a card in the middle (`target: null`). The first step of every tour is the page's `PAGE_HELP` text. A step whose element is not on the page is skipped. `placeCard.ts` (pure, tested) picks the side, `useTargetRect` finds and measures the element. While a tour is open, `#root` is `inert` and the card is in a portal. Esc closes, arrow keys step.
+- ✕ / Done marks this page's tour as seen. "Skip tutorial" stops all tours from starting by themselves. The round ? button (bottom right of every project page) shows the page's tour again, restarts the whole tutorial, or opens `/help`.
+- `/help` lists how PLANter works, every page, every category and every connection (from the template), and can restart the tutorial. Linked from the footer, project settings and the ? button.
 - New project ("Already got a good idea?"): `POST /api/projects` takes optional `items` (`type` + `title`), `groups` (`name`) and `tasks` (`title`), max 50 each, reusing the item, group and task schemas. The service checks item types against the template, places items with `startPosition`, colors groups with `pickGroupColor`, and saves everything in one `prisma.$transaction` (all or nothing). No connections: those are made on the map.
-- Seen/closed state is a flag in `localStorage` (`lib/storage.ts`, keys `planter:intro:<page>`), per browser only. Never used for real data.
+- Seen/skipped state is a flag in `localStorage` (`lib/storage.ts`, keys `planter:tour:<page>` and `planter:tour:off`), per browser only. Never used for real data.
 
 ## Scope (MoSCoW)
 

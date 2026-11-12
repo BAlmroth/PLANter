@@ -22,7 +22,7 @@ export function writeFlag(key: string, value: boolean): void {
   }
 }
 
-// Removes every flag that starts with `group` (for example "intro:"), used by "Show all intros again"
+// Removes every flag that starts with `group` (for example "tour:"), used by "Restart the tutorial"
 export function clearFlags(group: string): void {
   try {
     const keys = Object.keys(localStorage).filter((key) => key.startsWith(PREFIX + group));

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PAGE_HELP } from "../features/help/pageHelp";
 import { TypeBadge } from "../features/items/TypeBadge";
 import { useTemplate } from "../features/items/useTemplate";
-import { clearFlags } from "../lib/storage";
+import { resetTours } from "../features/tour/tourSteps";
 import styles from "./HelpPage.module.css";
 
 // The help page outside any project. "web" is the only template; when the game template
@@ -14,7 +14,7 @@ const TEMPLATE_KEY = "web";
 // Page texts come from pageHelp.ts, everything about categories and connections from the template.
 export function HelpPage() {
   const { template, error, loading, refetch } = useTemplate(TEMPLATE_KEY);
-  const [introsReset, setIntrosReset] = useState(false);
+  const [toursReset, setToursReset] = useState(false);
 
   const typeLabel = (key: string) => template?.itemTypes.find((t) => t.key === key)?.label ?? "Unknown";
 
@@ -112,21 +112,24 @@ export function HelpPage() {
         </>
       )}
 
-      <section className={styles.card} aria-labelledby="intros">
-        <h2 id="intros">Page intros</h2>
-        <p>Closed the “About this page” boxes? Show them on every page again.</p>
+      <section className={styles.card} aria-labelledby="tutorial">
+        <h2 id="tutorial">Tutorial</h2>
+        <p>
+          Every page has a short tour the first time you open it. To see one page's tour again, use the ? button in
+          the bottom-right corner of a project. To start over as a new user:
+        </p>
         <p>
           <button
             type="button"
             onClick={() => {
-              clearFlags("intro:");
-              setIntrosReset(true);
+              resetTours();
+              setToursReset(true);
             }}
           >
-            Show all page intros again
+            Restart the tutorial
           </button>{" "}
           {/* role="status": a screen reader reads the confirmation out loud */}
-          <span role="status">{introsReset && "Done. They show again on every page."}</span>
+          <span role="status">{toursReset && "Done. The tour starts again on every page."}</span>
         </p>
       </section>
 

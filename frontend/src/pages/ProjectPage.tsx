@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { PageIntro } from "../features/help/PageIntro";
 import { pageKeyFromPath } from "../features/help/pageHelp";
+import { HelpButton } from "../features/tour/HelpButton";
+import { Tour } from "../features/tour/Tour";
+import { TOURS } from "../features/tour/tourSteps";
+import { useTour } from "../features/tour/useTour";
 import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
 import { useWarnings } from "../features/warnings/useWarnings";
@@ -80,25 +83,39 @@ function ProjectFrame({ project, setProject }: FrameProps) {
     refetchWarnings();
   }, [pathname, refetchProgress, refetchWarnings]);
 
-  // Which page's intro box to show. The list and the map share a URL, so ?view= decides.
+  // Which page's tour to show. The list and the map share a URL, so ?view= decides.
   const [searchParams] = useSearchParams();
   const helpPage = pageKeyFromPath(pathname, searchParams.get("view"));
+  const tour = useTour(helpPage);
 
   return (
     <div className={styles.project}>
       <ProjectSubHeader project={project} progress={progress.progress} itemCrumb={itemCrumb} />
 
       <div className={styles.body}>
-        <aside className={styles.sidebar}>
+        <aside className={styles.sidebar} data-tour="sidebar">
           {/* Stays mounted when the page changes, so it does not jump. It has its own refresh button. */}
           <FileSidebar project={project} />
         </aside>
 
         <main className={styles.main}>
-          {helpPage && <PageIntro page={helpPage} />}
           <Outlet context={context} />
         </main>
       </div>
+
+      <HelpButton onShowTour={helpPage ? tour.start : undefined} onRestart={tour.restart} />
+      {/* key: a new page starts a fresh Tour, so nothing from the last page's step is kept */}
+      {helpPage && tour.index !== null && (
+        <Tour
+          key={helpPage}
+          steps={TOURS[helpPage]}
+          index={tour.index}
+          direction={tour.direction}
+          onStep={tour.onStep}
+          onClose={tour.close}
+          onSkipAll={tour.skipAll}
+        />
+      )}
     </div>
   );
 }

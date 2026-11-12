@@ -1,5 +1,5 @@
-// Short help text for every page of a project. Shown as the intro box at the top of the page
-// and listed on the Help page. The texts are about the pages (UI), so they live in the frontend.
+// Short help text for every page of a project. The first card of each page's tour
+// (features/tour/tourSteps.ts), and listed on the Help page. The texts are about the pages (UI), so they live in the frontend.
 // Anything about item types or connections comes from the template instead.
 
 export type PageKey = "overview" | "description" | "moodboard" | "list" | "map" | "tasks" | "checklist" | "item";

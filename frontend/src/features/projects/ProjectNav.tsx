@@ -12,14 +12,15 @@ export function ProjectNav({ projectId }: Props) {
   const base = `/projects/${projectId}`;
 
   return (
-    <nav className={styles.nav} aria-label="Project pages">
+    // data-tour: what the tutorial points at (features/tour/tourSteps.ts)
+    <nav className={styles.nav} aria-label="Project pages" data-tour="project-nav">
       <NavLink to={base} end className={linkClass}>
         Overview
       </NavLink>
       <NavLink to={`${base}/moodboard`} className={linkClass}>
         Moodboard
       </NavLink>
-      <NavLink to={`${base}/plan`} className={linkClass}>
+      <NavLink to={`${base}/plan`} className={linkClass} data-tour="nav-items">
         Items
       </NavLink>
       <NavLink to={`${base}/tasks`} className={linkClass}>

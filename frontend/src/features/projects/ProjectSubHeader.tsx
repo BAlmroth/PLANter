@@ -67,7 +67,12 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
       {section === "plan" && <PlanViewToggle />}
 
       <div className={styles.right}>
-        {progress && <ProgressBar progress={progress} label="Project progress" />}
+        {/* data-tour: the tutorial points at the progress */}
+        {progress && (
+          <div data-tour="progress">
+            <ProgressBar progress={progress} label="Project progress" />
+          </div>
+        )}
         <ProjectSettings project={project} />
       </div>
     </div>
