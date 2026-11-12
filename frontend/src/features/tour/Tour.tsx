@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { placeCard } from "./placeCard";
 import type { TourStep } from "./tourSteps";
+import { useInertRoot } from "./useInertRoot";
 import { useTargetRect } from "./useTargetRect";
 import styles from "./Tour.module.css";
 
@@ -39,16 +40,7 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
     else onStep(index + 1, 1);
   }, [target.status, direction, index, isLast, onStep, onClose]);
 
-  // The page behind the tour can be seen but not used: no clicks, no Tab, no screen reader.
-  // The card is rendered outside #root (portal), so it is not affected.
-  useEffect(() => {
-    const root = document.getElementById("root");
-    if (!root) return;
-    root.inert = true;
-    return () => {
-      root.inert = false;
-    };
-  }, []);
+  useInertRoot();
 
   // Keyboard: Esc closes, the arrow keys go forward and back (Enter and Space work on the buttons)
   useEffect(() => {

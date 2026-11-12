@@ -2,7 +2,15 @@
 // (a fake browser, so localStorage exists)
 import { afterEach, describe, expect, it } from "vitest";
 import { PAGE_HELP, type PageKey } from "../help/pageHelp";
-import { TOURS, markTourSeen, resetTours, shouldAutoStart, skipAllTours } from "./tourSteps";
+import {
+  TOURS,
+  markTourSeen,
+  markWelcomeSeen,
+  resetTours,
+  shouldAutoStart,
+  shouldShowWelcome,
+  skipAllTours,
+} from "./tourSteps";
 
 afterEach(() => localStorage.clear());
 
@@ -34,5 +42,20 @@ describe("when a tour starts by itself", () => {
     resetTours();
     expect(shouldAutoStart("list")).toBe(true);
     expect(shouldAutoStart("overview")).toBe(true);
+  });
+});
+
+describe("the welcome screen", () => {
+  it("shows once", () => {
+    expect(shouldShowWelcome()).toBe(true);
+    markWelcomeSeen();
+    expect(shouldShowWelcome()).toBe(false);
+  });
+
+  it("does not show after Skip tutorial, and shows again after a reset", () => {
+    skipAllTours();
+    expect(shouldShowWelcome()).toBe(false);
+    resetTours();
+    expect(shouldShowWelcome()).toBe(true);
   });
 });

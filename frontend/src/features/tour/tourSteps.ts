@@ -57,7 +57,17 @@ export const TOURS: Record<PageKey, TourStep[]> = {
 
 // localStorage flags. All start with "tour:", so "Restart the tutorial" clears them in one go.
 const OFF = "tour:off"; // "Skip tutorial": no tour starts by itself any more
+const WELCOME = "tour:welcome"; // the welcome screen has been shown
 const seenKey = (page: PageKey) => `tour:${page}`;
+
+// The welcome screen comes once, before the first tour, unless the tutorial was skipped
+export function shouldShowWelcome(): boolean {
+  return !readFlag(OFF) && !readFlag(WELCOME);
+}
+
+export function markWelcomeSeen(): void {
+  writeFlag(WELCOME, true);
+}
 
 // Should this page's tour start by itself? Not after "Skip tutorial", and only once per page.
 export function shouldAutoStart(page: PageKey): boolean {
