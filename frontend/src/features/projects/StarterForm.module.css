@@ -1,0 +1,73 @@
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  /* Hides the default triangle so the one below can sit on the right */
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Our own arrow, turned when the section is open */
+.summary::after {
+  content: "▸";
+  margin-left: auto;
+  color: var(--text);
+  transition: transform 0.15s;
+}
+
+.section[open] > .summary::after {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summary::after {
+    transition: none;
+  }
+}
+
+/* The category's color, with the name beside it */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--type-color, var(--borderDark));
+}
+
+.title {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.count {
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  background: var(--bg-dark);
+  border-radius: 999px;
+}
+
+.body {
+  padding: 0 16px 16px;
+}
+
+.help {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}

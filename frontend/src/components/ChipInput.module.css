@@ -1,0 +1,56 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The border takes the category's color (--type-color), grey when there is none.
+   The name is always shown, so the color never stands alone. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 10px;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--type-color, var(--borderDark));
+  border-radius: 999px;
+}
+
+.remove {
+  padding: 0 6px;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.remove:hover {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.row input {
+  flex: 1;
+  min-width: 0;
+  /* The global input style has margin-top for inputs under a label. Here it sits beside a button. */
+  margin-top: 0;
+}
