@@ -54,6 +54,12 @@ describe("web template data", () => {
     }
   });
 
+  it("never uses the same phrase for two connections", () => {
+    // "used by" on two types made the map ambiguous: which connection is it?
+    const phrases = webTemplate.relationshipTypes.flatMap((r) => [r.label, r.inverseLabel]);
+    expect(new Set(phrases).size).toBe(phrases.length);
+  });
+
   it("has help text for every item and relationship type", () => {
     // Beginners rely on these, so an empty one would show a blank help line
     for (const t of webTemplate.itemTypes) {

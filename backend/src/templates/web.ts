@@ -48,7 +48,9 @@ itemTypes: [
   groupColors: ["#3D8FD1", "#2E9A6E", "#8C6FD1", "#B08A1E", "#D45A8A", "#2B9A9A", "#A5835A", "#6F9A2A"],
   relationshipTypes: [
     // A component cannot contain the thing it uses so no cycles
-    { key: "belongs_to", label: "used by", inverseLabel: "uses", allowCycles: false,
+    // Labelled "part of" / "contains", not "used by" / "uses": those words belong to the "uses"
+    // type below, and one phrase must never mean two connections.
+    { key: "belongs_to", label: "part of", inverseLabel: "contains", allowCycles: false,
       description: "The component is a part of that page or component." },
     // Functions may call each other in a loop
     { key: "triggers", label: "triggers", inverseLabel: "triggered by", allowCycles: true,
