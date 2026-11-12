@@ -110,6 +110,16 @@ The tool should help you remember what is usually forgotten, without clutter. Bo
 - UI: Tasks & progress is one page with two sections and a sticky toggle that jumps between them (no scroll snap): "Progress & warnings" (progress, "Yet to plan" = the failed category checks, item warnings max 5) on top, "Tasks & sprints" below (New task and Sprints behind buttons). The checklist page (`/projects/:id/checklist`, not in the nav) shows every check with ✓/✗ and a link to where it is fixed, and all item warnings.
 - Add only rules where a missing link is almost always a real mistake. A rule that is often wrong (for example "every page must be protected", when many pages are public) gets ignored and clutters the UI.
 
+### Help and onboarding
+
+The tool must be understandable for a beginner, without cluttering the UI.
+
+- Help about item types and connections lives in the template (`description`, `example`), never in React.
+- Help about pages lives in `features/help/pageHelp.ts` (one `title` + `intro` per page key). `pageKeyFromPath` picks the key from the URL.
+- `PageIntro` is shown once, above every project page (in `ProjectFrame`). "Got it" shrinks it to an "About this page" button that opens it again.
+- `/help` lists how PLANter works, every page, every category and every connection (from the template), and can show all intros again. Linked from the footer, project settings and every intro.
+- Seen/closed state is a flag in `localStorage` (`lib/storage.ts`, keys `planter:intro:<page>`), per browser only. Never used for real data.
+
 ## Scope (MoSCoW)
 
 **Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.

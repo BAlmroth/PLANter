@@ -41,6 +41,13 @@
   gap: 8px;
 }
 
+/* On its own line above the delete button */
+.helpLink {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+
 .danger {
   color: #b00020;
   border-color: #b00020;

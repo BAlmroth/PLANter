@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Outlet, useLocation, useParams } from "react-router-dom";
+import { Link, Outlet, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { PageIntro } from "../features/help/PageIntro";
+import { pageKeyFromPath } from "../features/help/pageHelp";
 import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
 import { useWarnings } from "../features/warnings/useWarnings";
@@ -78,6 +80,10 @@ function ProjectFrame({ project, setProject }: FrameProps) {
     refetchWarnings();
   }, [pathname, refetchProgress, refetchWarnings]);
 
+  // Which page's intro box to show. The list and the map share a URL, so ?view= decides.
+  const [searchParams] = useSearchParams();
+  const helpPage = pageKeyFromPath(pathname, searchParams.get("view"));
+
   return (
     <div className={styles.project}>
       <ProjectSubHeader project={project} progress={progress.progress} itemCrumb={itemCrumb} />
@@ -89,6 +95,7 @@ function ProjectFrame({ project, setProject }: FrameProps) {
         </aside>
 
         <main className={styles.main}>
+          {helpPage && <PageIntro page={helpPage} />}
           <Outlet context={context} />
         </main>
       </div>

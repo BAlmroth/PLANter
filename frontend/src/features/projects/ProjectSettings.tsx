@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import { deleteProject } from "./projectsApi";
 import type { Project } from "./types";
@@ -50,9 +50,14 @@ export function ProjectSettings({ project }: Props) {
       {step !== "closed" && (
         <div className={styles.panel} role="dialog" aria-label="Project settings">
           {step === "menu" && (
-            <button type="button" className={styles.danger} onClick={() => setStep("confirm")}>
-              Delete project…
-            </button>
+            <>
+              <Link to="/help" className={styles.helpLink}>
+                Help and guides
+              </Link>
+              <button type="button" className={styles.danger} onClick={() => setStep("confirm")}>
+                Delete project…
+              </button>
+            </>
           )}
 
           {step === "confirm" && (

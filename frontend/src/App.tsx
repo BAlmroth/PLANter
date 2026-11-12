@@ -7,6 +7,7 @@ import { ItemPage } from "./pages/ItemPage";
 import { DescriptionPage, InspirationPage, PlanPage } from "./pages/ProjectViews";
 import { TasksPage } from "./pages/TasksPage";
 import { ChecklistPage } from "./pages/ChecklistPage";
+import { HelpPage } from "./pages/HelpPage";
 import { ProjectOverview } from "./features/projects/ProjectOverview";
 import { Login } from "./auth/Login";
 import { Register } from "./auth/Register";
@@ -29,6 +30,8 @@ export function App() {
           <Route element={<AppLayout />}>
           <Route path="/" element={<ProjectsPage />} />
           <Route path="/projects/new" element={<NewProjectPage />} />
+          {/* Behind login because the categories come from the template API, which needs a token */}
+          <Route path="/help" element={<HelpPage />} />
           {/* ProjectPage is the frame (sub header and File view). The nested route fills its Outlet. */}
           <Route path="/projects/:projectId" element={<ProjectPage />}>
             <Route index element={<ProjectOverview />} />
