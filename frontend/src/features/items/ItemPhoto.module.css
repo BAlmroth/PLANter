@@ -1,0 +1,41 @@
+/* Centered in the grey area on the item page, the button under the photo */
+.photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* The file input is hidden, the label works as the button */
+.upload {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.upload:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+.upload input {
+  display: none;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}

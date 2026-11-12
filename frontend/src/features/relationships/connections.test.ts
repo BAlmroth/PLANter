@@ -1,20 +1,27 @@
 import { describe, expect, it } from "vitest";
 import type { Item, Template } from "../items/types";
-import { getAllowedRelationshipTypes, getConnectOptions, getConnections } from "./connections";
+import {
+  getAllowedRelationshipTypes,
+  getConnectOptions,
+  getConnections,
+  groupConnectionsByLabel,
+  type Connection,
+} from "./connections";
 import type { Relationship } from "./types";
 
 const template: Template = {
   key: "web",
   label: "Web",
-  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true }],
-  relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true }],
+  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "", example: "" }],
+  groupColors: [],
+  relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" }],
   allowedCombinations: [],
 };
 
 function item(id: string, title: string): Item {
   return {
     id, projectId: "p", type: "page", title, description: null, status: "planned",
-    isMvp: false, positionX: 0, positionY: 0, createdAt: "2026-10-26T00:00:00.000Z",
+    isMvp: false, positionX: 0, positionY: 0, imageUrl: null, createdAt: "2026-10-26T00:00:00.000Z",
   };
 }
 
@@ -25,13 +32,13 @@ const relationship: Relationship = { id: "r1", projectId: "p", sourceItemId: "1"
 describe("getConnections", () => {
   it("shows the label on the source item", () => {
     expect(getConnections("1", [relationship], [page, button], template)).toEqual([
-      { id: "r1", label: "uses", otherTitle: "Button", otherTypeLabel: "Page" },
+      { id: "r1", label: "uses", otherTitle: "Button", otherType: "page" },
     ]);
   });
 
   it("shows the inverseLabel on the target item", () => {
     expect(getConnections("2", [relationship], [page, button], template)).toEqual([
-      { id: "r1", label: "used by", otherTitle: "LoginPage", otherTypeLabel: "Page" },
+      { id: "r1", label: "used by", otherTitle: "LoginPage", otherType: "page" },
     ]);
   });
 
@@ -54,13 +61,14 @@ describe("getConnectOptions", () => {
     key: "web",
     label: "Web",
     itemTypes: [
-      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true },
-      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true },
-      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true },
+      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
+      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
+      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
     ],
+    groupColors: [],
     relationshipTypes: [
-      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
-      { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false },
+      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" },
+      { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false, description: "" },
     ],
     allowedCombinations: [
       { source: "page", relationship: "uses", target: "asset" },
@@ -107,9 +115,10 @@ describe("getConnectOptions", () => {
 describe("getAllowedRelationshipTypes", () => {
   const withRules: Template = {
     ...template,
+    groupColors: [],
     relationshipTypes: [
-      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
-      { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true },
+      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" },
+      { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true, description: "" },
     ],
     allowedCombinations: [
       { source: "page", relationship: "uses", target: "component" },
@@ -123,5 +132,22 @@ describe("getAllowedRelationshipTypes", () => {
 
   it("is directional and returns nothing for a combination that is not allowed", () => {
     expect(getAllowedRelationshipTypes("component", "page", withRules)).toEqual([]);
+  });
+});
+
+describe("groupConnectionsByLabel", () => {
+  const uses1: Connection = { id: "a", label: "uses", otherTitle: "Button", otherType: "component" };
+  const usedBy: Connection = { id: "b", label: "used by", otherTitle: "Home", otherType: "page" };
+  const uses2: Connection = { id: "c", label: "uses", otherTitle: "Navbar", otherType: "component" };
+
+  it("puts connections with the same label together, in first-seen order", () => {
+    expect(groupConnectionsByLabel([uses1, usedBy, uses2])).toEqual([
+      { label: "uses", connections: [uses1, uses2] },
+      { label: "used by", connections: [usedBy] },
+    ]);
+  });
+
+  it("returns no groups for no connections", () => {
+    expect(groupConnectionsByLabel([])).toEqual([]);
   });
 });

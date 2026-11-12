@@ -8,35 +8,24 @@
   border-bottom: 1px solid var(--border);
 }
 
-.name {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-/* The page links, in one rounded group pushed to the right */
-.nav {
+/* The trail with the page title under it, at the left */
+.heading {
   display: flex;
+  flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  overflow-wrap: anywhere; /* a long item title without spaces must not push the page wider */
+}
+
+/* Progress and the settings button, at the right */
+.right {
   margin-left: auto;
-  padding: 4px;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.link {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  color: var(--text);
-  text-decoration: none;
-  border-radius: 6px;
-}
-.link:hover {
-  color: var(--text-h);
-}
-
-.active {
-  color: var(--text-h);
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+  display: flex;
+  align-items: center;
+  gap: 12px 24px;
 }

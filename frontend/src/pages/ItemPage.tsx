@@ -1,47 +1,22 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ItemDetail } from "../features/items/ItemDetail";
-import { useProject } from "../features/projects/useProject";
+import { useProjectContext } from "../features/projects/useProjectContext";
 
 // The detail view of one item: /projects/:projectId/items/:itemId
+// ProjectPage has already loaded the project, so it comes from the Outlet context,
+// together with the project's warnings (the item shows its own) and progress (refreshed after changes).
 export function ItemPage() {
-  const { projectId, itemId } = useParams() as { projectId: string; itemId: string };
-  // The project is needed for its template key and name
-  const { project, error, loading, refetch } = useProject(projectId);
-
-  if (loading) {
-    return (
-      <main>
-        <p>Loading…</p>
-      </main>
-    );
-  }
-
-  if (error) {
-    // 404: not found or not yours. 400: the id in the URL is not a valid uuid.
-    const notFound = error.status === 404 || error.status === 400;
-    return (
-      <main>
-        <h1>{notFound ? "Project not found" : "Could not load the project"}</h1>
-        {!notFound && (
-          <div role="alert">
-            <p>{error.message}</p>
-            <button type="button" onClick={refetch}>
-              Try again
-            </button>
-          </div>
-        )}
-        <p>
-          <Link to="/">Back to projects</Link>
-        </p>
-      </main>
-    );
-  }
-
-  if (!project) return null;
+  const { itemId } = useParams() as { itemId: string };
+  const { project, warnings, progress } = useProjectContext();
+  const itemWarnings = warnings.byItem.get(itemId) ?? [];
 
   return (
-    <main>
-      <ItemDetail project={project} itemId={itemId} />
-    </main>
+    <ItemDetail
+      project={project}
+      itemId={itemId}
+      warnings={itemWarnings}
+      refreshWarnings={warnings.refetch}
+      refreshProgress={progress.refetch}
+    />
   );
 }

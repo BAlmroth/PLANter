@@ -1,0 +1,28 @@
+/* A switch between the views of a page (List / Map, Progress / Tasks): one rounded group */
+.toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.option {
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.option:hover {
+  color: var(--text-h);
+}
+
+.active {
+  color: var(--text-h);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}

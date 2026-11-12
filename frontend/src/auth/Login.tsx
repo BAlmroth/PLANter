@@ -18,6 +18,8 @@ export function Login() {
       footer={
         <>
           No account? <Link to="/register">Register</Link>
+          <br />
+          <Link to="/forgot-password">Forgot password?</Link>
         </>
       }
     />

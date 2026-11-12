@@ -1,44 +1,84 @@
-import { NavLink } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { Breadcrumb, type Crumb } from "../../components/Breadcrumb";
 import { ProgressBar } from "../progress/ProgressBar";
 import type { Progress } from "../progress/types";
+import { PlanViewToggle } from "./PlanViewToggle";
+import { ProjectSettings } from "./ProjectSettings";
 import type { Project } from "./types";
+import type { ItemCrumb } from "./useProjectContext";
 import styles from "./ProjectSubHeader.module.css";
 
 type Props = {
   project: Project;
   progress: Progress | null; // null while loading
-  onNavigate: () => void; // called when a page link is clicked
+  itemCrumb: ItemCrumb | null; // set by the item page, null on every other page
 };
 
-// The bar under the header on every project page: name, progress and the page links.
-export function ProjectSubHeader({ project, progress, onNavigate }: Props) {
-  // NavLink adds the "active" class to the link of the page we are on. "end" on the overview link
-  // stops it from also matching /map, /tasks and so on.
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? `${styles.link} ${styles.active}` : styles.link;
+// The title of each page under /projects/:projectId, by the first part of the address after the project id
+const PAGE_TITLES: Record<string, string> = {
+  description: "Description",
+  moodboard: "Moodboard",
+  plan: "Items",
+  tasks: "Tasks & progress",
+  checklist: "Checklist",
+};
+
+// The bar under the header on every project page: the trail and title of the page we are on, and the progress.
+export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
+  // "/projects/<id>/tasks" -> ["", "projects", "<id>", "tasks"]
+  const section = useLocation().pathname.split("/")[3] ?? "";
+  const base = `/projects/${project.id}`;
+
+  let title: string;
+  let crumbs: Crumb[];
+
+  if (section === "items") {
+    // The item page sets itemCrumb once the item is loaded
+    title = itemCrumb?.title ?? "Item";
+    crumbs = [
+      { label: project.name, to: base },
+      { label: itemCrumb?.typeLabel ?? "Items", to: `${base}/plan?view=list` },
+      { label: title },
+    ];
+  } else if (section === "checklist") {
+    // The checklist is opened from Tasks & progress (not from the nav), so the trail goes back there
+    title = PAGE_TITLES.checklist;
+    crumbs = [
+      { label: project.name, to: base },
+      { label: PAGE_TITLES.tasks, to: `${base}/tasks` },
+      { label: title },
+    ];
+  } else if (section === "") {
+    title = "Overview";
+    crumbs = [{ label: project.name }];
+  } else {
+    title = PAGE_TITLES[section] ?? "Overview";
+    crumbs = [{ label: project.name, to: base }, { label: title }];
+  }
 
   return (
     <div className={styles.subHeader}>
-      <h1 className={styles.name}>{project.name}</h1>
-      {progress && <ProgressBar progress={progress} label="Project progress" />}
+      <div className={styles.heading}>
+        <Breadcrumb crumbs={crumbs} />
+        <h1 className={styles.title}>{title}</h1>
+      </div>
 
-      <nav className={styles.nav} aria-label="Project pages">
-        <NavLink to="" end className={linkClass} onClick={onNavigate}>
-          Overview
-        </NavLink>
-        <NavLink to="files" className={linkClass} onClick={onNavigate}>
-          Files
-        </NavLink>
-        <NavLink to="map" className={linkClass} onClick={onNavigate}>
-          Map
-        </NavLink>
-        <NavLink to="tasks" className={linkClass} onClick={onNavigate}>
-          Tasks
-        </NavLink>
-        <NavLink to="progress" className={linkClass} onClick={onNavigate}>
-          Progress
-        </NavLink>
-      </nav>
+      {/* Next to the title, at the left */}
+      {section === "plan" && (
+        <div data-tour="plan-view-toggle">
+          <PlanViewToggle />
+        </div>
+      )}
+
+      <div className={styles.right}>
+        {/* data-tour: the tutorial points at the progress */}
+        {progress && (
+          <div data-tour="progress">
+            <ProgressBar progress={progress} label="Project progress" />
+          </div>
+        )}
+        <ProjectSettings project={project} />
+      </div>
     </div>
   );
 }

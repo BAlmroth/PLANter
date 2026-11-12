@@ -34,7 +34,9 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
   }
 
   return (
-    <div>
+    // A fragment, not a <div>: the parts become children of the box the map puts this in,
+    // so the box can lay them out on one line
+    <>
       {selected ? (
         <p>
           {source.title}{" "}
@@ -61,6 +63,6 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
       <button type="button" onClick={onCancel}>
         Cancel
       </button>
-    </div>
+    </>
   );
 }

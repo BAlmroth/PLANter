@@ -1,90 +1,70 @@
-/* One item: title and tags on top, then the description and the connections */
+/* One item as a small card in the section's grid: status and title, then the description, then the tags
+   (lines 2 and 3 only when there is something to show). The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--bg-dark);
-}
-.row:last-child {
-  border-bottom: 0;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--type-color, var(--border));
+  border-radius: 6px;
 }
 
 .top {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
+/* The title takes the free space and is cut with "…" when too long.
+   min-width: 0 is needed: a flex child will not shrink below its text width otherwise. */
 .title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   font-weight: 600;
   color: var(--text-h);
   text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .title:hover {
   color: var(--primary);
   text-decoration: underline;
 }
 
+/* Line 3: the tags, on their own line so they never take space from the title or the description.
+   Indented to line up with the title (status icon 14px + gap 8px). Wraps if the card is very narrow. */
 .tags {
   display: flex;
-  flex-shrink: 0;
-  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0 0 22px;
 }
 
-.tag {
-  padding: 2px 8px;
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  border-radius: 4px;
-}
-
-/* One colour per status. The names match the status keys. */
-.planned {
-  color: var(--text);
-  background: var(--bg-dark);
-}
-.in_progress {
-  color: var(--accent);
-  background: rgb(217 119 6 / 12%);
-}
-.done {
-  color: var(--primary);
-  background: rgb(62 101 84 / 12%);
-}
-
-.mvp {
-  color: var(--on-primary);
-  background: var(--accent);
-}
-
-/* The groups of the item, as a subtitle under the title */
-.groups {
-  margin: 2px 0 0;
+/* "3 connections": small and quiet, the list is in the tooltip and on the item page */
+.connections {
   font-family: var(--mono);
   font-size: 0.75rem;
   color: var(--text);
+  white-space: nowrap;
 }
 
-.description {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-}
-
-/* The connections, indented under the item with a thin line */
-.connections {
-  margin: 8px 0 0;
-  padding: 0 0 0 12px;
-  list-style: none;
-  font-size: 0.85rem;
-  border-left: 2px solid var(--border);
-}
-
-/* "uses", "used by" */
-.relation {
+/* The only filled badge (see the color rules in CLAUDE.md) */
+.mvp {
+  padding: 1px 6px;
   font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text);
+  font-size: 0.7rem;
+  color: var(--on-primary);
+  background: var(--accent);
+  border-radius: 4px;
 }
 
-.type {
-  opacity: 0.7;
+/* Line 2: one line, cut with "…", indented like the tags */
+.description {
+  margin: 2px 0 0 22px;
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

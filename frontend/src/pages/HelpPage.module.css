@@ -1,0 +1,70 @@
+/* One column of cards, not wider than is comfortable to read */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.card {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  line-height: 1.5;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: var(--text-h);
+}
+
+.steps li + li {
+  margin-top: 6px;
+}
+
+/* Name on the left, explanation on the right. Stacks on narrow screens. */
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.list > div {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 4px 16px;
+}
+
+.list dt {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.list dd {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .list > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+.example,
+.inverse {
+  color: var(--text);
+  font-weight: normal;
+}
+
+/* Which categories a connection goes between, on its own line */
+.combos {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}

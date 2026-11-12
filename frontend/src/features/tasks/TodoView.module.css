@@ -1,19 +1,30 @@
-/* The Tasks page: a header row, the Sprints and New task cards, then one card per sprint */
+/* The Tasks & sprints view: a header row, the Sprints and New task cards (when open), then one card per sprint */
 .page {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* flex-wrap: on a narrow screen the buttons move onto a new row instead of squeezing */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.5rem;
+/* "Manage sprints" and "New task". margin-left: auto pushes them to the right, as on the Items page. */
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* An outline button for the action that is not the main one */
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
 }
 
 .count {

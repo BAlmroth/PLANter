@@ -5,16 +5,13 @@
   gap: 16px;
 }
 
-/* "Files", the number of items, and "Add item" on the right */
-.header {
+/* One row: "Items", the count, Category | Group, the filters, and the actions on the right.
+   flex-wrap: on a narrow screen the parts move onto new rows instead of squeezing. */
+.toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-}
-
-.title {
-  margin: 0;
-  font-size: 1.5rem;
+  gap: 8px 12px;
 }
 
 .count {
@@ -25,8 +22,18 @@
   border-radius: 4px;
 }
 
-.addButton {
+/* "Manage groups" and "Add item". margin-left: auto takes all free space to the left, pushing them right. */
+.actions {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
+}
+
+/* An outline button for actions that are not the main one */
+.secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
 }
 
 /* Category | Group switch: the active one is filled, the other one is an outline */
@@ -46,12 +53,11 @@
   font-size: 0.85rem;
 }
 
-/* Two or more cards side by side when there is room, one on a narrow screen */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  align-items: start;
-  gap: 16px;
+/* The sections, one under the other */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .card {
@@ -61,36 +67,80 @@
   border-radius: 12px;
 }
 
-/* Small caps category label, the same as on the overview */
+/* The heading line of a section: the label on the left, the progress bar (category mode) on the right.
+   The line under it is in the section's color (--type-color, set by FileView): the item type in
+   "Category" mode, the group in "Group" mode. Grey for "Unknown" and "No group". */
+.labelRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--type-color, var(--border));
+}
+
+/* Small caps section label */
 .label {
   display: flex;
-  justify-content: space-between;
-  margin: 0 0 4px;
-  padding-bottom: 8px;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
 }
 
 .labelCount {
   font-weight: 400;
+  color: var(--text);
 }
 
+/* The item cards of a section: as many 260px+ columns as fit, filled left to right, top to bottom.
+   min(100%, 260px): on a screen narrower than 260px, one column that fits instead of overflowing. */
 .list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* The description of a group, under its label */
+/* The description of a group, between its label and its items */
 .description {
-  margin: 8px 0 0;
+  margin: 0 0 10px;
   font-size: 0.9rem;
   opacity: 0.8;
+}
+
+/* The one line with the empty categories (or groups), at the bottom */
+.emptySections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* A name with a dot in front in the section's color (--type-color), grey for "Unknown" and "No group" */
+.emptyName {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-h);
+}
+.emptyName::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--type-color, var(--border));
+  border-radius: 50%;
 }
 
 .empty {

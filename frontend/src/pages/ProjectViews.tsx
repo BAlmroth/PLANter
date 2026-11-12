@@ -1,9 +1,10 @@
 import { FileView } from "../features/items/FileView";
 import { MapView } from "../features/map/MapView";
-import { ProgressOverview } from "../features/progress/ProgressOverview";
+import { InspirationPageCard } from "../features/projects/InspirationPageCard";
+import { usePlanView } from "../features/projects/usePlanView";
 import { ProjectDescriptionCard } from "../features/projects/ProjectDescriptionCard";
 import { useProjectContext } from "../features/projects/useProjectContext";
-import { TodoView } from "../features/tasks/TodoView";
+import styles from "./PlanPage.module.css";
 
 // The pages under /projects/:projectId. Each one picks the project (and shared data) out of the
 // Outlet context that ProjectPage provides, and shows one view.
@@ -13,35 +14,28 @@ export function DescriptionPage() {
   return <ProjectDescriptionCard project={project} setProject={setProject} />;
 }
 
-export function FilesPage() {
+export function InspirationPage() {
   const { project } = useProjectContext();
-  return <FileView project={project} />;
+  return <InspirationPageCard projectId={project.id} />;
 }
 
-export function MapPage() {
-  const { project } = useProjectContext();
-  return <MapView project={project} />;
-}
+// The list and the map show the same items, so they share one page. The List / Map toggle is in the sub header.
+export function PlanPage() {
+  const { project, warnings, progress } = useProjectContext();
+  const { view } = usePlanView();
 
-export function TasksPage() {
-  const { project } = useProjectContext();
-  return <TodoView project={project} />;
-}
-
-export function ProgressPage() {
-  const { project, progress } = useProjectContext();
   return (
-    <>
-      {progress.loading && <p>Loading progress…</p>}
-      {progress.error && (
-        <div role="alert">
-          <p>{progress.error}</p>
-          <button type="button" onClick={progress.refetch}>
-            Try again
-          </button>
-        </div>
+    <div className={styles.page}>
+      {view === "list" ? (
+        <FileView
+          project={project}
+          warnings={warnings.byItem}
+          progress={progress.progress}
+          onItemAdded={progress.refetch}
+        />
+      ) : (
+        <MapView project={project} warnings={warnings.byItem} />
       )}
-      {progress.progress && <ProgressOverview progress={progress.progress} templateKey={project.template} />}
-    </>
+    </div>
   );
 }

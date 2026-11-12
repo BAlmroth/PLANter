@@ -26,19 +26,43 @@
 }
 
 .subLabel {
-  margin: 16px 0 8px;
+  margin: 0 0 8px;
   font-size: 0.9rem;
 }
 
+/* The "New group" form in a dashed box under the cards */
+.newGroup {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1.5px dashed var(--borderDark);
+  border-radius: var(--radius);
+}
+
+/* The group cards, two per row. minmax(0, 1fr): two equal columns that may shrink below their content,
+   so a long item name cannot make one column wider than the other. */
 .list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+/* One card per row on a narrow screen */
+@media (max-width: 700px) {
+  .list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
+/* One group: a card with a thick left border and a light background in the group's color (--group-color,
+   set by GroupSection). color-mix() mixes 8% of the group color into white, the same way TypeBadge tints. */
 .group {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--bg-dark);
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--group-color, var(--border)) 8%, var(--surface));
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--group-color, var(--border));
+  border-radius: var(--radius);
 }
 
 /* Name on the left, Edit and Delete on the right */
@@ -49,9 +73,21 @@
   gap: 8px;
 }
 
+/* The group name a bit bigger than the text around it, with the item count next to it */
 .name {
-  font-weight: 500;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: var(--text-h);
+}
+
+.itemCount {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text);
 }
 
 .description {
@@ -104,7 +140,9 @@
   gap: 4px;
   padding: 2px 4px 2px 8px;
   font-size: 0.85rem;
-  background: var(--bg-dark);
+  /* White, so the tags stand out on the tinted card */
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 

@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import { GroupChips } from "../groups/GroupChip";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import type { Group } from "../groups/types";
 import { useGroups } from "../groups/useGroups";
 import type { Project } from "../projects/types";
-import { STATUS_LABELS } from "./types";
+import { typeColorStyle } from "./typeColor";
+import { StatusIcon } from "./StatusIcon";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileSidebar.module.css";
@@ -12,11 +14,15 @@ import styles from "./FileSidebar.module.css";
 function GroupNames({ itemId, groups }: { itemId: string; groups: Group[] }) {
   const itemGroups = getGroupsOfItem(itemId, groups);
   if (itemGroups.length === 0) return null;
-  return <span className={styles.groups}>{itemGroups.map((group) => group.name).join(", ")}</span>;
+  return (
+    <span className={styles.groups}>
+      <GroupChips groups={itemGroups} />
+    </span>
+  );
 }
 
 // The short file list on the left of every project page: category, item name, groups and status.
-// The full File view (descriptions and connections) is its own page, /projects/:projectId/files.
+// The full File view (descriptions and connections) is shown on /projects/:projectId/plan.
 // It loads once and is not reloaded when the page changes. The refresh button loads it again,
 // for example after an item was added on the map or a group was changed.
 export function FileSidebar({ project }: { project: Project }) {
@@ -51,10 +57,13 @@ export function FileSidebar({ project }: { project: Project }) {
     );
   }
 
+  // After the check above TypeScript knows the template is loaded
+  const loadedTemplate = template.template;
+
   // Items whose type is not in the template (for example an old key) go under "Unknown"
-  const knownKeys = template.template.itemTypes.map((type) => type.key);
+  const knownKeys = loadedTemplate.itemTypes.map((type) => type.key);
   const categories = [
-    ...template.template.itemTypes.map((type) => ({
+    ...loadedTemplate.itemTypes.map((type) => ({
       key: type.key,
       label: type.pluralLabel,
       items: items.items.filter((item) => item.type === type.key),
@@ -63,12 +72,12 @@ export function FileSidebar({ project }: { project: Project }) {
   ];
 
   return (
-    <nav aria-label="Files">
+    <nav aria-label="Items">
       <div className={styles.heading}>
-        <Link to={`/projects/${project.id}/files`} className={styles.headingLink}>
-          File Overview<span className={styles.count}>{items.items.length} items </span>
+        <Link to={`/projects/${project.id}/plan?view=list`} className={styles.headingLink}>
+          Item Overview<span className={styles.count}>{items.items.length} items </span>
         </Link>
-        <button type="button" className={styles.refresh} onClick={refresh} aria-label="Refresh file list" title="Refresh">
+        <button type="button" className={styles.refresh} onClick={refresh} aria-label="Refresh item list" title="Refresh">
           ↻
         </button>
       </div>
@@ -76,7 +85,8 @@ export function FileSidebar({ project }: { project: Project }) {
         // Hide "Unknown" when there is nothing in it
         .filter((category) => category.key !== "unknown" || category.items.length > 0)
         .map((category) => (
-          <section key={category.key} className={styles.group}>
+          // The key is the type key ("unknown" matches no type, so it stays grey)
+          <section key={category.key} className={styles.group} style={typeColorStyle(loadedTemplate, category.key)}>
             <h2 className={styles.groupTitle}>{category.label}</h2>
             {category.items.length === 0 ? (
               <p className={styles.empty}>No items yet.</p>
@@ -89,7 +99,7 @@ export function FileSidebar({ project }: { project: Project }) {
                         {item.title}
                         <GroupNames itemId={item.id} groups={groups.groups} />
                       </span>
-                      <span className={styles.status}>{STATUS_LABELS[item.status]}</span>
+                      <StatusIcon status={item.status} />
                     </Link>
                   </li>
                 ))}

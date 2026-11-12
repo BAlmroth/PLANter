@@ -1,0 +1,43 @@
+/* A small box in the top right corner of the map */
+.legend {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.summary {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A square in the type's color (--type-color) before the type name, like the strip on a node */
+.type::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  background: var(--type-color, var(--border));
+  border-radius: 2px;
+}
+
+/* A small explanation on its own line, indented under the status text */
+.note {
+  display: block;
+  padding-left: 18px;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}

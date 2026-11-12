@@ -1,80 +1,56 @@
-/* The item page: a back link and three cards (the item, its connections, its tasks) */
+/* The item page: a header, then two columns (main and side). Colors come from index.css. */
 .page {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 760px;
 }
 
-.back {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--text);
-  text-decoration: none;
-}
-.back:hover {
-  color: var(--text-h);
-}
+/* --- Header --- */
 
-.card {
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-/* --- The item --- */
-
-.tags {
+/* Title on the left, status and buttons on the right. Wraps on a narrow screen. */
+.header {
   display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Small grey chip, used for the type and for the type of a connected item */
-.tag {
-  display: inline-block;
-  padding: 2px 8px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--text);
-  background: var(--bg-dark);
-  border-radius: 4px;
+.heading {
+  min-width: 0;
 }
 
-.mvp {
-  color: var(--on-primary);
-  background: var(--accent);
+/* The title with the type badge, MVP badge and groups beside it */
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
 }
 
 .title {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 1.75rem;
+  overflow-wrap: anywhere; /* a long title without spaces must not push the page wider */
 }
 
-/* The groups of the item, as a subtitle under the title */
-.groups {
-  margin: 0 0 8px;
+/* MVP is the only filled badge (amber) */
+.mvp {
+  padding: 1px 8px;
   font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text);
+  font-size: 0.75rem;
+  color: var(--on-primary);
+  background: var(--accent);
+  border-radius: 999px;
 }
 
-.description {
-  max-width: 65ch; /* a comfortable line length to read */
-  margin: 0 0 16px;
-  white-space: pre-wrap; /* keep the line breaks the user typed */
-}
-
-/* Status on the left, Edit and Delete on the right */
-.toolbar {
+.headerActions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  align-items: center;
+  gap: 8px;
 }
 
 .status {
@@ -89,6 +65,7 @@
   gap: 6px;
   padding: 6px 12px;
   font-size: 0.9rem;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
@@ -100,6 +77,176 @@
 }
 .toggle input {
   accent-color: var(--primary);
+}
+
+.error {
+  flex-basis: 100%; /* its own line under the header */
+  margin: 0;
+  color: var(--danger);
+}
+
+/* --- The two columns --- */
+
+/* The side column has a fixed width, the main column takes the rest.
+   minmax(0, 1fr): a wide photo must not stretch the main column. */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* One column when the page is too narrow for both (the file list on the left takes 320px too) */
+@media (max-width: 1200px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Card title with a line under it */
+.cardTitle {
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--bg-dark);
+}
+
+/* A card title with something on the right (the warning count) */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--bg-dark);
+}
+.cardHeader .cardTitle {
+  margin: 0;
+  border-bottom: 0;
+}
+
+/* Small caps label, used in tiles and connection boxes */
+.label {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* --- Main photo --- */
+
+/* The grey area the photo sits in, centered like a preview */
+.stage {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+}
+
+/* --- Details: four small tiles in a row (two on a narrow screen) --- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.tile {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.tile dd {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* --- Connections --- */
+
+/* One box per kind of connection, two boxes per row */
+.relationGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.relationGroup {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* "● Button  Component ×": a dot in the type color (--type-color), the title, the type label */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 4px 2px 10px;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.pill::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--type-color, var(--text));
+  border-radius: 50%;
+}
+.pillType {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.remove {
+  padding: 0 6px;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: transparent;
+}
+.remove:hover:not(:disabled) {
+  color: var(--danger);
 }
 
 .actions {
@@ -119,64 +266,50 @@
   background: transparent;
   border: 1px solid var(--danger);
 }
-.textButton {
-  padding: 4px 8px;
-  font-size: 0.85rem;
-  color: var(--text);
-  background: transparent;
-}
-.textButton:hover:not(:disabled) {
-  color: var(--danger);
+
+/* --- Side column --- */
+
+.description {
+  margin: 0;
+  white-space: pre-wrap; /* keep the line breaks the user typed */
 }
 
-/* --- Connections and tasks --- */
-
-/* Small caps card label, the same as on the overview */
-.label {
-  margin: 0 0 12px;
+/* The warning count, in the danger color like the warnings themselves */
+.count {
+  padding: 0 8px;
   font-family: var(--mono);
   font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 4px;
 }
 
-.list {
-  margin: 0 0 16px;
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--bg-dark);
+.warning {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  border-radius: 6px;
+}
+.warning strong {
+  color: var(--text-h);
 }
 
-/* "uses", "used by": the kind of connection, before the item name */
-.relation {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text);
-}
-
-.empty {
-  opacity: 0.7;
-}
-
-/* ItemTasks: its heading, list and add form. Only direct children (>), the rows style themselves (TaskRow.module.css) */
+/* --- Tasks: ItemTasks' heading, list and add form. Only direct children (>), the rows style themselves (TaskRow.module.css) --- */
 .tasks > h2 {
-  margin: 0 0 12px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text);
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--bg-dark);
 }
 .tasks > ul {
   margin: 0 0 16px;

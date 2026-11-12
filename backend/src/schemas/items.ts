@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { textSchema } from "./text.js";
 
 const statusSchema = z.enum(["planned", "in_progress", "done"]);
 //zod schema for items
 export const createItemSchema = z.object({
-  title: z.string().trim().min(1).max(100),
+  title: textSchema.trim().min(1).max(100),
+  // Not textSchema: the type must match a template key exactly, so anything else is already a 400
   type: z.string().min(1),
-  description: z.string().max(500).optional(),
+  description: textSchema.max(500).optional(),
   status: statusSchema.optional(), // db default "planned"
   isMvp: z.boolean().optional(),   // bd default false
 });

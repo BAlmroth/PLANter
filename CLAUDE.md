@@ -50,9 +50,13 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - A template is plain data (strings, arrays, objects, no functions), so it can be sent as JSON. It contains:
-  - item types: `key`, `label`, and whether the type counts toward progress
-  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), and `allowCycles`
+  - item types: `key`, `label`, whether the type counts toward progress, `color` (`#RRGGBB`, the type's color in the whole UI), and help text for beginners: `description` (one plain sentence) and `example` (typical names, shown as the title placeholder)
+  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), `allowCycles`, and `description` (help text)
   - the allowed combinations of source type, relationship type and target type
+  - `groupColors`: the colors a group can have (`#RRGGBB`). Lighter than the item type colors and never the same, so a group never looks like an item type
+  - `warningRules`: an item of `itemType` with no `relationship` in a `direction` (`incoming`/`outgoing`) gets a warning with `message` (for example a page with no component belonging to it)
+  - `checklistItemTypes`: the categories people tend to forget (`itemType` + `label`, written as a todo like "Plan the tests"). The checklist has one check per entry, passed when the project has at least one item of that type
+- Colors are presentation, like labels: they can be changed at any time without a migration. The database never stores a type color. A group stores its own hex, so changing `groupColors` does not change existing groups.
 - Keys are permanent, labels are free. The database stores only keys (`items.type`, `relationships.type`, `projects.template`). The UI only shows labels, so a label can be changed at any time. A key is never renamed or removed in code alone: that needs a data migration (`UPDATE ... SET type = ...`) in a Prisma migration. If the frontend meets an unknown key, it shows it as "Unknown" instead of crashing.
 - The frontend gets the template from `GET /api/templates/:key` (uses `requireAuth` like every other route). The template is never copied into the frontend.
 - Never hard-code item types or relationship rules in route logic. Read them from the template.
@@ -66,20 +70,24 @@ Login, registration and logout are done in the frontend directly against Supabas
 ### Data model (starting point, refine in sprint 1)
 
 - `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (optional), template, created_at
-- `items`: id, project_id, type, title, description, status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, created_at
+- `items`: id, project_id, type, title, description, status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, image_path (optional), created_at. `image_path` is the main photo (for example a Figma screenshot), see the images rule below.
 - `relationships`: id, project_id, source_item_id, target_item_id, type. Unique on (source, target, type). An item cannot be connected to itself.
 - `tasks`: id, project_id, item_id (optional), title, done, sprint_id (optional)
 - `sprints`: id, project_id, name
-- `item_details`: id, item_id, title, url (optional), text (optional), created_at. Detail rows of an item, for example the links and notes of a tech stack item. No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order.
-- `project_inspirations`: id, project_id, title, url (optional), text (optional), created_at. Inspiration for the whole project. Not part of progress.
+- `item_details`: id, item_id, title, url (optional), text (optional), image_path (optional), created_at. Detail rows of an item: its moodboard. A row with an image is a visual reference (title is the caption), a row with a link and no image is a link row (text is the note). No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order. API: `/api/items/:itemId/details` (list, create) and `/api/item-details/:id` (edit, delete, image).
+- `project_colors`: id, project_id, hex (`#RRGGBB`, stored in upper case), name (optional), created_at. The project's color palette. Unique on (id, project_id) so `item_colors` can use a composite foreign key. API: `/api/projects/:projectId/colors` and `/api/colors/:id`.
+- `item_colors`: item_id, color_id, project_id. Primary key (item_id, color_id). Which palette colors an item uses. Composite foreign keys `(item_id, project_id)` and `(color_id, project_id)` make sure the item and the color are in the same project. Items only link to palette colors, they never own one. API: `GET /api/projects/:projectId/item-colors`, `PUT` and `DELETE /api/items/:itemId/colors/:colorId`.
+- `project_inspirations`: id, project_id, title, url (optional), text (optional), image_path (optional), created_at. Inspiration for the whole project. Not part of progress. `image_path` is the path of the image in the private Supabase Storage bucket `inspiration-images` (`<projectId>/<uuid>.<ext>`), never a URL. `text` doubles as the image description. The API returns `imageUrl` (a signed URL valid for one hour) instead of the path.
+- `groups`: id, project_id, name, description (optional), color, created_at. A user-made group of items, for example "Navigation". Not an item type: an item keeps its type and can be in several groups (or none). `color` is one of the template's `groupColors`: Zod checks `#RRGGBB` and the groups service checks the template (400 otherwise). Created without a color, a group gets the next color no group in the project uses yet. Unique on (id, project_id) so `group_items` can use a composite foreign key. API: `/api/projects/:projectId/groups` (list, create), `/api/groups/:id` (edit, delete).
+- `group_items`: group_id, item_id, project_id. Primary key (group_id, item_id). Which items are in a group. Composite foreign keys `(group_id, project_id)` and `(item_id, project_id)` make sure the group and the item are in the same project. Deleting a group or an item only deletes these rows. API: `PUT` and `DELETE /api/groups/:id/items/:itemId`.
 
-Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links).
+Length limits are enforced by Zod only (not in the database): project description max 500, item description max 500, title max 100, url max 2000, text max 2000 (item details and inspiration), color name max 100, group name max 100, group description max 500, color hex exactly `#RRGGBB` for palette and group colors (so a color is safe in a `style` attribute). `url` must be a valid URL using `http://` or `https://` (blocks `javascript:` links). Every text field that is saved starts from `textSchema` (or `urlSchema`) in `schemas/text.ts`, which rejects the null character `\u0000`: Postgres cannot store it, so it would otherwise be a 500. Keys checked against the template (item type, relationship type) stay plain `z.string()`.
 
 Use database constraints, foreign keys (with cascade delete) and enums in addition to Zod.
 
 - The project description is a column on `projects`, not an item type. MVP is the `is_mvp` flag on items, not an item type.
 - Tech stack and design are ordinary item types: they have a status, count toward progress, can have relationships and appear on the map. No separate tables per category (that would hard-code types outside the template).
-- Images (for item details and inspiration) are postponed. They need Supabase Storage.
+- Images (project inspiration, the main photo of an item, and item details) are stored in Supabase Storage (private bucket `inspiration-images`) and uploaded through Express: `PUT /api/inspirations/:id/image`, `PUT /api/items/:id/image` and `PUT /api/item-details/:id/image`. The body is the raw file (JPEG/PNG/WebP, max 5 MB). `express.raw()` enforces type and size, and a Zod schema (`schemas/images.ts`) checks that the file's first bytes are really an image. Shared code: `services/images.ts` and `middleware/imageBody.ts`. File paths are made by the server (`<projectId>/<uuid>.<ext>`). The frontend never talks to Storage, and gets `imageUrl` (a signed URL valid for one hour) instead of the path. Deleting an entry, an item or a project also deletes its files.
 - Composite foreign keys `(item_id, project_id)` make sure relationships and tasks point at items in the same project.
 - Deleting an item also deletes its relationships and tasks (cascade). The delete confirmation must say so (for example "This also deletes 3 tasks and 5 connections").
 - Timestamps are `timestamptz`. The API sends ISO strings, and the frontend shows them in the user's local time.
@@ -90,14 +98,38 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 - Completion = `done / (planned + in_progress + done)`, per item type and in total. In-progress items count as not finished.
 - Only item types that count toward progress in the template are included. Project inspiration and item details are not items and never count.
 - A project or category with no items is 0%, never a division by zero.
+- Shown on the Tasks & progress page (a ring for the total, a bar per category) and as a slim bar on each category heading in the item list. There is no separate Progress page (`/progress` redirects to `/tasks`).
+
+### Warnings and checklist
+
+The tool should help you remember what is usually forgotten, without clutter. Both are pure functions in `services/` (no database, unit tested) and read their rules from the template where possible.
+
+- Item warnings (`GET /api/projects/:id/warnings`, `services/warnings.ts`): one warning per item and broken rule. The template's `warningRules`, plus "an MVP item that is not done and has no tasks" (in code, not tied to a type). Shown as a "!" badge on the item in the list and on the map, and as a list on Tasks & progress and on the checklist page.
+- Project checklist (`GET /api/projects/:id/checklist`, `services/checklist.ts`): every check with `passed`, never only the failed ones. `kind: "category"` (one per `checklistItemTypes` entry) or `kind: "readiness"` (`has_mvp`, `mvp_has_tasks`, `has_sprint`, `connections`). The readiness checks reuse `findWarnings`, so the checklist and the badges always agree. Empty never counts as passed (no MVP, no items).
+- Check keys are stable like other keys, labels can change. The frontend only uses keys for navigation (`features/checklist/checkLinks.ts`).
+- UI: Tasks & progress is one page with two sections and a sticky toggle that jumps between them (no scroll snap): "Progress & warnings" (progress, "Yet to plan" = the failed category checks, item warnings max 5) on top, "Tasks & sprints" below (New task and Sprints behind buttons). The checklist page (`/projects/:id/checklist`, not in the nav) shows every check with ✓/✗ and a link to where it is fixed, and all item warnings.
+- Add only rules where a missing link is almost always a real mistake. A rule that is often wrong (for example "every page must be protected", when many pages are public) gets ignored and clutters the UI.
+
+### Help and onboarding
+
+The tool must be understandable for a beginner, without cluttering the UI.
+
+- Help about item types and connections lives in the template (`description`, `example`), never in React.
+- Help about pages lives in `features/help/pageHelp.ts` (one `title` + `intro` per page key). `pageKeyFromPath` picks the key from the URL.
+- Tutorial (`features/tour/`, own code, no library): each project page has a short tour (`TOURS` in `tourSteps.ts`) that starts by itself the first time the page is opened. A step points at an element with a `data-tour="<name>"` attribute (spotlight + Figma-style card with ✕, "2 of 6", Skip tutorial, Back, Next/Done), or is a card in the middle (`target: null`). The first step of every tour is the page's `PAGE_HELP` text. A step whose element is not on the page is skipped. `placeCard.ts` (pure, tested) picks the side, `useTargetRect` finds and measures the element. While a tour is open, `#root` is `inert` and the card is in a portal. Esc closes, arrow keys step. An element with no size counts as missing. A step can show a small SVG animation (`demo: "connect"`, `ConnectDemo.tsx`, static under reduced motion). `tourTargets.test.ts` fails if a step's target has no matching `data-tour` in the code, so add the attribute (or `tourId` on `MoodboardCard`) together with the step.
+- The first card of the overview tour is the welcome ("Welcome to PLANter!"): new users land on the overview after creating a project. There is no separate welcome screen: an Amazon-style screen with arrows was tried and removed (2026-11-12) because it showed the same four things as the overview tour right after it.
+- ✕ / Done marks this page's tour as seen. "Skip tutorial" stops all tours from starting by themselves. The round ? button (bottom right of every project page) shows the page's tour again, restarts the whole tutorial, or opens `/help`.
+- `/help` lists how PLANter works, every page, every category and every connection (from the template), and can restart the tutorial. Linked from the footer, project settings and the ? button.
+- New project ("Already got a good idea?"): `POST /api/projects` takes optional `items` (`type` + `title`), `groups` (`name`) and `tasks` (`title`), max 50 each, reusing the item, group and task schemas. The service checks item types against the template, places items with `startPosition`, colors groups with `pickGroupColor`, and saves everything in one `prisma.$transaction` (all or nothing). No connections: those are made on the map.
+- Seen/skipped state is a flag in `localStorage` (`lib/storage.ts`, keys `planter:tour:<page>` and `planter:tour:off`), per browser only. Never used for real data.
 
 ## Scope (MoSCoW)
 
 **Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
 
-**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (images later, they need Storage); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
+**Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (with images); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
 
-**Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode.
+**Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode. Built in sprint 5 (the user's own addition): the item moodboard (links, images, colors, one card per item), a main photo per item, and the project color palette on the Inspiration page. Fonts were planned and not built.
 
 **Won't**: real-time collaboration, code generation from the plan, integrations (GitHub, Linear, Figma), mobile app, templates beyond web and game, editor for user-created templates and item types, teams, roles, permissions and payments, automatic generation of a whole plan from an idea.
 
@@ -109,7 +141,7 @@ Use database constraints, foreign keys (with cascade delete) and enums in additi
 4. Progress and finished MVP: progress overview, polish and deploy the MVP, tests for progress, then start Should (create from map, todo list, sprints).
 5. Understanding the plan, quality and finishing: impact view, warnings, remaining Should items, error and loading states, security review, README, AI-use documentation.
 
-Current sprint: **4** (update this line when the sprint changes).
+Current sprint: **5** (update this line when the sprint changes).
 
 Cut line if time runs short: Could first, then search, filter, MVP marking and responsive layout. Tests and the security check are never cut. Tests are written in the same sprint as the logic.
 
@@ -125,7 +157,7 @@ planter/
       lib/              supabaseClient.ts, api.ts (fetch wrapper that adds the token)
       auth/             AuthProvider, Login, Register, ProtectedRoute
       pages/            top-level pages
-      features/         projects, items, relationships, map, file-view, progress
+      features/         projects, items, relationships, map, file-view, progress, warnings, checklist, tasks
       components/       shared UI components
       types/
   backend/
@@ -137,7 +169,7 @@ planter/
       config/           env.ts (validates environment variables with Zod)
       middleware/       requireAuth.ts, validate.ts, errorHandler.ts
       routes/           projects.ts, items.ts, relationships.ts, tasks.ts, sprints.ts
-      services/         business logic: ownership, relationships, progress, warnings
+      services/         business logic: ownership, relationships, progress, warnings, checklist
       schemas/          Zod schemas
       templates/        web.ts, index.ts
       lib/              prisma.ts, supabase.ts
@@ -149,6 +181,13 @@ planter/
 - Routes are thin: validate, check ownership, call a service, return the result. Logic lives in `services/`.
 - API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user. 409 for needs confirmation instances. as when deleting och updating an item affects relations.
 - User text (project description, item titles, details, inspiration) is stored as the user typed it, and is made safe when it is shown: the frontend renders it only as text (React escapes it), never as HTML (no `dangerouslySetInnerHTML`), and never in `href`/`src` unless it passed the `http(s)` URL check.
+- Colors in the UI: one visual channel per meaning, so a color always means the same thing.
+  - Item type = hue, read from the template (`TypeBadge` pill, colored strip or dot, map node strip). Set with the CSS variable `--type-color` (`typeColorVar` / `typeColorStyle` in `features/items/typeColor.ts`), and CSS falls back to grey for an unknown type.
+  - Status = shape, never color (`StatusIcon`: empty circle planned, half in progress, filled with a check done). On the map, planned nodes also have a dashed border.
+  - Group = a dot or border in the group's color (`GroupChip`, `--group-color` via `groupColorVar`).
+  - MVP = the only filled badge (amber). Errors and warnings = `--danger`. No item type or group color is used for these.
+  - Color never stands alone: the type label, status text or group name is always shown next to it (or as `aria-label`/`title`).
+  - New type or group colors need at least 4.5:1 contrast on white when used as text (type colors) and 3:1 when only used as dots and borders (group colors).
 - React components in PascalCase files, other modules in camelCase. Named exports.
 - Code, comments, commit messages and documentation in English.
 - Small commits with clear messages (for example `feat: add item CRUD routes`). Commit often.
@@ -159,6 +198,7 @@ planter/
 - Frontend (`frontend/`): `npm run dev` (Vite, port 5173), `npm test`, `npm run build`
 - Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`, `npm run typecheck` (src, tests and configs)
 - Test database: Postgres.app (PostgreSQL, port 5432) must be running, with a database `planter_test`. `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
+- Demo data (`backend/`): `npm run seed:demo -- <supabase-user-id>` creates (or replaces) the project "Awesome Demo Portfolio" for that user
 - Prisma (`backend/`): `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
 
 ## Environment variables

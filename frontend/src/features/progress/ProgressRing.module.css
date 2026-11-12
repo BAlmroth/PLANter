@@ -1,0 +1,58 @@
+/* The ring with its caption under it, centered */
+.ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The SVG and the percent on top of each other: both fill the same square */
+.circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.circle svg {
+  width: 100%;
+  height: 100%;
+  /* SVG circles start at the right (3 o'clock). Turning the drawing makes the ring start at the top. */
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--bg-dark);
+}
+
+.fill {
+  fill: none;
+  stroke: var(--primary);
+  /* round ends look softer than square ones */
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.percent {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+/* No animation for people who asked their system for less motion */
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+}

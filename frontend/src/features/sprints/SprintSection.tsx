@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/api";
 import type { Task } from "../tasks/types";
@@ -18,6 +19,7 @@ const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "
 
 // Create, rename and delete the sprints of a project.
 export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks }: Props) {
+  const { confirm, modal } = useConfirm();
   const [name, setName] = useState("");
   // The sprint being renamed, and the new name
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
   async function handleDelete(sprint: Sprint) {
     const count = tasks.filter((task) => task.sprintId === sprint.id).length;
     const alsoChanges = count === 0 ? "" : ` Its ${count === 1 ? "task stays" : `${count} tasks stay`}, without a sprint.`;
-    if (!window.confirm(`Delete the sprint "${sprint.name}"?${alsoChanges}`)) return;
+    if (!(await confirm({ title: "Delete sprint?", message: `"${sprint.name}" will be deleted.${alsoChanges}` }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -83,6 +85,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
 
   return (
     <section className={styles.card}>
+      {modal}
       <h2 className={styles.label}>Sprints</h2>
       {sprints.length === 0 ? (
         <p className={styles.empty}>No sprints yet.</p>

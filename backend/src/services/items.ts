@@ -3,6 +3,7 @@ import { HttpError } from "../middleware/errorHandler.js";
 import type { CreateItemInput, UpdateItemInput } from "../schemas/items.js";
 import { relationshipRuleSchema } from "../schemas/relationships.js";
 import { getTemplate } from "../templates/index.js";
+import { deleteImageFiles, saveImageFile, withImageUrl, withImageUrls } from "./images.js";
 import { startPosition } from "./itemLayout.js";
 import { getOwnedProject } from "./projects.js";
 
@@ -29,10 +30,17 @@ export async function getOwnedItem(itemId: string, userId: string) {
 // LIST ITEMS IN A PROJECT
 export async function listItems(projectId: string, userId: string) {
   await getOwnedProject(projectId, userId);
-  return prisma.item.findMany({
+  const items = await prisma.item.findMany({
     where: { projectId },
     orderBy: { createdAt: "asc" },
   });
+  return withImageUrls(items);
+}
+
+// GET ONE ITEM for the client: like getOwnedItem, but with imageUrl instead of the storage path
+export async function getItem(itemId: string, userId: string) {
+  const item = await getOwnedItem(itemId, userId);
+  return await withImageUrl(item);
 }
 
 // CREATE ITEM
@@ -49,7 +57,7 @@ export async function createItem(projectId: string, userId: string, input: Creat
     select: { positionX: true, positionY: true },
   });
 
-  return prisma.item.create({
+  const created = await prisma.item.create({
     data: {
       projectId,
       title,
@@ -60,6 +68,7 @@ export async function createItem(projectId: string, userId: string, input: Creat
       ...(isMvp !== undefined && { isMvp }),
     },
   });
+  return await withImageUrl(created);
 }
 
 // Ids of the item's relationships that would break the template rules if the item got newType
@@ -119,12 +128,28 @@ export async function updateItem(itemId: string, userId: string, input: UpdateIt
     prisma.relationship.deleteMany({ where: { id: { in: invalidIds } } }),
     prisma.item.update({ where: { id: itemId }, data }),
   ]);
-  return updated;
+  return await withImageUrl(updated);
+}
+
+// SET (or replace) THE MAIN PHOTO of an item
+export async function setItemImage(itemId: string, userId: string, file: Buffer) {
+  const item = await getOwnedItem(itemId, userId);
+  const imagePath = await saveImageFile(item.projectId, file);
+  const updated = await prisma.item.update({ where: { id: itemId }, data: { imagePath } });
+  // The old file is no longer used. Do this last, so a failed upload never loses the old photo.
+  await deleteImageFiles([item]);
+  return await withImageUrl(updated);
 }
 
 // DELETE ITEM
-// Its relationships and tasks are deleted with it (cascade in the schema).
+// Its relationships, tasks and details are deleted with it (cascade in the schema), and its image files are removed.
 export async function deleteItem(itemId: string, userId: string) {
-  await getOwnedItem(itemId, userId);
+  const item = await getOwnedItem(itemId, userId);
+  // Collect the paths of the details' images before the rows are gone
+  const details = await prisma.itemDetail.findMany({
+    where: { itemId, imagePath: { not: null } },
+    select: { imagePath: true },
+  });
   await prisma.item.delete({ where: { id: itemId } });
+  await deleteImageFiles([item, ...details]);
 }

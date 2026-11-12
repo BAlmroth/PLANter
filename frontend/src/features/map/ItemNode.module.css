@@ -1,0 +1,52 @@
+/* One item on the map. --type-color is set by ItemNode, grey for an unknown type.
+   Left strip = item type. Border style = status: dashed while planned, solid once started. */
+.node {
+  min-width: 150px;
+  padding: 8px 12px 8px 10px;
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-left: 6px solid var(--type-color, var(--border));
+  border-radius: 8px;
+}
+
+.planned {
+  border-style: dashed;
+  /* Only the three thin sides are dashed, the color strip stays solid */
+  border-left-style: solid;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The type name in the type's color, for example PAGE in blue */
+.type {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--type-color, var(--text));
+}
+
+/* The group dots, pushed to the right of the type name */
+.groups {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+.groupDot {
+  width: 8px;
+  height: 8px;
+  background: var(--group-color);
+  border-radius: 50%;
+}
+
+.title {
+  display: block;
+}

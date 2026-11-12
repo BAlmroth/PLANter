@@ -1,0 +1,1624 @@
+# AI log
+
+## IMPORTANT ##
+NEVER DELETE THIS FILE. NEW ENTRIES ARE WRITTEN AT THE BOTTOM AND OLD ENTRIES ARE NOT TO BE TOUCHED OR CHANGED
+
+## 2026-10-15: Decision: RLS deny-all instead of ownership policies
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** A review of the project and an explanation of the suggestion to use RLS without policies, then to implement RLS on Prisma's `_prisma_migrations` table and update the documentation.
+
+**What was generated:**
+- Migration `20261015133328_enable_rls_prisma_migrations`, which enables RLS on `_prisma_migrations`.
+- Updated rule 5 and the Definition of Done in `CLAUDE.md`, and the RLS row in `docs/tech-clarification.md`.
+
+**Decision and why it differs from the plan:**
+`docs/project-plan.md` (locked, not changed) says RLS is enabled on every table *with ownership policies*. I changed this to RLS enabled with **no policies** (deny-all).
+
+- In PLANter the frontend never reads or writes tables (rule 1). All data goes through Express, and Prisma connects as the `postgres` role, which bypasses RLS. Ownership policies would protect a path that is never used.
+- Ownership policies would actually open a back door. A logged-in user could use the anon key and their own token from the browser console to insert or update their own rows directly through Supabase's Data API. That skips Express, so it also skips Zod validation, the template rules and the relationship rules.
+- With deny-all, `anon` and `authenticated` get nothing, so Express is the only way to the data, and every write is validated.
+- Deny-all has no policy logic, so there is nothing to get subtly wrong (a missing `WITH CHECK`, a forgotten operation).
+- The ownership check in Express (rule 3) is unchanged and is still the real protection.
+
+**What I changed or corrected:** I created the first RLS migration (`20261015090145_enable_rls`) myself, using the SQL from the AI explanation. The AI review pointed out that `_prisma_migrations` was not covered, because Prisma creates that table itself in the `public` schema.
+
+**What went wrong:** The AI created and committed the `_prisma_migrations` migration before it had been tested against a database. `npx prisma migrate dev` failed with P3006 / `42P01: relation "_prisma_migrations" does not exist`. The reason: `migrate dev` first replays all migrations in an empty shadow database, and Prisma doesn't create its history table there. The AI had assumed the table always exists. Supabase was not affected, because Prisma stopped before applying anything. Fixed by changing the statement to `ALTER TABLE IF EXISTS`, which skips the statement in the shadow database. Lesson: run the migration before committing it.
+
+## 2026-10-15 – 2026-10-16: Project review and follow-up fixes
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** A review of the whole project (docs, `CLAUDE.md`, all code) covering improvements, risks and thoughts. I answered each point, and then asked the AI to implement the agreed fixes one at a time, checking with me before every commit.
+
+**What was generated:** A written review (critical issues, risks, design questions, minor notes), explanations of RLS, composite foreign keys and the test setup, and the commits listed below.
+
+### Implemented
+
+**Frontend strict mode** (`fix: enable strict mode in frontend tsconfig`)
+- I had added `"strict": true` at the top level of `frontend/tsconfig.json`, where it has no effect (TypeScript error TS6258). The AI moved it into `compilerOptions` in `tsconfig.app.json` and `tsconfig.node.json`, and verified it with `tsc --showConfig` and `tsc -b`.
+
+**Same-project references** (`fix: enforce same-project references with composite foreign keys`)
+- Problem found in the review: each foreign key on `relationships` (and `tasks.item_id`) was checked separately, so the database accepted a relationship in project A pointing at an item in project B, even another user's item. I had assumed the `project_id` column on items was enough.
+- Decision: two layers. (1) The service never takes `projectId` from the body for relationships. It loads both items with an owner filter and responds 404 on a mismatch. This is written as a rule in `CLAUDE.md` and is implemented with the routes. (2) Composite foreign keys `(item_id, project_id) → items(id, project_id)` on `relationships` and `tasks.item_id`, so the database also refuses cross-project references.
+- `tasks.sprint_id` deliberately keeps a single-column key: `ON DELETE SET NULL` on a composite key would also null the required `project_id`.
+- Verified with `prisma validate`, an offline `prisma migrate diff` preview, and `prisma migrate dev`. Prisma's warning about the new unique constraint on `items(id, project_id)` was safe, because `id` is the primary key.
+
+**Test setup** (`test: add vitest config, local test database and split tsconfig`)
+- `vitest.config.ts` sets test values for `FRONTEND_URL` and `DATABASE_URL` (dotenv does not overwrite them), so tests no longer depend on `.env`, and runs test files one at a time (`fileParallelism: false`) so database tests don't interfere with each other.
+- `tests/setup.ts` is a safety guard that stops all tests if `DATABASE_URL` is not localhost, so tests can never delete data in Supabase.
+- `tsconfig.json` now type-checks `src`, `tests` and the config files (`noEmit`). The new `tsconfig.build.json` compiles only `src/` for the build. Reason: VS Code uses `tsconfig.json`, so tests now get strict checking, and tests are not compiled into `dist/`.
+- Decision: **Postgres.app** as the local test database. Alternatives considered: a second Supabase project (slower, secret connection string, free projects pause), Docker (a heavy new tool), PGlite (new libraries, less proven with Prisma), and mocking Prisma (rejected because it can't prove that the database filters by owner or enforces the foreign keys). Postgres.app is real Postgres, needs no new libraries, and works because deny-all RLS means the migrations use nothing specific to Supabase.
+- I removed an old Homebrew PostgreSQL 14 that I no longer used, because it blocked port 5432. Postgres.app runs PostgreSQL 18.6. All migrations applied to `planter_test` with `npm run test:db:migrate`, and the RLS check found no unprotected tables.
+- Mocking `supabase.auth.getUser` for two-user tests is planned for when `requireAuth` is built.
+
+**Build** (my own commits, from review notes)
+- `"build": "prisma generate && tsc"`, because the generated client is gitignored and Prisma 7 doesn't generate it on install. Removed the `prisma skills sync` postinstall script and the `.cursor/` and `.devin/` skill files.
+
+### Decided, not yet implemented
+- **MVP:** not an item category. An `is_mvp` boolean on items. The plan's "MVP" category was badly phrased; `docs/project-plan.md` stays unchanged.
+- **Project description:** a `description` column on `projects`, not an item type.
+- **Tech stack and design:** stay item types (they count toward progress, can have relationships and appear on the map). No separate tables, because those would break the template rule, block relationships and complicate progress. Instead, a generic child table for detail rows per item (URL, text), plus project-level inspiration with `project_id`, which does not count toward progress. Images are postponed (they need Supabase Storage).
+- **Progress formula:** `done / (planned + in_progress + done)`. In-progress items count as not finished, and an empty project gives 0%.
+- **Relationships:** one direction only. The other side is shown with an inverse label (for example "used by"). Whether cycles are allowed is a template property per relationship type.
+- **Deleting an item deletes its tasks** (cascade). The delete confirmation should say so.
+- **Timestamps:** `timestamptz` in the database. The frontend shows them in the user's local time. Indexes on foreign key columns.
+- **Template keys vs labels:** each type has a permanent `key` stored in the database and a `label` that can change freely. Renaming a key needs a data migration.
+- **Service role key:** decide whether the backend needs it when `lib/supabase.ts` is written (`getUser` works with the anon key).
+
+### What went wrong
+- The AI created the `_prisma_migrations` migration folder by hand with a **local-time** timestamp, while Prisma names migrations in **UTC**. The migration created afterwards (`20261015114942_same_project_foreign_keys`) therefore sorts before it. This is harmless, because the two migrations are independent, and it was not renamed, because renaming applied migrations breaks Prisma's history. Lesson: always create migrations with `prisma migrate dev --create-only`.
+- The first `_prisma_migrations` migration was committed before it was tested (see the entry above).
+
+## 2026-10-16: timestamptz and foreign key indexes
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To implement two schema points from the project review (point 14) on the branch `feature/keyIndexes`, and to explain why the indexes are useful.
+
+**What was generated:** Changes to `schema.prisma`. I created migration `20261016091829_timestamptz_and_indexes` with `prisma migrate dev` and applied it to Supabase and the local test database.
+- `created_at` on `projects` and `items` changed from `timestamp` to `timestamptz(3)`. The database stores an exact moment, and the frontend will show it in the user's local time. The application code is unchanged (Prisma still returns a `Date`).
+- 8 indexes on foreign key columns: `projects.user_id`, `items.project_id`, `relationships.project_id`, `relationships.target_item_id`, `tasks.project_id`, `tasks.item_id`, `tasks.sprint_id`, `sprints.project_id`.
+
+**Decisions:**
+- Postgres does not index foreign keys automatically. They are the columns PLANter searches by on almost every request (the ownership check, the File view, the map, "used by"), and Postgres uses them itself when it cascades deletes or sets values to null.
+- `relationships.source_item_id` gets no extra index, because it is the first column of the unique `(source_item_id, target_item_id, type)`, which already covers it. `items.project_id` does need one, because the unique `(id, project_id)` starts with `id`.
+- Only foreign key columns are indexed. Each index costs space and makes writes slightly slower.
+- At the current data size the speed difference is not noticeable. It is done now because it is correct design and cheapest while the tables are empty.
+
+**Verification:** `prisma validate`, an offline `prisma migrate diff` preview, `prisma migrate dev` (Supabase) and `npm run test:db:migrate` (local). Checked in the test database: 8 indexes, and `created_at` is `timestamp with time zone`.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing.
+
+## 2026-10-16: CLAUDE.md updated with decisions from the project review
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To update `CLAUDE.md` with the decisions from the project review that were not yet documented (branch `feature/updateDocs`). `docs/project-plan.md` stays unchanged.
+
+**What was generated:** Changes to `CLAUDE.md` only.
+- **MVP:** removed as an item type (in the intro and in the Must list). MVP is the `is_mvp` flag on items.
+- **Project description:** a column on `projects`, not an item type.
+- **Templates:** a template is plain data. Item types have `key`, `label` and whether they count toward progress. Relationship types have `key`, `label`, `inverseLabel` and `allowCycles`.
+- **Keys vs labels:** keys are permanent and stored in the database, labels are only shown in the UI. Renaming a key needs a data migration, and an unknown key is shown as "Unknown".
+- **`GET /api/templates/:key`:** the frontend gets the template from the API (with `requireAuth`) instead of keeping its own copy.
+- **Relationships:** one direction, shown from both sides (`label` on the source, `inverseLabel` on the target). Cycle check with a graph search when `allowCycles` is false.
+- **Data model:** tech stack and design stay item types (no separate tables). Item details and project inspiration are listed as tables still to be designed. Images are postponed (they need Storage). The schema decisions already made are documented: composite foreign keys, cascade-deleting tasks with their item (the delete confirmation must say so), `timestamptz`, and foreign key indexes.
+- **Progress:** `done / (planned + in_progress + done)`, only for item types that count toward progress, and 0% when there are no items.
+- **Should list:** "inspiration links and images per item" changed to item details (links and text) and project-level inspiration, with images later.
+
+**Confirmed by me:**
+- Cycle rule: only cycles of the **same** relationship type are checked (A → B is rejected if A can be reached from B through relationships of that type), because `allowCycles` is a property per relationship type. Cycles across different types are allowed.
+- `is_mvp` stays a **Should** and stays on the cut line. It is not core to the product, but should be implemented if there is time. (The AI had pointed out that cutting it leaves the product with no MVP feature. I accept that.)
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing.
+
+## 2026-10-16: Schema for project description, item details and project inspiration
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** To implement the schema for point 10 from the project review (branch `feature/insp-detailsSchema`), after first going through the table design.
+
+**Design decisions (mine, after the AI described the alternatives):**
+- **Two tables** (`item_details`, `project_inspirations`) instead of one shared table with both `item_id` and `project_id`. Each table means one thing and has a simple foreign key.
+- **Columns:** `title` is required. `url` and `text` are optional, with no "at least one" rule, so a row can be created with only a title and filled in later. No ordering column: rows are shown in `created_at` order.
+- **Project description:** optional plain text, max 500 characters.
+- **Length limits in Zod only, not in the database:** description 500, title 100, url 2000, text 2000. `url` must be `http://` or `https://` (blocks `javascript:` links, an XSS risk).
+- **No `project_id` on `item_details` (the AI's recommendation, which I accepted).** Ownership is checked through the item in one Prisma query (`item: { project: { userId } }`). Storing `project_id` as well would duplicate data and need another composite foreign key to stay consistent. Relationships need `project_id` because they connect two items. A detail row belongs to exactly one item.
+
+**What was generated:**
+- In `schema.prisma`: `Project.description`, the models `ItemDetail` and `ProjectInspiration` (cascade delete and an index on the foreign key), and the back-relations `Item.details` and `Project.inspirations`.
+- In `CLAUDE.md`: the two tables, the Zod limits and the URL rule.
+
+**Migration:** `20261016095142_item_details_and_inspirations`, created with `prisma migrate dev --create-only`, so that RLS could be added before it was applied (rule 5: every new table gets RLS in the same migration). I added the two `ENABLE ROW LEVEL SECURITY` lines myself and applied the migration to Supabase and the local test database. The RLS check found no unprotected tables in either.
+
+**What went wrong:** The AI ran `prisma format`, which re-aligned many existing lines in `schema.prisma` (only whitespace). That made the diff noisy and was not asked for. The AI restored the file and applied only the real changes.
+
+**What I changed or corrected:** I added the RLS lines to the migration myself, instead of waiting for the AI.
+
+## 2026-10-16: Personal notes kept out of the repo
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** A file in `docs/` with things left to do from our sessions, and that neither that file nor this log is committed.
+
+**What was generated:**
+- `docs/todo.md`: open decisions and reminders from the review sessions, grouped by when they are needed. Plus the checklist for new tables and the small cleanups.
+- `.gitignore`: `docs/todo.md` and `docs/ai-log.md`.
+- `git rm --cached docs/ai-log.md` (branch `fix/removeLogs`): removed the log from git without deleting the local file.
+
+**What I changed or corrected:** The first version of `todo.md` also listed general plan features. I asked for only the things we had talked about, and the AI trimmed it.
+
+**Notes:** Older versions of this log remain in git history (commits already merged into `dev`). History was not rewritten. The Definition of Done says AI use is documented in `docs/ai-log.md`, so I need to decide how to hand in the log (noted in `todo.md`).
+
+**What went wrong:** Nothing.
+
+## 2026-10-16 to 2026-10-18: Frontend auth (AuthProvider, ProtectedRoute, login/register/logout)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/userRegistration`.
+
+**What I asked**
+- A walkthrough of how to set up `AuthProvider` cleanly, without over-engineering. I had already written `config/env.ts`, `supabaseClient.ts` and `api.ts` myself.
+- A walkthrough of `ProtectedRoute`, then a review of my changed files.
+- To move the routing out of `main.tsx` (review point 3).
+- To create the login, register and logout pages, scalable but controlled and not overcomplicated.
+
+**What was generated**
+- `auth/authContext.ts` and `auth/AuthProvider.tsx`: auth state from `onAuthStateChange`, with a `loading` flag.
+- `auth/ProtectedRoute.tsx`: redirect when logged out, wait while loading.
+- Routing moved from `main.tsx` into `App.tsx`, plus a placeholder `pages/ProjectsPage.tsx`.
+- `auth/AuthForm.tsx` (shared email and password form), `auth/Login.tsx`, `auth/Register.tsx` and `auth/LogoutButton.tsx`.
+
+**Why the pages were generated instead of written by me**
+- I was short on time. The review of my changed files took a lot of time, so I asked the AI to create the login, register and logout pages rather than writing them myself, as I had done for the earlier files.
+- Because I did not write these files, I need to make sure I understand them before building on them.
+
+**What I changed or corrected**
+- Wrote the `AuthProvider` wrapping in `main.tsx` and the route tree in `App.tsx` (the `Login` and `Register` imports) myself.
+- Kept the `/willbelogin` redirect in `ProtectedRoute` on purpose, as a placeholder (it should become `/login`).
+- Tested the whole flow in the browser (register, log out, log in, wrong password, reload). It works.
+
+**What went wrong or was noted**
+- `react-router-dom` was in `package.json` but not listed in `CLAUDE.md`.
+- Small cleanups were pointed out: a misleading comment in `env.ts` ("server" instead of frontend) and a misindented `return` in `api.ts`.
+- The review pointed out that routing in `main.tsx` made `App` a page and an app shell at once, which led to the move into `App.tsx`.
+
+## 2026-10-18: Backend middleware, Zod validation and error handler
+
+**Tool:** Claude Code (Sonnet 5.5), branch `dev`. I also used claude.ai to understand the generated code, to save Claude Code credit. That use is not logged in detail here.
+
+**What I asked**
+- A walkthrough of a good way to implement the issue "Backend middleware, Zod validation and error handler". Zod is new to me.
+- After the first walkthrough I told it to read `CLAUDE.md` and everything in `docs/` before planning, because it had missed context.
+- What the difference is between the Supabase anon key and the service role key.
+- To create the files, which I would then review thoroughly.
+- A detailed explanation of `validate.ts` and how it uses Zod.
+
+**What was generated**
+- A walkthrough of Zod (schema, `safeParse`, inferred types) and a six-step plan: env, Supabase client, `errorHandler`, `validate`, `requireAuth`, temporary route, tests.
+- A corrected plan after the AI read `docs/project-plan.md`, `docs/todo.md`, `docs/tech-clarification.md` and `docs/ai-log.md`: it had assumed the service role key, but `docs/todo.md` listed that as an open decision.
+- An explanation of anon key vs service role key: both can verify a token with `getUser`, but the service role key bypasses RLS, so a leak would undo rule 5.
+- Code changes:
+  - `config/env.ts`: added `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+  - `vitest.config.ts`: fake Supabase values for tests.
+  - `app.ts`: registers the temporary route, then the 404 handler and the error handler last.
+- New files:
+  - `lib/supabase.ts`: backend client with the service role key and `persistSession: false`.
+  - `middleware/errorHandler.ts`: `HttpError` class, `notFoundHandler` and `errorHandler` (one error shape, invalid JSON gives 400, unknown errors give 500 without leaking details).
+  - `middleware/validate.ts`: Zod `safeParse` on `req.body`, 400 with `z.flattenError` details, and `req.body` replaced with the parsed data.
+  - `middleware/requireAuth.ts`: reads the Bearer token, calls `supabase.auth.getUser`, sets `req.userId` (with a `declare global` to type it), otherwise 401.
+  - `routes/testRoute.ts`: temporary `POST /api/_test`.
+  - `tests/middleware.test.ts`: 7 Supertest tests with `vi.mock` on Supabase (fake tokens `token-a` and `token-b`). They cover no token (401), invalid token (401), valid token (200), invalid body (400), a `userId` in the body being ignored, an unknown route (404 in the error shape) and invalid JSON (400).
+- Result when generated: `npm run typecheck` clean, 8 tests passing (including the earlier health test).
+
+**What I changed or corrected**
+- Told the AI to read the docs first. This led to the corrected plan above.
+- Decided to use the service role key now, because it matches the plan and the issue text, even though the AI recommended the anon key (least privilege). I accept that the key then sits in the backend unused except for token checks, and I take responsibility for keeping it out of the repo and logs.
+
+**What went wrong or was noted**
+- The AI's first plan did not read `docs/` and treated an open decision (service role key) as settled. It also planned the test-mocking approach without checking that `docs/todo.md` had already decided it.
+- The AI added things that were not in the issue: the `HttpError` class and the 404 handler for unknown routes. Both are small, but they were not asked for, and `validate` and `requireAuth` now depend on `HttpError`.
+- `errorHandler` logs unknown errors with `console.error`. Those can contain request details, so this needs checking against rule 6 (secrets) before deploying.
+- `validate` only checks `req.body`. Params and query strings are not validated yet, and `req.body` is still typed `any` in the route handlers. Both are for the first real routes.
+- I did not write these files myself, because I wanted to see a good structure first. I need to be able to explain every line before building on them (as I noted for the login pages).
+
+**Insights and what I learned**
+- Zod: a schema describes valid data. `safeParse` never throws and returns either `{ success, data }` or `{ success: false, error }`, so the code can handle both with an `if`. The type of the data can be inferred from the schema (`z.infer`), so the shape is written once.
+- `validate.ts` is a function that returns a middleware. The outer function runs once at route setup and remembers the schema, and the inner one runs on every request.
+- Zod object schemas strip unknown fields by default. Replacing `req.body` with the parsed result is what stops a made-up `userId` in the body from reaching a route, and that supports rule 2.
+- Middleware order matters: `requireAuth` runs before `validate`, so an anonymous caller gets a 401 and learns nothing about the schemas.
+- Express 5 forwards errors thrown in async handlers to the error handler, so there is no need for try/catch in each route. An error handler is recognised by having four parameters.
+- Authentication (`requireAuth`: who are you?), validation (`validate`: is the input well formed?) and ownership (a later shared helper: is it yours?) are three separate steps, and none of them replaces another.
+- The anon key vs service role key choice does not change how the code works, only how much damage a leak does. Prisma does not use either key, it uses `DATABASE_URL`.
+- Testing without the real service: `vi.mock` replaces the Supabase client with a fake, and two fake tokens map to two users, which prepares the two-user ownership test in sprint 2.
+- Reading the project docs before planning matters. The AI missed an open decision, and I only caught it because I asked it to read them.
+
+### Deploy (same day, same session)
+
+**What I asked**
+- Whether deploy is the next step after the middleware.
+- How to deploy only `backend/` to Heroku, since the repo has both `frontend/` and `backend/`.
+- What the Vercel project needs, and whether any files must be added or changed for production.
+
+**What was generated**
+- A reason for deploying next, taken from `docs/todo.md` ("never cut the deploy") and the sprint 1 goal (login working in the deployed setup).
+- Instructions for pushing only `backend/` to Heroku with `git subtree push --prefix backend heroku dev:main`, run from the repo root. It included the order (config variables before the first push, because `prisma generate` needs `DIRECT_URL`), a suggestion to add an `engines` field for the Node version, and a list of what can go wrong.
+- Checks before the deploy: the Git remote, that all five Heroku config variables existed (values hidden), and that the working tree was clean.
+- After the push: the Heroku logs, which showed a successful build and `State changed from starting to up`. It also noted that the real app URL has a suffix (`planter-api-741253331c3c.herokuapp.com`).
+- `frontend/vercel.json` (rewrite every path to `index.html`, needed because the app uses `BrowserRouter`) and `frontend/.env.example`.
+- A local `npm run build` of the frontend, which passed (only a chunk size warning).
+- Vercel instructions (root directory `frontend`, Vite preset, three `VITE_` variables set before the first build, anon key and not the service role key) and follow-up steps (update `FRONTEND_URL` on Heroku, Supabase Site URL and Redirect URLs).
+
+**What I changed or corrected**
+- Decided on Heroku myself, created the app and added the Heroku remote.
+- I interrupted the AI's first attempt to run the `git subtree push` and ran the deploy myself instead, both to Heroku and to Vercel.
+- Updated the environment variables on both hosts myself and committed the new files.
+
+**What went wrong or was noted**
+- The AI first tried a `curl` against `planter-api.herokuapp.com`, which returned "No such app", because Heroku adds a suffix to the URL. The real URL came from `heroku info`.
+- The AI suggested an `engines` field for the Node version. No `engines` field was added before the deploy, so Heroku used its default Node version, which may differ from my local version (Node 26).
+- The frontend does not call the backend yet (`ProjectsPage` is a placeholder), so CORS is not tested by the real app. Only `/health` was verified on the backend, and register and login on the frontend.
+- The temporary route `/api/_test` is deployed. It is behind `requireAuth`, but it must be deleted when the real routes exist.
+- The RLS check against the live Data API was done afterwards. A curl with the anon key to `/rest/v1/projects` returned `permission denied for schema public` (code 42501). The AI had said it should return `[]`, which is what RLS alone gives. This was a stricter block: the `anon` role cannot use the `public` schema at all. That does not prove RLS is on, so I also ran `select tablename from pg_tables where schemaname = 'public' and not rowsecurity;` in the Supabase SQL editor, and it returned no rows.
+
+**Insights and what I learned**
+- Heroku deploys whatever is at the root of the repo it receives. For a monorepo, `git subtree push --prefix backend` sends only that folder as if it were the whole repo, without extra buildpacks. The remote branch must be `main` or `master`.
+- Config variables must be set before the first build when the build itself needs them (`prisma generate` reads `DIRECT_URL`).
+- `VITE_` variables are baked into the bundle at build time, so they are public, and changing them needs a redeploy. That is why the service role key must never have that prefix.
+- A single-page app with `BrowserRouter` needs a rewrite to `index.html` on the host, or a reload on a client-side route gives a 404.
+- CORS needs an exact origin match, so `FRONTEND_URL` on Heroku must be the Vercel URL without a trailing slash, and preview URLs will not work.
+- Deploying early is useful because it shows environment and host problems while they are cheap to fix. The Heroku logs (`heroku logs --tail`) are the first place to look when something fails.
+- A permission error and an empty list are both a pass for the Data API check, but they mean different things (schema access blocked vs rows blocked by RLS). The RLS check must be done separately with SQL, and the thesis should describe the result accurately.
+
+## 2026-10-18: React Flow prototype (sprint 1)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `dev`.
+
+**What I asked**
+- A walkthrough of React Flow for the prototype issue, since I had never used it. I had created `features/map/ItemNode.tsx` and an empty `pages/MapPrototypePage.tsx` and suggested using mock data.
+- Whether positions created automatically when an item is created could be an issue, and an assessment of the Should item "Create items and connections from the map and save node positions".
+- Two follow-ups: log drag events in the prototype, and note the position problem in `docs/todo.md`.
+
+**What was generated**
+- `features/map/mockData.ts`: 6 nodes, 5 edges with labels, and types for the node data (category as a template key, plus a temporary label lookup).
+- `features/map/ItemNode.tsx`: custom node with category, title, status and handles.
+- `pages/MapPrototypePage.tsx`: `ReactFlow` with `useNodesState`/`useEdgesState`, `Background`, `Controls` and `fitView`. A temporary `/map-prototype` route in `App.tsx`.
+- An `onNodeDragStop` console log, and a new "Item positions on the map" section in `docs/todo.md`.
+- The assessment: positions default to (0, 0) so items stack, with a suggested rule (backend computes a start position per category); the risks for sprint 4 (save on drag stop, mixed state, failed saves, batch updates, connection rules, delete confirmation).
+
+**What I changed or corrected**
+- Ran the page in the browser and checked the drag log myself: it prints once per released drag, with the coordinates.
+- I corrected nothing in the generated code. The AI also corrected my sprint number: the item is in sprint 4 in the plan, not sprint 3.
+
+**What went wrong or was noted**
+- The AI wrote the whole prototype (about 100 lines) in one go, although CLAUDE.md asks for small steps. I need to read through it so I can explain every line.
+- The prototype route is public, and the edge directions, categories and statuses are mock values. All of it is temporary.
+- The AI did not run the page in a browser, only typecheck and lint.
+
+**Insights and what I learned**
+- React Flow is controlled: without `onNodesChange` nodes cannot be dragged. Nodes and edges are plain data, and a custom node is a component registered in `nodeTypes`, defined outside the component.
+- Edges need `Handle` components in the custom node, and the parent needs an explicit height.
+- `onNodeDragStop` fires once per drag, `onNodesChange` fires many times, so saving positions belongs in the first.
+- A column default of 0 for positions is a design decision that has to be made before the map shows real data.
+
+**Decision:** continue with React Flow or Plan B: _(to be filled in by me)_
+
+
+## 2026-10-19 to 2026-10-20: Web template, templates route and tests (sprint 2)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/webTemplate`.
+
+**What I asked**
+- A review of my first version of `backend/src/templates/index.ts` (the `Template` type and `getTemplate`) and `web.ts`, after reading `CLAUDE.md` and the docs.
+- Follow-up questions: is the "depends on" relationship type needed, how to handle tech stack (project-wide, not per component) and progress, and how to show page to page navigation.
+- To fix the `getTemplate("constructor")` bug, and to build `GET /api/templates/:key` (uses `requireAuth`, returns the template as JSON, 404 in the normal error shape) with tests for 200, 401 and 404.
+- What `routes/templates.ts` does, and why the Zod schema was not in `schemas/` as `CLAUDE.md` says.
+- Whether turning a Zod error into a 400 is best practice, and then to put it in `validate.ts`.
+- Template data tests, with detailed help since Vitest and Zod are new to me.
+
+**What was generated**
+- Review feedback: `getTemplate` bug, `counterLabel` vs `inverseLabel`, wrong direction rule comment, missing plural labels, typos, no check that keys in `allowedCombinations` exist, and a suggestion to use a `types.ts` later.
+- Code:
+  - `index.ts`: `templates` changed from a plain object to a `Map`, and `pluralLabel` moved into the `itemTypes` entries of the `Template` type.
+  - `web.ts`: the `page triggers page` combination.
+  - `routes/templates.ts`: the route.
+  - `schemas/templates.ts`: `templateParamsSchema`.
+  - `app.ts`: mounts the router at `/api/templates`.
+  - `validate.ts`: now takes a source, `validate(schema, "body" | "params")`.
+- `CLAUDE.md` line 3: "depends on" removed from the example relationship types.
+- Tests (24 backend tests pass in total after this session), described in detail below.
+
+### The tests, file by file
+
+Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describe("name", () => {...})` groups tests. `it("does X", () => {...})` is one test. `expect(value).toBe(...)` is an assertion, and a test fails if one is wrong. If an assertion has a second argument, as in `expect(list, "message").toContain(x)`, the message is shown when it fails.
+
+**`tests/templates.test.ts`, the route (4 tests).** It uses Supertest: `request(app).get("/api/templates/web")` sends a fake HTTP request to the Express app without starting a server.
+- `vi.mock("../src/lib/supabase.js", ...)` replaces the real Supabase client with a fake, so no test makes a real call. In the fake, only `"token-a"` is a valid token. The mock is hoisted by Vitest above the imports, so `requireAuth` gets the fake version.
+- 200 with a valid token: `.set("Authorization", "Bearer token-a")` and the body equals `webTemplate`. This shows the route sends the real template data.
+- 401 without a token: proves `requireAuth` protects the route (rule 2).
+- 404 for `"nope"`: the body must equal exactly `{ error: { message: "Template not found" } }`, which checks the one error shape in `CLAUDE.md`.
+- 404 for `"constructor"`: the regression test for the `getTemplate` bug.
+
+**`tests/validate.test.ts`, the `validate` middleware (2 tests).**
+- Why a separate file: the template route has no param that can fail validation (a key is always a non-empty string), so it cannot test the 400 case. The test builds its own small Express app with one route, `/:id`, checked with `validate(z.object({ id: z.uuid() }), "params")`, and the real `errorHandler`.
+- Zod: `z.object({...})` describes valid data, `z.uuid()` accepts only UUID strings. `validate` calls `schema.safeParse(...)`, which returns `{ success, data }` or `{ success: false, error }` and never throws.
+- Invalid param (`/not-a-uuid`): status 400, message "Invalid request params", and `details.fieldErrors.id` exists. `z.flattenError` is what produces `fieldErrors`.
+- Valid param: the request continues to the route and returns the id.
+
+**`tests/templates.data.test.ts`, the template data (10 tests).** These test the data in `web.ts` and not the HTTP behaviour. A typo in a key such as `"componnent"` compiles fine, because keys are plain strings, and would silently never match. These tests catch it. They are the safety net for things that are easy to forget when a template is edited.
+- Unique item type keys and unique relationship type keys: `new Set(keys).size` equals `keys.length`, because a Set removes duplicates.
+- Every combination's source, target and relationship refer to a key that exists. A loop checks each combination, and the failure message names the bad key.
+- No duplicate combinations (source, relationship, target). Later a relationship has a unique constraint on (source, target, type), so a duplicate here would be a design mistake.
+- Every relationship type is used in at least one combination. This catches a type that was defined and forgotten.
+- Every label, plural label and inverse label is non-empty.
+- `getTemplate`: `"web"` returns `webTemplate`, and `"nope"`, `"constructor"` and `"__proto__"` return `undefined`.
+
+**What I changed or corrected**
+- I decided to remove "depends on" (it was an example in the plan) and asked the AI to update `CLAUDE.md`. The `docs/project-plan.md` still mentions it, which I left as it is the thesis plan.
+- I decided that tech stack is project-wide and counts toward progress when it is `done` ("fill it in to get progress").
+- I chose option A for navigation: `page triggers page`.
+- I fixed the direction rule comment and renamed `counterLabel` to `inverseLabel` myself, to match `CLAUDE.md`.
+- I pushed back when the AI had put the Zod schema in the route file, and asked about the 400 conversion. The AI's answer was not to catch every `ZodError` in the error handler, but to convert at the input boundary, so I chose to extend `validate.ts`.
+- I added `pluralLabel` in the wrong place (the `Template` type itself). The AI pointed it out, and it was moved to the item types.
+
+**What went wrong or was noted**
+- The AI first put `paramsSchema` in `routes/templates.ts` and said it could be moved later, against rule 4 in `CLAUDE.md` ("Schemas live in `backend/src/schemas/`"). I had to point it out. The AI moved it.
+- The AI wrote the route, the `validate` change and all the tests in single steps, although `CLAUDE.md` asks for small steps. I need to read through all of it so I can explain every line.
+- TypeScript types `req.params.key` as `string | string[] | undefined`, so the first typecheck failed. The fix was a cast, `req.params as z.infer<typeof templateParamsSchema>`, which is safe only because `validate` has already checked the value.
+- `validate` has a source of `"body"` or `"params"` only. `req.query` is read-only in Express 5, so a query source is left for the first route that needs it.
+- The `getTemplate` tests overlap with the route tests (the `"constructor"` case is in both). I kept both on purpose.
+- The template data tests only check that the data is consistent. They do not check that the rules make sense for users, for example whether a combination is missing. That is a design decision I have to make.
+- Tests were run by the AI, but no real Supabase token was used. Only the mocked `requireAuth` was tested, as in sprint 1.
+
+**Insights and what I learned**
+- Using a plain object as a lookup (`templates[key]`) is unsafe when the key comes from the user: `"constructor"` and `"__proto__"` are found through the object prototype. A `Map` only contains what is put in it.
+- Validating where input comes in (the body or the URL) and sending a 400 there is better than catching all `ZodError`s in the error handler. A `ZodError` from my own code (config, a database row) is a server bug and should be a 500.
+- `safeParse` returns a result, `parse` throws. `validate` uses `safeParse` so it can control the error shape.
+- Plain-data templates make good test targets: a short loop over the data replaces many manual checks, and the tests make me think about the rules each time the template changes.
+- A test with its own tiny Express app is a good way to test a middleware without needing a real route that can fail.
+- Keys in strings are not checked by TypeScript. A test is what protects them, until the types are made stricter.
+
+## 2026-10-20 to 2026-10-21: Project CRUD (schemas, service, routes, tests)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/CRUD`.
+
+**What I asked**
+- To review and fix my project schema, which did not work in the project service.
+- That the project description must allow `""` and spaces, but be safe from scripts.
+- To fix the project id validation in the `GET /:id` route (`getOwnedProject` and the route were mine).
+- To review my update and delete, and to add the empty PATCH check.
+- To write the project tests, and to fix an error on line 11 of the project service.
+
+**What was generated**
+- `CreateProjectInput` in `schemas/projects.ts` (`z.infer<typeof createProjectSchema>`), used by the service.
+- The fixed `GET /:id` route: `validate(projectIdSchema, "params")` plus the same cast as in the templates route.
+- The empty PATCH check: `.refine(...)` on `updateProjectSchema`.
+- The `exactOptionalPropertyTypes` fix in `createProject` and `updateProject` (only fields that were sent are passed to Prisma).
+- `tests/projects.test.ts` (22 tests), and a convention about user text in `CLAUDE.md`.
+
+**What I wrote myself**
+- `createProjectSchema`, `projectIdSchema` and `updateProjectSchema` (`.omit({ template: true }).partial()`).
+- `listProjects`, `getOwnedProject` (the shared ownership helper), `updateProject` and `deleteProject`, and the routes.
+
+**What the tests do (`tests/projects.test.ts`)**
+- **Setup.** The tests run through the real Express app with Supertest and the real local database `planter_test`, so they test the whole chain: `requireAuth`, `validate`, the ownership check, the service and Prisma. Only Supabase is mocked: `token-a` is user A and `token-b` is user B, as in the other test files. The user ids are real UUIDs, because `user_id` is a uuid column. Before each test, and after the file, the rows of these two users are deleted, so tests do not depend on each other and never touch other data. A helper creates a project through the API, so every test starts from known data.
+- **Create (6 tests).**
+  - No token gives 401.
+  - The project gets the `userId` of the token. A `userId` in the body is ignored, so user B cannot create a project as user A.
+  - The name is trimmed and `description: ""` is accepted, which was a decision in this session.
+  - Empty name, unknown template and a description over 500 characters give 400. For the first two, the test also checks that the error is on the right field (`fieldErrors`).
+- **List (1 test).** After A and B each create a project, A sees only A's project.
+- **Get one (4 tests).** The owner gets 200. Another user gets 404, and so does an id that does not exist. The same 404 means the API does not reveal that someone else's project exists (rule 3). A non-UUID id gives 400, which shows that `projectIdSchema` runs before the database.
+- **Update (6 tests).**
+  - The owner can change name and description.
+  - Only the fields that were sent change (a PATCH with just `description` keeps the name).
+  - User B gets 404, and then user A's project is read again to prove it was not changed. Without that second check, the test would pass even if the update had gone through.
+  - An empty `{}` body gives 400.
+  - `template` and `userId` in the body are ignored, so the project stays `web` and owned by A.
+  - A non-UUID id gives 400.
+- **Delete (3 tests).** User B gets 404 and the project still exists afterwards. The owner gets 204, and a following GET gives 404. A missing id gives 404.
+- **Not covered yet.** Cascade delete (items, relationships, tasks) is not tested, because those routes do not exist yet. It should be added in sprint 2 when items are added.
+
+**What I changed or corrected**
+- Decided that the description may be `""` and spaces, so it is not trimmed. I decided to skip the extra test for a `<script>` description.
+- Decided where script safety belongs: React escapes text when it is shown, so the protection is in how the frontend renders, not in a Zod schema. The AI added this as a rule in `CLAUDE.md` after I asked for the note.
+- Chose to add the empty PATCH check.
+
+**What went wrong or was noted**
+- I used the Zod schema as a TypeScript type (`input: createProjectSchema`). A schema is a value, and the type is `z.infer<typeof ...>`.
+- The GET route had `const { id } = projectIdSchema, req.params;`. A comma, not a call, so the schema never ran.
+- The `exactOptionalPropertyTypes` error. The tsconfig is strict about optional fields. Zod's `.partial()` gives `string | undefined`, and Prisma does not accept `undefined`. The first fix, `{ ...input }`, did nothing. The real fix is to build `data` from only the fields that were sent.
+- The first test run gave 500 on create and update. The generated Prisma client in `src/generated` (gitignored) was out of date and did not know `description`. `npx prisma generate` fixed it. This also hid the same type error in `createProject`, which showed up as the "error on line 11" after the client was regenerated.
+- The tests were run by the AI against the local `planter_test` database. Nothing was run against Supabase.
+- Two functions now use the same "only send what was defined" pattern. If it appears in items too, it should become a small helper.
+
+**Insights and what I learned**
+- A Zod schema is a runtime value. `z.infer` gives the TypeScript type, so the shape is defined only once.
+- `validate(schema, "params")` before the handler means a bad id gives 400 instead of a 500 from Postgres.
+- `findFirst({ where: { id, userId } })` plus a 404 is how ownership and "does not exist" become the same answer.
+- Testing "user B cannot change A's project" needs a second read as user A. A 404 alone does not prove that nothing changed.
+- After a change in `schema.prisma`, `npx prisma generate` must be run. A stale client causes errors that look like code bugs.
+
+
+## 2026-10-21: Frontend project pages (list, create, view, edit, delete) and API tests
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/CRUD`.
+
+**What I asked**
+- To read the docs and the current code, and to recommend an architecture for three project pages (list, create, project page) before writing any code.
+- To go through it in small steps. I decided: `useEffect` + `useState` and no data-fetching library, no template dropdown (with a comment), `todo.md` entries for the delete confirmation, plain HTML now and CSS modules later.
+- Whether `ApiError`/`apiRequest` belongs in `api.ts` or in its own file, whether `type="button"` is needed, and whether the slow loading on localhost will be a problem when deployed.
+- To write the frontend tests before starting item CRUD, and then this log entry.
+
+**What was generated**
+- The recommendation: routes (`/`, `/projects/new`, `/projects/:projectId`), the layers (pages -> hooks -> `projectsApi.ts` -> `lib/api.ts`) and a list of decisions for me.
+- `ApiError` and `apiRequest<T>` in `lib/api.ts`: parses JSON, handles 204, reads the backend's `{ error: { message, details } }` shape and throws `ApiError`.
+- `useProjects` and `useProject` (loading, error, refetch), `ProjectCard`, `ProjectForm` (shared by create and edit), `ProjectsPage`, `NewProjectPage` and `ProjectPage` with edit and delete (`window.confirm`).
+- The routes in `App.tsx`, entries in `docs/todo.md`, the frontend `test` script and `src/lib/api.test.ts` (9 tests).
+
+**What I wrote myself**
+- `features/projects/types.ts` and `projectsApi.ts`, including `getProject`, which I added after the review pointed out that it was missing. I also trimmed some of the generated comments in the hooks and pages afterwards.
+
+**What the tests do (`src/lib/api.test.ts`)**
+- Supabase and the env check are replaced with fakes, and `fetch` is a mock, so no request is sent. They test `apiRequest` only, because everything else in the frontend calls it.
+- Requests (2 tests): the token is sent as a Bearer header to the API url, and no header is sent when there is no session.
+- Success (2 tests): the parsed JSON is returned, and 204 (DELETE) returns `undefined`.
+- Errors (5 tests): the backend's error shape becomes an `ApiError` with status, message and details. A 404 keeps its status. A non-JSON body (a 502 page) and JSON without the error shape both give "Request failed (status)". A network failure gives status 0.
+- **Not covered:** `ProjectForm`, the hooks and the pages. They need `@testing-library/react`, which is not installed. I will decide whether to add it (it is in `todo.md`). I also did not test in the browser during this session beyond type checking and ESLint, so the pages still need a manual run-through.
+
+**What I changed or corrected**
+- Decided that edit sends `""` to clear the description and create leaves it out, so new projects get `null`. The display treats `""` and `null` the same.
+- Decided to keep `ApiError` in `api.ts` for now. It would only be moved if a test needs it without the Supabase and env imports. The mocks made that unnecessary.
+- Decided to keep `type="button"` on every button outside forms, as `LogoutButton` already does.
+- Decided to skip timing code for the slow localhost requests, and to find out where the time goes in the browser's Network tab instead.
+
+**What went wrong or was noted**
+- I wrote "app.ts" when I meant `api.ts`, and the AI assumed it, which turned out right but was a guess.
+- I said I had written the hook, but I had not. The AI looked for the file and found none, so the hooks were generated. This is why they are listed above as generated.
+- The first test run failed: "Cannot access 'getSession' before initialization". `vi.mock` is moved to the top of the file, above the fake it uses. `vi.hoisted` fixes it.
+- The slow loading on localhost is not explained yet. The likely reason is two round trips to Supabase (Ireland) on each request: `getUser` in `requireAuth` and the Prisma query. React StrictMode also sends every request twice in development. The backend region and host sleeping (free tiers) need to be checked before the first deploy of the pages.
+- The generated code is typechecked and linted, not reviewed in the browser yet.
+
+**Insights and what I learned**
+- A hook should hold the state of one request. Storing the id together with the answer makes "loading" something that is calculated, so a page never shows the previous project.
+- A cleanup function in `useEffect` (`cancelled = true`) stops an answer that arrives late from updating a component that is gone.
+- A button is `type="submit"` by default, so `type="button"` is needed for any button that sits in a form.
+- `vi.mock` is hoisted. A fake used inside it must be created with `vi.hoisted`.
+- The same 404 for "missing" and "not yours" is handled on the page by one message. The 400 for a bad uuid in the URL is mapped to "not found" too.
+
+
+## 2026-10-21 to 2026-10-22: Item CRUD in the backend (schemas, service, routes, tests)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/CRUD`.
+
+**What I asked**
+- To recommend the next step after the project pages, and then to write the item service, routes and tests.
+- Whether the item type should be changeable after creation. I decided yes. If the new type makes relationships invalid, they should not be dropped silently: the API rejects the change, and the client confirms with an explicit flag (sprint 3, in `todo.md`). Until relationships exist there is nothing to drop.
+- To review my `schemas/items.ts`, and whether the 500 character limit on the item description is needed or handled elsewhere.
+- What "nested" routes means, before the routes were written. I also decided the default position (0, 0) is fine for now.
+- To keep the frontend test next to the code, and to note it in `CLAUDE.md`.
+
+**What was generated**
+- `services/items.ts`: `getOwnedItem` (`findFirst({ id, project: { userId } })`), `listItems`, `createItem`, `updateItem`, `deleteItem`, and a check that `type` exists in the project's template (400 with the same `fieldErrors` shape as `validate()`).
+- `routes/items.ts`: `projectItemsRouter` (`GET` and `POST /api/projects/:projectId/items`, `Router({ mergeParams: true })`) and `itemsRouter` (`GET`, `PATCH` and `DELETE /api/items/:id`), both with `requireAuth` first, mounted in `app.ts`.
+- `tests/items.test.ts` (25 tests), the item description limit in `CLAUDE.md`, the sprint 3 type-change note in `todo.md`, and the note about where frontend tests live.
+
+**What I wrote myself**
+- `schemas/items.ts` (create and update schemas, the status enum, the two param schemas), the same layout as `schemas/projects.ts`.
+- I renamed the template check to `checkItemTypeInTemplate` and shortened some comments in the service afterwards.
+
+**What the tests do (`tests/items.test.ts`)**
+- They run through the real Express app with Supertest and the local database `planter_test`. Only Supabase is faked (`token-a` and `token-b`), as in `projects.test.ts`.
+- Create (8): 401, the defaults (`planned`, not MVP, position 0, 0), optional fields, the project taken from the URL (a `projectId` in the body is ignored), an unknown type gives 400 on the `type` field, bad title/status/description give 400, another user's project gives 404 and creates nothing, and a missing or non-uuid project.
+- List (3): only the items of that project in creation order, an empty list, 404 for another user's project.
+- Get (3), update (7) and delete (3): the owner succeeds, another user gets 404 and the item is unchanged afterwards, a non-uuid id gives 400, an unknown type gives 400, and a `projectId` in the body cannot move an item to another project.
+- Cascade (1): deleting a project deletes its items. This was the gap noted in the project CRUD entry.
+- **Not covered:** relationship dropping on a type change (sprint 3), the frontend for items, and manual checks against Supabase. Nothing here was run against Supabase.
+
+**What I changed or corrected**
+- Decided that the item description limit is 500 and that it is written in `CLAUDE.md`. The limit is needed: the database column is unlimited `text`, the frontend `maxLength` can be skipped with any HTTP client, and Express only stops bodies over about 100 kB.
+- Changed the "at least one field" message so items and projects say the same.
+- Chose two small routers, each with `router.use(requireAuth)`, instead of one router with full paths. This changed the AI's first suggestion: one router mounted at `/api` would answer 401 for unknown routes, and adding `requireAuth` by hand to every route is easy to forget.
+- Kept the "send only defined fields" spread pattern from `projects.ts`. It now appears in five places, and a helper is an option if it grows.
+
+**What went wrong or was noted**
+- The test files run in parallel against one database, and `projects.test.ts` deletes the rows of its two users before every test. The items tests would have deleted each other's data, so they use their own two user ids (`...0c` and `...0d`). This was caught when planning the test file, before the first run. Every future test file needs its own pair of users.
+- All tests passed on the first run, which proves little. I removed the owner filter from `getOwnedItem` on purpose and ran the tests again. Two cases failed, but the PATCH test for another user's item still passed. Cause: a request with `type` runs a second ownership check (`getOwnedProject`), which hid the missing filter. A test with only a title was added, and then 3 tests failed under the same change. The filter was restored and the full suite passed (69 tests).
+- An update that changes `type` does two ownership queries, and an item deleted between the check and the update gives a 500. Both are small and match the project service, so they were left as they are.
+- I staged files with `git add .` in the wrong terminal. No harm was done.
+- The generated code is typechecked and tested, but the item routes have not been called from the browser yet.
+
+**Insights and what I learned**
+- A nested route (`/api/projects/:projectId/items`) puts the parent in the URL. An id that identifies the item alone (`/api/items/:id`) does not need it, and ownership is checked through the project.
+- `mergeParams: true` is needed for a router to see params from the path where it is mounted.
+- Whether an item type is valid depends on the project's template, so the check is in the service and not in the Zod schema.
+- A test that passes on the first run should be tried against a deliberate bug. A test can pass because another check hides the bug.
+- Tests in different files run at the same time, so they must not share the rows they delete.
+
+
+## 2026-10-25: Review of the File view and add item form (frontend)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/itemCRUD`.
+
+**What I asked**
+- To review my File view and `ItemForm`, and to help with the "pick type for item" dropdown, which I thought did not work.
+- To fix the review notes (not the formatting), then to add minimal tests and this log entry.
+
+**What was generated**
+- A review of `FileView.tsx`, `ItemForm.tsx`, the hooks and the backend item routes. It found no bug in the type picker and listed what to check in the browser (the Network tab for `GET /api/templates/web` and the `POST` for items).
+- Small fixes: `UpdateItem` and `DeleteItem` renamed to `updateItem` and `deleteItem`, `setItems` in `useItems.ts` now also accepts a function (`items.setItems((current) => [...current, item])`), and `ItemForm` only updates its own state when `onSubmit` returns an error.
+- `itemsApi.test.ts` (4 tests): checks the path, method and JSON body that each function in `itemsApi.ts` gives to `apiRequest`, which is replaced with a fake.
+
+**What I wrote myself**
+- created the whole fileview and item crud by myself. so all of `features/items`.
+- `FileView.tsx` with the add item form and `ItemForm.tsx`. I also renamed the button to "Add item" myself.
+
+**What I changed or corrected**
+- The type picker worked. The problem was my own misunderstanding, so no code change was needed there.
+- I decided to leave the formatting of `useItems.ts` and `types.ts` for later, and to wait with more tests.
+
+**What went wrong or was noted**
+- The first rename with `sed` failed on macOS (BSD `sed` needs different syntax), so the rename was done with the edit tool instead.
+- The tests are minimal on purpose. They do not render React components: that needs a library such as `@testing-library/react`, which is not in the plan, so I need to decide on it before adding it. `useItems`, `ItemForm` and `FileView` are not tested yet.
+- The unmounted-form fix assumes the parent closes the form on success. A form that stays open after saving would need to reset `submitting` itself.
+
+**Insights and what I learned**
+- A review without running the app can only show that code looks right. Checking the Network tab is the quickest way to find out which side is wrong.
+- A state update that depends on the current value should use the function form (`setState(current => ...)`), so a late answer cannot overwrite a newer list.
+
+
+## 2026-10-25 to 2026-10-26: Edit and delete for items in the File view
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/itemCRUD`.
+
+**What I asked**
+- To add edit and delete for items, with checkboxes for status and `is_mvp`.
+- Then to show MVP only in the edit form, and not in the normal File view.
+- Then to log this and check whether the item CRUD and File view tests follow the plan.
+
+**What was generated**
+- `ItemRowCard.tsx`: "In progress" and "Done" checkboxes (neither checked = `planned`), an Edit button that opens `ItemForm` inline, and a Delete button with `window.confirm`. Each action calls `updateItem` or `deleteItem` and shows an error under the item if it fails.
+- `FileView.tsx`: `replaceItem` and `removeItem`, which update the list with the function form of `setItems`.
+- `ItemForm.tsx`: a new `isMvp` value and an MVP checkbox that is only shown when editing (no `types` prop).
+
+**What I wrote myself**
+- The read-only "MVP" text on items in the normal File view (`{item.isMvp && <p>MVP</p>}`).
+- The fix for the import spelling (`itemForm` to `ItemForm`), which broke on case-sensitive systems.
+
+**What I changed or corrected**
+- The first version had an MVP checkbox on every item in the File view. I wanted it only in the edit form, so it was moved, and I then added the read-only marker myself.
+- Status has three values, so the AI used two checkboxes instead of one. I kept this.
+
+**What went wrong or was noted**
+- The delete confirmation has no counts yet ("This also deletes its connections and tasks"), because relationships and tasks do not exist until sprint 3. There is a TODO in the code.
+- The new components (`ItemRow`, `ItemForm`, `FileView`) have no tests. They need `@testing-library/react`, which is not in the plan.
+- Nothing here was tested in the browser by the AI. I tried it myself.
+
+**Insights and what I learned**
+- A status with three values does not fit one checkbox. Two checkboxes that exclude each other work, but a dropdown would show the three values more clearly.
+- The same form component can be used for add and edit by leaving out props (`types`), but then the form must decide what to show from which props it has.
+
+
+## 2026-10-26: Relationship rules, service and routes (sprint 3)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `dev`.
+
+**What I asked**
+- How to build the relationship rules with Zod, without overengineering, and to read the docs first so the answer fits the sprint plan.
+- To then build it in small steps: schemas and their tests, then the service (ownership and template rules), then the cycle check, then the routes.
+- Later: to look into why `npm run test` failed, to write this log, and to do the `updateItem` TODO (a type change that makes connections invalid).
+
+**What was generated**
+- `schemas/relationships.ts`: `createRelationshipSchema` (UUIDs, a type, source is not equal to target, no `projectId`), `relationshipIdSchema` and `relationshipRuleSchema(template)`, which checks a combination of source type, relationship type and target type against `template.allowedCombinations` with `.refine`.
+- `services/relationships.ts`: `createRelationship` (loads both items in one query filtered on the owner, 404 if not exactly two items or if their projects differ, rule check with 400, cycle check, create, readable 400 on a duplicate), `wouldCreateCycle` (a pure depth-first search), `listRelationships` and `deleteRelationship`.
+- `routes/relationships.ts` (`POST /api/relationships`, `GET /api/projects/:projectId/relationships`, `DELETE /api/relationships/:id`) and the two routers mounted in `app.ts`.
+- `updateItem` in `services/items.ts`: when the type changes, it checks the item's incoming and outgoing relationships against the template. If any would become invalid it responds 409 with `{ invalidRelationships: n }`. With `confirmRelationshipRemoval: true` in the body, it deletes those relationships and updates the item in one `prisma.$transaction`. The schema `updateItemSchema` got the new optional flag.
+- Tests: `relationshipRules.test.ts` (Zod only), `relationships.test.ts` (service with the database, plus the cycle search) and `relationships.api.test.ts` (Supertest, including two users). Five more in `items.test.ts` for the type change (409 with count and nothing changed, only invalid ones counted, confirm deletes only invalid ones, other edits leave connections alone, incoming connections checked).
+
+**What I wrote myself**
+- Decisions on scope: Zod only judges the combination and the service fetches the data, and the cycle check stays outside Zod.
+- Edited the comments in `schemas/relationships.ts` after it was generated.
+- Removed the temporary `/api/_test` route and `testRoute.ts`, as its own comment said to do when real routes exist.
+
+**What I changed or corrected**
+- The first typecheck failed in the tests because `noUncheckedIndexedAccess` makes `Record<string, string>` lookups `string | undefined`. The test helper got a generic type so the ids are plain strings.
+- After I removed the temporary route, `tests/middleware.test.ts` failed with 404s because it still called `/api/_test`. The AI moved those tests to `POST /api/relationships` and dropped two tests that depended on the temp route (a 200 with a valid token and a body `userId` being ignored). The same ideas are covered in the items and relationship API tests. The total went from 102 to 100 tests.
+
+**What went wrong or was noted**
+- The AI did not run the full suite after I deleted the temporary route, so the stale tests were only found when I ran `npm run test`.
+- The cycle check reads the existing relationships and then writes, without a lock. Two requests at the same moment could both pass and create a loop. I accepted this for a single-user planning tool and can name it as a known limit in the thesis.
+- An unknown project template throws a plain `Error` (500), because it would be a data bug and not a user mistake.
+- 409 Conflict is a new status code that `CLAUDE.md` does not list (it names 400, 401 and 404). It was chosen so the frontend can tell "needs confirmation" from a plain validation error. `todo.md`, mentioned in the old TODO comment, does not exist in the repo.
+- One of the new type change tests first had a title that did not match what it checked ("changes the type without asking" while expecting 409). The AI renamed it after noticing.
+- The frontend does not handle the 409 yet: changing the type in `ItemRowCard` would show a generic error. It should read `invalidRelationships`, ask for confirmation and re-send with the flag.
+- No frontend work yet: the React Flow map and the connections in the File view are still to do.
+
+**Insights and what I learned**
+- Zod cannot look in the database. The pattern is: fetch with Prisma, then let a Zod schema judge the fetched facts (`relationshipRuleSchema(template)`).
+- `.refine` adds a custom rule on top of the built-in checks, and a schema can be a function that depends on the template.
+- Ownership is checked in the query itself (`project: { userId }`), so another user's resource looks the same as one that does not exist (404).
+- A TypeScript `Record` lookup is `T | undefined` with `noUncheckedIndexedAccess`, so a generic helper is a cleaner fix than `!` everywhere.
+- A change that touches more than one table should be one transaction (`prisma.$transaction([...])`), so a failure cannot leave half of it done.
+
+
+## 2026-10-26: Relationships in the frontend: map, File view and connect forms (sprint 3)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `dev`.
+
+**What I asked**
+- To build the React Flow map, then to show connections in the File view.
+- Then an idea of my own: create a new item from an item and have it connected automatically (for example an image on the About page).
+- Then that the connections were confusing: I wanted to pick the type of the new item ("a component") and see clearly how it is connected ("belongs to the page", "is triggered by").
+- Then to add connecting to an existing item and a delete button for connections.
+- Then a correction of my own: editing, deleting and connecting belong in a detail view of an item, not in the File view. The File view should only add items and show connections as text. The AI asked me which I meant, because my message said the File view both can and cannot add connections.
+
+**What was generated**
+- `features/relationships/`: `types.ts`, `relationshipsApi.ts` (list, create, delete), `useRelationships.ts` (loading, error, `setRelationships`), `connections.ts` (`getConnections`, `getConnectOptions`, `getTypeChoices`), `ConnectedItemForm.tsx` and `ConnectExistingForm.tsx`, and `connections.test.ts` (10 tests).
+- `features/map/MapView.tsx`: a read-only React Flow map of the real items and relationships. Labels come from the template. Items without a saved position (all of them for now) are placed in one column per type. `ItemNode` got an optional `categoryLabel`.
+- `ProjectPage.tsx`: a File view / Map switch.
+- Connections shown on an item, from both sides (`label` on the source, `inverseLabel` on the target) with the other item's type. The delete confirmation for an item says how many connections it also deletes.
+- Detail view (after my correction): `ItemDetail.tsx` and `pages/ItemPage.tsx` with the route `/projects/:projectId/items/:itemId`. It holds status, edit, delete, the connections with a Remove button, "Add connected item" and "Connect existing item". The File view (`FileView.tsx`, `ItemRowCard.tsx`) became read-only apart from "Add Item", and each title links to the detail view.
+- Add connected item: the form reads from the new item's side as a sentence, with a live preview ("Button (Component) belongs to About (Page)"). Type first, then only the verbs that are allowed for that type, all from `allowedCombinations`. It makes two requests (create the item, create the relationship) and deletes the new item again if the relationship is refused.
+
+**What I wrote myself**
+- The idea of creating connected items from an item, and the decision to read the connection as a sentence from the new item's side with type and verb as separate choices.
+- Decisions on scope: the map is read-only for now, positions are not saved yet, and fixing the details of the connection rules waits until I can see the whole picture.
+
+**What I changed or corrected**
+- The first version of the connect form had one dropdown with labels like "uses Asset" and "contains Component". It was hard to read, so it was rebuilt: type first, then a filtered verb, then a preview.
+- A test failed because its test template had no item types, so the type label was "Unknown". The test data was fixed, not the code.
+
+**What went wrong or was noted**
+- I first asked for the connect forms and Remove in the File view and moved them to a detail view afterwards, so that work was done twice. The plan did say "item detail view", but I did not think about where the controls belong until I saw them. The AI did not raise it either.
+- The AI used "Button triggers Home" as an example, but the web template has no `component triggers page`. I found it when I tried it. The form only offers combinations the template allows, so nothing was wrong in the code, but the AI's example was wrong. Adding that combination (and others) is postponed until I decide the rules.
+- The two-request create is not atomic. If the browser closes between the requests, an unconnected item stays. A backend route with a transaction would fix it.
+- Nothing here was tested in a browser by the AI, and the components have no tests. They need `@testing-library/react`, which is not in the plan, so that is still a decision for me.
+- The detail view loads its own data, so going back to the File view fetches the list again. Connections and map nodes do not link to the detail view yet.
+- Still open: the 409 confirmation in `ItemRowCard` when changing an item's type (and the edit form cannot change the type yet), saving node positions, and creating connections from the map (Sprint 4).
+
+**Insights and what I learned**
+- Everything the user sees about types and verbs can come from the template, so a new template needs no frontend change.
+- A relationship has one direction but is read from two sides, so one pure function (`getConnections`) can serve both the File view and later the map.
+- A form is easier to understand when it reads as a sentence with a live preview.
+- A list that is held in state (`useItems`, `useRelationships`) needs a setter, so the screen can update after create and delete without loading everything again.
+- Decide where a control belongs (list or detail) before building it. A list that only shows and links, and a detail view that changes things, is easier to explain and to test.
+
+
+## 2026-10-28: Type editing with confirmation, map link and elbow lines (sprint 3)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/flowMap`.
+
+**What I asked**
+- To add the frontend side of the 409 for item type changes (editing the type and a confirmation).
+- Then a link from the map to the detail view, and whether the map can look like a screenshot I had (a tree with 90 degree lines).
+- Then, after the AI explained what the screenshot needs, to do only the elbow lines now and leave the tree layout for later.
+
+**What was generated**
+- `ItemForm.tsx`: the type dropdown (`types`) and the MVP checkbox (`showMvp`) are now two separate options.
+- `ItemDetail.tsx`: the edit form has a type dropdown. If saving gets a 409, it asks with `window.confirm` ("Changing the type to Design deletes 2 connections that are no longer allowed. Continue?"). On OK it sends the changes again with `confirmRelationshipRemoval: true` and reloads the connections. On cancel the form stays open.
+- `typeChange.ts` with `getInvalidRelationshipCount(err)` (reads the count from a 409 and checks the shape of `details`), and `typeChange.test.ts` (4 tests). `UpdateItemInput` accepts the confirm flag.
+- `MapView.tsx`: `onNodeClick` opens `/projects/:projectId/items/:id`, and edges use `type: "smoothstep"` (90 degree bends). `ItemNode.tsx`: handles moved to the left (in) and right (out).
+
+**What I wrote myself**
+- The decision to do only the elbow lines now and to put the tree layout last (a Could item, end of sprint 5, after saved positions exist).
+- The screenshot I wanted the map to look like.
+
+**What I changed or corrected**
+- The AI could not open my screenshot from the macOS temp folder (a permission error) and did not work around it. I saved a copy in the project and it could then read it.
+- The AI first asked me to choose between three options for the map look. I stopped it to ask what was unclear, and it then answered my actual question (should this wait for the next sprint) with a recommendation instead.
+
+**What went wrong or was noted**
+- The 409 and confirm flow has no component test. It lives in the edit form's `onSubmit` and needs `@testing-library/react`, which is not in the plan. The backend side is fully tested.
+- The count in the confirmation does not say which connections will go, because the 409 only sends a number.
+- If an item's stored type is not in the template, the type dropdown shows the first type. Saving without touching it still does not change the type.
+- The screenshot is in `frontend/src/assets/`. It is not an asset of the app, so it should be moved or removed.
+- The map has no arrowheads: direction is only shown by the left-to-right handles and the label. Nothing here was tested in a browser by the AI.
+- The tree layout needs a template field saying which side of each relationship type is the parent (for example `belongs_to`: the target, `uses`: the source), so it is a template and layout decision, not only styling.
+
+**Insights and what I learned**
+- Two behaviors that sit in one flag (`!types` meant both "adding" and "no MVP checkbox") should be separate options, or the form cannot be reused for editing.
+- Dragging and clicking are different events in React Flow, so a click handler on a node does not fire after a drag.
+- A map layout (where nodes are) and an edge style (how lines are drawn) are separate things: the second is a one-line change, the first is a feature.
+
+
+## 2026-10-30: Template relationship changes (sprint 3)
+
+**Tool:** Claude Code (Sonnet 5.5), branch `feature/flowMap`.
+
+**What I asked**
+- A note that I had changed the `belongs_to` relationship to read "used by", and that one item must be usable by many things (a button on many pages).
+- Then: why a component could not be connected to a page.
+- Then to keep the old key after the AI asked about renaming it.
+- Then that page to page should read "navigates to" (inverse "reached by") and not "triggers", and the same for component to page.
+
+**What was generated**
+- A diagnosis of why the Connect forms offered nothing for component to page: my edit to `web.ts` spelled the key `used_tby` but the combinations said `used_by`. The AI fixed the typo, then updated the tests when I had chosen a new key, and reverted all of it when I changed my mind and kept `belongs_to`.
+- `web.ts`: a new relationship type `navigates_to` ("navigates to" / "reached by", loops allowed), and the combinations `page navigates_to page` and `component navigates_to page`, which replace `page triggers page`. The `triggers` type is unchanged for the other combinations.
+- Two tests in `relationshipRules.test.ts` (navigating is allowed, triggering between those types is not).
+
+**What I wrote myself**
+- The change of label for `belongs_to` to "used by" / "uses", and the comment next to it.
+- The decisions: keep the old key, add `navigates_to` for pages and components, and skip a data migration for old connections.
+
+**What I changed or corrected**
+- I started to rename the key `belongs_to` to `used_by`. The AI warned that a key change needs a data migration (the project rule: keys are permanent, labels are free), and I decided to keep the old key and change the label only.
+- The AI had to explain that a label belongs to a relationship type, not to one combination, so renaming "triggers" for page to page only was impossible without a new type.
+
+**What went wrong or was noted**
+- The typo in the key (`used_tby`) was my own and broke the forms and 10 tests. The template data test ("only uses relationship types that exist") caught it, which is the reason that test exists.
+- The AI's `navigates_to` edit was missing from `web.ts` when it ran the tests again, so it had to be applied a second time. I do not know how it went missing.
+- Old connections saved as `triggers` between page and page (and any `belongs_to` rows, if the key had changed) are not migrated. I accepted this because the data is throwaway. Those rows still exist but are no longer an allowed combination.
+- A component can already be used by many pages, because the database only forbids the exact same (source, target, type) twice. This is not proven by a test yet.
+
+**Insights and what I learned**
+- Keys are for the code and the database, labels are for people. Changing a label is free, changing a key needs a data migration.
+- Words that mean the same in the UI ("used by" and "uses") can be different types with different directions in the data.
+- A test that checks the template data against itself catches typos that would otherwise just make options silently disappear.
+
+
+## 2026-11-02: Start positions for new items on the map (sprint 3)
+
+**Tool:** Claude Code, branch `feature/mapPositions`. Models used in the session: Sonnet 5.5, then Opus 5.5, then Haiku 5.5 (switched with `/model`).
+
+**What I asked**
+- To look at a screenshot of the map where a line from a page to an asset ran through a function node that was not connected to the line.
+- To optimize the start positions of new items once more.
+- Then to choose between three options: keep the current rule, save dragged positions in sprint 4, or lay out unplaced items from their relationships.
+- To do point 2 of my own list (move the node type out of `mockData.ts` and remove the prototype page), and then to commit.
+
+**What was generated**
+- `backend/src/services/itemLayout.ts`: `startPosition(itemTypeKeys, type, existing)`. One column per item type in template order (220 px), and the first free row in that column (110 px). It is a plain function and does not touch the database.
+- `backend/tests/itemLayout.test.ts` (5 tests): first item, column order, stacking, filling a gap after a delete, and ignoring moved items.
+- `createItem` in `services/items.ts` loads the positions of the same type in the project and saves the result.
+- `frontend/src/features/map/types.ts` with the node types. `ItemNode.tsx` and `MapView.tsx` import from there.
+- Removed `features/map/mockData.ts`, `pages/MapPrototypePage.tsx` and the `/map-prototype` route.
+
+**What I wrote myself**
+- The decision to keep the start-position rule for sprint 3 and to put saved dragged positions in sprint 4 (option 1).
+- The decision to remove the prototype page once nothing used `mockData.ts` except that page.
+- The commit split: one commit for the backend rule, one for the map cleanup.
+
+**What I changed or corrected**
+- The AI first treated "fix point 2" as the layered layout (option 2). That added a nullable position column, a hand-written migration and a frontend layout function. I had meant point 2 of my list, the cleanup. I asked for a revert, and the AI undid the migration on the local test database and rebuilt the start-position rule from the earlier version, which was never committed.
+- The migration was written by hand instead of with `prisma migrate dev`, because the local config had no shadow database and `.env` points at Supabase. The SQL was checked by applying it to `planter_test` and diffing the database against the schema. That work was then reverted.
+- My own analysis of the screenshot was not checked in the browser. The line running through the function is only explained by the relationships in the screenshot, not confirmed visually.
+
+**What went wrong or was noted**
+- A layered layout would fix the screenshot case, but it would only work for items without a saved position. Items with a saved position can still overlap or cross lines until sprint 4.
+- The layout rule uses item type columns, not relationships. Lines between columns can still pass through a node in the same row. This is accepted until auto-layout (a Could item).
+- The local test database was changed by hand twice (once up, once down). The schema and the database were checked to match after both changes.
+- Nothing was pushed. The backend is not yet redeployed with this change.
+
+**Insights and what I learned**
+- "Keep as is" and "fix point 2" can point to different things. When a list has numbered points, say which point before changing code.
+- The rule for where an item goes, and the rule for how a line is drawn, are separate problems. A column rule cannot prevent a line from crossing a node, because it does not know the lines.
+- A nullable column is the right way to say "not placed yet", but it changes every reader of that column, so it is a bigger step than it looks.
+
+## 2026-11-02: Progress calculation, route and views (sprint 4)
+
+**Tool:** Claude Code (Haiku 5.5), branch `dev`.
+
+**What I asked**
+- To read the docs and give an overview before starting sprint 4, then to start with the progress calculation.
+- To continue with the progress route, and later to add the frontend progress view.
+- Whether a progress bar could sit next to the project title, and whether in-progress items could be shown without counting toward the bar.
+- To commit the work and add this log entry.
+
+**What was generated**
+- `backend/src/services/progress.ts`: `countProgress` (done, in progress, total and percent for one set of items) and `calculateProgress` (filters to the template's item types with `countsTowardProgress`, one entry per category in template order). Both are pure functions. `getProjectProgress` does the ownership check, loads the items with Prisma and calls `calculateProgress`.
+- `GET /api/projects/:id/progress` in `routes/projects.ts`, with `requireAuth` and the uuid check.
+- Tests: `tests/progress.test.ts` (unit, 10 tests) and `tests/progress.api.test.ts` (Supertest with two users, 7 tests). The full backend suite went from 100 to 131 tests.
+- Frontend in `features/progress/`: `types.ts`, `progressApi.ts` (+ test), `useProgress.ts`, `ProgressBar.tsx` (native `<progress>` with the numbers as text), `ProgressOverview.tsx` (per category labels from the template). `ProjectPage.tsx` has a third tab, "Progress", and a bar next to the title (`ProjectPage.module.css`).
+
+**What I decided or changed**
+- The percent is `done / total`, rounded with `Math.round`. `total` includes planned and in-progress items, as the plan's formula says. In-progress items are shown as a count ("· 2 in progress") and do not change the percent.
+- The route is on the existing projects router, not in a new file, because it is a sub-resource of a project.
+- A project with an unknown template key throws a plain Error (500), the same rule as for relationships.
+- The Progress tab first fetched its own numbers. When the header bar needed the same numbers, I moved the fetch up to `ProjectPage` and changed `ProgressOverview` to take the data as props. This was a second version of the same code, and it could have been decided before the first version.
+- `refetch` keeps the old numbers on screen until the new ones arrive, so the header does not flicker when the view changes.
+
+**What went wrong or is still open**
+- The header bar is only refreshed when the view changes or the page reloads. Edits made in the File view do not update it until then. Fixing this needs a callback from the File view to the page. Not done yet.
+- The browser was not run by the AI. Only typecheck, lint and the automated tests were run. The new components have no component tests, because `@testing-library/react` is not in the plan and needs a decision.
+- The frontend progress files were not in any commit when this session started, although the frontend had been described as committed. They are committed with this entry.
+- The percent rounding (1 of 3 = 33%) is a choice that the thesis should mention.
+
+**Insights and what I learned**
+- A pure function (`countProgress`) can be tested without the database. The API test then only checks that the route is wired correctly and that ownership is enforced.
+- The same numbers in two places (header and tab) need one owner: the parent holds the state, and the children receive it as props.
+- A native `<progress>` element gives a bar with no new library, which fits the rule that libraries are added only from the plan.
+- Keeping the old numbers while a refetch runs avoids a flicker, but the screen can then show numbers that are a little out of date for a moment.
+
+## 2026-11-02: Pre-deploy review, fixes and README (sprint 4)
+
+**Tool:** Claude Code (Opus 5.5, switched with `/model`), branch `dev`.
+
+**What I asked**
+- To review the whole project before deploying the MVP: inconsistencies, overengineering and better solutions, checked against my list of deploy issue points.
+- Then to do the code fixes and write the README.
+
+**What was found**
+- Deploy: the Heroku backend was from 2026-10-30 (no start positions, no progress route), `origin/main` was 83 commits behind `dev`, and `backend/package.json` had no `engines` field (local Node 26, Heroku default unknown).
+- Bug: the map still had its own fallback for items "without a position", which treated (0, 0) as unplaced. Since the backend gives every item a start position, (0, 0) is a real spot, and after a delete and a new item two nodes could land on the same place.
+- Inconsistencies: "Welcome, [name]" placeholder on the projects page, the template key `web` shown on project cards (the UI should only show labels), an item delete message that mentioned tasks that do not exist yet, a frontend `env.ts` comment copied from the backend, `STATUS_LABELS` defined twice, and `routes/relationships.ts` importing a project param schema from `schemas/items.ts`.
+- Leftovers from the Vite template: `App.css`, `src/assets/*`, `public/icons.svg`, `frontend/README.md`, and the page title "frontend".
+- Checklist: leftovers from earlier sprints were already removed, the secret scan of files and git history found nothing, both `.env.example` files exist, and every data page has "Try again". The README and the React Flow decision in this log were not done.
+
+**What was generated**
+- `MapView.tsx` uses the stored position only. `STATUS_LABELS` moved to `features/items/types.ts`. Title "Your projects", no template tag on cards, delete message without tasks, `index.html` title "PLANter", `env.ts` comment rewritten, boilerplate files removed.
+- `projectIdParamSchema` moved to `schemas/projects.ts`. `"engines": { "node": "26.x" }` in `backend/package.json` (Heroku's changelog lists Node 26 builds).
+- `README.md`: tech stack, install, configure (all env variables and where to find them), Supabase setup, migrations, run, scripts, deploy (Heroku with `git subtree`, Vercel), security check, and the existing test database section.
+
+**What went wrong or is still open**
+- My checkmarks in the pasted issue list did not come through, so the AI checked every point it could from the repo instead.
+- During the review the branch head moved (I was merging `feature/progressCalculation` into `dev`). The AI noticed the progress route "disappearing", checked the reflog and found nothing was lost.
+- Items created before the backend start positions still sit at (0, 0) and now stack on the map. Accepted, the data is throwaway.
+- Not done: the React Flow decision (mine to write), pushing and redeploying, `prisma migrate status` against Supabase, and the device and two-account checks. The AI did not run the app in a browser.
+- `useProjects` still uses a different state pattern than the other hooks. Left as it is, it works.
+
+**Insights and what I learned**
+- Two pieces of code that decide the same thing (where an item goes) will drift apart. When the backend took over, the frontend fallback should have been removed in the same change.
+- A deploy checklist has to compare what is deployed with what is in git, not only what works locally.
+
+## 2026-11-02: Add item button and delete connection on the map (sprint 4)
+
+**What I asked**
+- An "Add item" button on the map, and a delete button that appears when a connection line is clicked.
+
+**What was generated**
+- `MapView.tsx`: the existing `ItemForm` and `createItem` are reused (new item gets its start position from the backend). Clicking an edge shows "A uses B" with a "Delete connection" button (with a confirm, like the item detail view); clicking the background hides it. The "No items yet" early return was removed, so the Add item button also shows on an empty map.
+- No backend changes.
+
+## 2026-11-02: Tasks API (sprint 4, Should)
+
+**What I asked**
+- Next step: the todo list, with tasks that can be connected to items. Backend first, frontend after.
+
+**What was generated**
+- `schemas/tasks.ts`, `services/tasks.ts`, `routes/tasks.ts`, wired in `app.ts`: `GET` and `POST /api/projects/:projectId/tasks`, `PATCH` and `DELETE /api/tasks/:id`. Same pattern as items: owner check in one place (`getOwnedProject` / `getOwnedTask`), 404 when not owned.
+- `itemId` is checked to be in the task's project (404 otherwise), `itemId: null` unlinks. `tests/tasks.api.test.ts` (8 tests, including a two-user test and cascade on item delete).
+
+**Decisions**
+- No `sprintId` yet: it is added together with the sprint routes, where the "sprint is in the same project" check is needed.
+- No migration: the `tasks` table already exists. It has no `created_at`, so the list is sorted open tasks first, then by title.
+
+## 2026-11-02: Todo view on the project page (sprint 4, Should)
+
+**What I asked**
+- Frontend step 1 of the todo list: a Todo tab with the task list, an add form with an optional item, a done checkbox and delete.
+
+**What was generated**
+- `features/tasks/`: `types.ts`, `tasksApi.ts` (+ test), `useTasks.ts` (same pattern as `useRelationships`), `TodoView.tsx`. A fourth button "Todo" on `ProjectPage.tsx`.
+- The item title is shown as text only. Delete asks for confirmation.
+
+**Still open**
+- Editing a task title, showing an item's tasks on its detail page, and sprints (step 2 and later).
+
+## 2026-11-02: Tasks on the item detail page (sprint 4, Should)
+
+**What I asked**
+- Step 2 of the todo list: show an item's tasks on its detail page.
+
+**What was generated**
+- `tasks/ItemTasks.tsx`: list, add (linked to the item), done checkbox and delete. `ItemDetail.tsx` loads the project's tasks with `useTasks` and passes this item's tasks down, because it also needs them for the delete message.
+- The item delete confirmation now counts tasks too ("This also deletes 2 connections and 1 task."), which was a TODO in the code and in `docs/todo.md`.
+- In the Todo tab, the item name next to a task is a link to the item's detail page.
+- No backend changes: the tasks route already returns all tasks of a project, and the page filters on `itemId`.
+
+**Note**
+- `ItemTasks` repeats some of the add, toggle and delete logic of `TodoView`. Left as it is: the two differ (item fixed vs dropdown), and a shared hook would be more code than the duplication.
+
+## 2026-11-02: Task requirements checked, title editing (sprint 4)
+
+**What I asked**
+- I pasted the todo requirements (types, API, `useTasks`, a "Tasks" button, add, edit title, tick, delete with confirmation, errors on the form or the row, empty message). The AI compared them with what was built.
+
+**What was missing and was added**
+- The button was called "Todo", now "Tasks". Editing a title did not exist. Errors from tick and delete were shown above the list, not on the row.
+- New `tasks/TaskRow.tsx`: one task with tick, edit title, delete (confirm) and its own error line. Used by both `TodoView` and `ItemTasks`, which removed the duplicated logic that I had noted earlier.
+
+## 2026-11-03: Sprints on the Tasks tab (sprint 4, Should)
+
+**What I asked**
+- Frontend step 1 for sprints: create, rename and delete sprints, and a sprint dropdown on tasks. Keep to the code conventions, do not overengineer.
+
+**What was generated**
+- `features/sprints/`: `types.ts`, `sprintsApi.ts` (+ test), `useSprints.ts` (same pattern as `useTasks`), `SprintSection.tsx` (list, add, rename, delete with a confirmation that says how many tasks lose their sprint).
+- `TodoView`: sprint dropdown in the add form, the sprint name next to a task, and `SprintSection` above the task list. `TaskRow`: sprint dropdown in the edit form.
+- After a sprint is deleted, the tasks in the page state get `sprintId: null`, like the server does, so no reload is needed.
+
+**Still open**
+- Step 2: group the tasks by sprint.
+
+## 2026-11-03: Tasks grouped by sprint (sprint 4, Should)
+
+**What I asked**
+- Step 2: group the tasks by sprint.
+
+**What was generated**
+- `TodoView`: one heading per sprint with its tasks, and a "No sprint" group last. An empty group says "No tasks." The sprint name next to a task was removed, the heading shows it now. No other changes.
+
+## 2026-11-03: Project page layout with the File view always on the left (sprint 4, CSS)
+
+**What I asked**
+- Restyle the project page like my screenshot, keep the File view on the left on every project page (also the map), and add an Overview button in the sub header that goes back to the screenshot view.
+
+**What was generated**
+- `/projects/:projectId` is now a layout route (`pages/ProjectPage.tsx`). It loads the project, items, relationships, template and progress once and gives them to the pages through the `<Outlet context>` (`features/projects/useProjectContext.ts`). The File view sits in a sidebar, so it always matches the page next to it.
+- Nested routes in `App.tsx`: overview (index), `map`, `tasks`, `progress`, `items/:itemId`. The old view buttons are now `NavLink`s in `ProjectSubHeader`, with an Overview link first and the "Add item" button on the right.
+- Overview page (`ProjectOverview`): Desc (with edit and delete, moved from the old page), Tech stack, Todo and Sprint cards.
+- `FileView`, `MapView` and `ItemDetail` read the shared data instead of loading their own. The add item form moved from `FileView` and `MapView` to the sub header.
+- CSS modules for the new parts, dark green header and footer (`--bar-bg` in `index.css`).
+
+**Not done**
+- The Insp card from the screenshot: project inspiration has a table but no routes or UI yet.
+- Not checked in a browser by the AI, only typecheck, build and tests.
+
+**Follow-up (same day): item page CSS**
+- I asked for clean, readable CSS on the item page. Generated `features/items/ItemDetail.module.css` and classNames in `ItemDetail.tsx`: three cards (the item, connections, tasks), type and MVP tags, status checkboxes shaped as pills, quieter Edit/Delete/Remove buttons. No logic changed. `ItemTasks` and `TaskRow` are shared with the Tasks page, so they are styled from the item page (`.tasks` descendant selectors) instead of being edited.
+- File view page CSS: `FileView.module.css` and `ItemRowCard.module.css`. A header row (Files, item count, Add item), one card per category in a grid, items with coloured status tags (class names match the status keys, for example `styles.in_progress`), connections indented under the item. `ItemForm` is shared, so it is styled from the File view (`.addForm`). No logic changed.
+- Tasks page CSS: `TodoView.module.css`, `SprintSection.module.css` and `TaskRow.module.css`. A header row with the pending count, Sprints and New task cards side by side, one card per sprint with a "done" count, the linked item as a small tag. `TaskRow` now styles itself, so the item page only styles the direct children of ItemTasks (`.tasks > ul` and so on). No logic changed.
+
+## 2026-11-03: Groups, database and API (sprint 4, scope addition)
+
+**What I asked**
+- User-made groups of items, for example "Navigation" with the components Nav, Header and Footer. An item can be in several groups, groups have a name and a short description, and deleting a group keeps its items. Not in the original plan, so it is a scope addition.
+- The AI pointed out that "category" already means the item type, so the feature is called "groups". Groups are user data like sprints, not new item types, so the Won't item "user-created item types" still holds.
+
+**What was generated**
+- Migration `groups`: tables `groups` and `group_items` (join table, many-to-many), RLS enabled on both. `group_items` has composite foreign keys `(group_id, project_id)` and `(item_id, project_id)`, so a group and an item must be in the same project. Deleting a group or an item only deletes the join rows.
+- The migration was created and applied against the local test database (`DIRECT_URL` points at Supabase). I apply it to Supabase myself with `npx prisma migrate deploy`.
+- `schemas/groups.ts`, `services/groups.ts`, `routes/groups.ts`: `GET`/`POST /api/projects/:projectId/groups`, `PATCH`/`DELETE /api/groups/:id`, `PUT`/`DELETE /api/groups/:id/items/:itemId`. A group is returned with `itemIds`, so item routes are unchanged. Adding the same item twice is not an error (PUT).
+- `tests/groups.api.test.ts`: 8 tests, including a two-user test, an item from another project (404), and that items stay when their group is deleted.
+
+**What went wrong**
+- Typecheck failed on the first try: `description: undefined` is not allowed with `exactOptionalPropertyTypes`. Fixed with the same spread pattern as `createProject`.
+
+**Next**
+- Frontend: groups card on the Files page, group names under the item title, a Category | Group switch on the Files page, and a small group marker in the left file list.
+
+## 2026-11-04: Groups on the Files page (sprint 4, scope addition)
+
+**What I asked**
+- Step 3 of groups: the frontend, with the same conventions as sprints, short and not overengineered.
+
+**What was generated**
+- `features/groups/`: `types.ts`, `groupsApi.ts` (+ test, 6 tests), `useGroups.ts` (same pattern as `useSprints`), `GroupSection.tsx` and its CSS module.
+- `GroupSection` is a card above the category cards on the Files page: create, edit (name and description) and delete groups, and add or remove items inside each group (a select and small tags with ×). Create and edit share one small `GroupForm`. The delete confirmation says how many items stay.
+- `FileView` loads the groups with `useGroups` and passes them down.
+- Item add and remove is only in the group card for now (not on the item page), so there is one place to do it.
+
+**Changed after the first version**
+- The first draft had a `toInput` helper and the create form emptied itself even when the request failed. Simplified: the form only resets when the request worked.
+
+**Not done / limits**
+- Checked with typecheck, lint and tests, not in a browser (the AI cannot log in).
+- Still open: group names under the item title, the Category | Group switch, and the group marker in the left file list.
+
+## 2026-11-04: Group names under the item title (sprint 4, scope addition)
+
+**What I asked**
+- Step 4 of groups: show an item's groups as a subtitle.
+
+**What was generated**
+- `groups/itemGroups.ts`: `getGroupsOfItem(itemId, groups)`, a plain function (+ 2 tests), used by the File view and the item page.
+- `ItemRow` gets a `groups` prop and shows the names as a small line under the title. `ItemDetail` loads the groups with `useGroups` and shows "Groups: Navigation, Forms" under the item title. Nothing is shown for an item in no group.
+- No backend change: the groups list already has `itemIds`.
+
+**Still open**
+- Category | Group switch on the Files page, and the group marker in the left file list. Checked with typecheck, lint and tests, not in a browser.
+
+## 2026-11-04: Category | Group switch on the Files page (sprint 4, scope addition)
+
+**What I asked**
+- Step 5 of groups: choose between the Files page grouped by category (as before) and everything grouped by group, with items in no group at the bottom and the group name as each section title.
+
+**What was generated**
+- `items/fileSections.ts`: `getFileSections(mode, items, template, groups)`, a plain function (+ 5 tests) that returns the cards for the chosen mode. Group mode: one card per group (an item in two groups shows in both), then "No group" (only when it has items). Category mode is as before, with "Unknown" for old type keys.
+- `FileView`: a Category | Group switch (local state, starts on Category) and one render loop over the sections. This replaced the two copies of the card JSX (the category cards and the Unknown card). A group's description is shown under its title.
+- The Groups card (create, edit, delete) stays on top in both modes.
+
+**Still open**
+- The group marker in the left file list. Checked with typecheck, lint and tests, not in a browser.
+
+## 2026-11-04: Group names in the left file list (sprint 4, scope addition)
+
+**What I asked**
+- Step 6 of groups: a small group indication in the left file list. I accepted that it only updates with the refresh button, like the items.
+
+**What was generated**
+- `FileSidebar` loads the groups with `useGroups` and shows an item's group names as a small line under its name (one line, cut off with "..." when too long). The ↻ button now reloads items and groups.
+- The sidebar already had a local variable called `groups` (the category cards), which was renamed to `categories`.
+
+**Groups are now done** (database, API, card, subtitle, Category | Group switch, sidebar). Checked with typecheck, lint and tests, not in a browser.
+- `CLAUDE.md` (data model, scope) and `docs/project-plan.md` do not mention groups yet. I decide where it belongs in MoSCoW and update them.
+
+## 2026-11-04: Decision: groups added outside the MoSCoW plan
+
+**Decision (mine)**
+- I chose to add user-made groups even though they are not in the MoSCoW list in `docs/project-plan.md`. I see it as a very important addition to make everything work: the item types are fixed by the template, so without groups there is no way to organise items the way a project actually needs it (for example "Navigation" with a nav, a header and a footer, which are all components, or items of different types that belong together).
+- The closest item in the plan is the Could item "auto-layout and grouping on the map". Groups are not that: they are not on the map, and they live in the File view. The Could item "filter in the File view" is also related but not the same. The Category | Group switch is a different way to divide the File view, not a filter.
+- It is a scope addition in sprint 4, next to the Should items. It does not break any rule: groups are user data like sprints, not new item types, so the Won't item "user-created item types" still holds.
+
+**What the AI did**
+- Before building, the AI pointed out that this was outside the plan and that "category" already means the item type (so the feature is called "groups"). It gave a size estimate and split the work in six small steps. I decided to go ahead with that. The AI did not decide the scope change.
+
+**What I did with the plan**
+- `docs/project-plan.md` is not changed on purpose: it stays as the plan that was approved, and this entry is where the deviation is documented. The same goes for the thesis: the deviation and the reason are reported there.
+
+**Cost / risk**
+- Time taken from the sprint 4 Should items and the work after it (impact view and warnings in sprint 5). The cut line still applies: Could first, then search, filter, MVP marking and responsive layout. Tests and the security check are never cut, and groups have their own API tests (including a two-user test).
+
+## 2026-11-04: Demo project seed "Awesome Demo Portfolio"
+
+**What I asked**
+- A seedable mock project, a fully planned portfolio called "Awesome Demo Portfolio", that uses every feature so I can check that everything works.
+
+**What was generated**
+- `backend/src/seed/demoPortfolio.ts`: the data only (47 items in all 9 types, 53 relationships using all 8 relationship types, 5 groups, 3 sprints, tasks linked to items, backlog tasks, item details, project inspiration). It has two deliberate gaps (a page with no connections, a function nothing triggers) for the warnings in sprint 5.
+- `backend/src/seed/seedDemo.ts`: creates it for one user in one transaction. It deletes an older demo project with the same name first, so it can be repeated. Positions use the same layout function as new items.
+- `backend/src/seed/run.ts` + script `npm run seed:demo -- <supabase-user-id>` (the id is checked with Zod).
+- `tests/seedDemo.test.ts`: checks the data against the web template (allowed combinations, no loops, no duplicates, limits, http(s) urls) and that seeding works twice on the test database.
+
+**Still open**
+- Not run against Supabase and not looked at in the browser. I need to pick the user id of my own account.
+
+## 2026-11-04 – 2026-11-05: Warnings (backend and frontend) and a better demo map layout
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** For the sprint 5 issues, then to start with the warnings. First the backend route, then the frontend. I wanted the warnings to be very clean and not take much space: a small alert icon on the items that opens more info when pressed. Afterwards I asked for better positions of the demo items on the map (related items beside each other), and then for much more space between them so the connections are easy to see.
+
+**What was generated:**
+- **Backend:**
+  - `warningRules` added to the `Template` type and the web template (plain data): a page with no component belonging to it, and a function nothing triggers.
+  - `services/warnings.ts`: `findWarnings` (pure function) and `getProjectWarnings` (ownership check first, then Prisma).
+  - `GET /api/projects/:id/warnings`.
+  - Tests: 13 unit tests, 3 template data tests, 9 API tests including a two-user test (user B gets 404).
+- **Frontend (`features/warnings/`):**
+  - API function, `useWarnings` hook (same pattern as `useProgress`), a helper that groups warnings by item, and a `WarningBadge` component (a small "!" button with a popover).
+  - The warnings are loaded once in `ProjectPage` and shared through the Outlet context, so the File view and the map show the same badges. They are refetched when a page link is clicked.
+- **Demo seed:** every demo item got a hand-placed `col` and `row` (columns by role: tests and auth, components, pages, functions, data; rows by feature). `seedDemo.ts` multiplies them by `DEMO_COLUMN_WIDTH` (420) and `DEMO_ROW_HEIGHT` (220), which are separate from the spacing for new items. Tests check that every item has its own spot and that a component sits next to the page it belongs to.
+
+**Decisions:**
+- **Rules in the template, not in the service:** I accepted extending the template with `warningRules`, so the service never hard-codes `page` or `belongs_to` (CLAUDE.md rule) and a game template needs no code change.
+- **The MVP rule skips items that are done.** The plan says "an MVP item with no tasks", but a finished item has nothing left to plan. This is one condition in `warnings.ts` and can be removed.
+- **Warning errors are silent in the UI.** If the request fails, no badges are shown and no error message. Warnings are a hint, not core data, and I wanted a clean UI.
+- **No new library:** the icon is a styled "!" and the popover is CSS.
+- **Demo spacing is separate from new-item spacing,** so new items added by hand keep the old layout.
+
+**What I changed or corrected:** (fill in)
+
+**What went wrong:**
+- Nothing broke in the tests (backend 195 tests, frontend 59 tests, typecheck and lint clean at the end of the session), but the AI could not look at the result in a browser. The popover position (it could overlap other nodes on the map) and the demo layout are not visually verified by the AI.
+- The badges refresh only when a page link is clicked, so a connection made on the map does not remove a badge until I navigate.
+- My first request to restore this log was based on an old tracked version, so entries written between `8e0d3f4` and now may be missing. This entry was written from this chat only.
+
+## 2026-11-05: Impact view on the map
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To start the impact view (sprint 5): when I click an item on the map, its connections and connection lines should light up. Keep it simple and not overengineered.
+
+**What was generated:** Changes in `frontend/src/features/map/MapView.tsx` only:
+- A `selectedNodeId` state. Clicking a node sets it, clicking the background or a connection clears it.
+- The `edges` memo styles the selected node's own connections (blue, thicker, animated) and fades the others.
+- A `shownNodes` memo fades every node that is not the selected one or directly connected to it. It is applied at render time, so the saved node positions are not touched.
+- Only direct connections are highlighted, not whole chains.
+
+**Decision:** A click used to open the item's detail view. A click cannot do both, so opening the detail view moved to double-click (`onNodeDoubleClick`).
+
+**What I changed or corrected:** Nothing yet.
+
+**What went wrong:**
+- The first version declared `shownNodes` before the `useNodesState` line that creates `nodes`, which gave a TypeScript error (variable used before its declaration). The AI moved the block below it. After that, typecheck and the 59 frontend tests passed. I have not tried it in the browser yet.
+- `docs/ai-log.md` was missing on disk (it is in `.gitignore` since `8e0d3f4`). I had the AI restore the last tracked version from git (`8e0d3f4^`) and append this entry, so entries written after that commit may be missing.
+
+## 2026-11-05: Filters on the map
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To filter the map on group, category, item type, and anything else that fits.
+
+**What was generated:** In `frontend/src/features/map/`:
+- `mapFilters.ts`: the filter type and `matchesFilters`, a plain function. An item must pass every active filter.
+- `mapFilters.test.ts`: 6 Vitest tests (no filter, type, status, MVP, group, several filters together).
+- `MapFilterBar.tsx`: the bar above the map with selects for type, group and status, an "MVP only" checkbox and a "Clear filters" button.
+- `MapView.tsx`: holds the filter state, loads the groups, and styles matching nodes in the `shownNodes` memo.
+
+**Decisions:**
+- Category and item type are the same thing in this app (the category is fixed by the template), so there is one "Type" filter. The AI added status and "MVP only" as the extra filters.
+- The first version hid items that did not match (`hidden` on the node). I asked whether that was the best way. The AI pointed out that hiding also hides the connections, so a filter on pages shows pages with no connections. I chose to switch to dimming.
+- Final behaviour: nothing is hidden. Matching items get a purple outline, so the whole map and its connections stay visible. The impact view still fades unconnected nodes on click, so the two do not clash.
+- Each filter takes one value. Multi-select was suggested and not built.
+
+**What I changed or corrected:** I changed the approach from hiding to outlining after reviewing the first version.
+
+**What went wrong:** Nothing broke. The first version was replaced because of its design, not because of a bug. Typecheck and the 65 frontend tests pass, but I have not tried the filters in the browser yet.
+
+## 2026-11-05: Images in project inspiration
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** To add images to the project inspiration, where each image has a small description option.
+
+**What was generated:** The work was done in five small steps, with my approval before each one.
+- **Database:** a nullable column `image_path` on `project_inspirations` (migration `20261105160446_inspiration_image_path`). The database stores only the path of the file in Supabase Storage, never the file. No new table, so no new RLS statement was needed.
+- **Backend:**
+  - `lib/storage.ts`: upload, signed URLs and delete against the private bucket `inspiration-images`.
+  - `services/imageFiles.ts`: checks the first bytes of a file ("magic bytes") to tell JPEG, PNG and WebP from anything else.
+  - `PUT /api/inspirations/:id/image` in `routes/inspirations.ts`, using `express.raw()` with a 5 MB limit.
+  - `services/inspirations.ts`: `setInspirationImage`. Every inspiration response now has `imageUrl` (a signed link valid for one hour, or `null`) instead of the internal `imagePath`. Replacing an image or deleting an entry also deletes the old file.
+  - `middleware/errorHandler.ts`: a file over the limit returns 413 in the normal error shape.
+  - `tests/inspirationImages.api.test.ts`: 9 tests with Storage mocked.
+- **Frontend:** `uploadInspirationImage` in `inspirationsApi.ts` (with a test), a file input in the add and edit forms of `InspirationPageCard.tsx`, the image shown above its description, and one CSS class.
+
+**Decisions:**
+- **Upload path:** through Express, not straight from the browser to Storage. This keeps rule 1 (only Express touches data). The bucket is private, and only Express can create a signed link, after the ownership check.
+- **Allowed files:** JPEG, PNG and WebP, max 5 MB. SVG is left out on purpose because it can contain scripts.
+- **multer or not:** the AI first suggested multer. I asked whether it was needed and which option was better. We chose the built-in `express.raw()`, so no new library was added. The file is sent as the request body.
+- **Two requests:** an entry is created first, then the image is attached with a `PUT`. If the image upload fails, the entry stays and the error message says so.
+- **Description:** the existing `text` field is the image's description. I did not add a separate 500-character limit. It keeps the 2000-character limit.
+- **Real file type:** the server looks at the first bytes of the file and does not trust the `Content-Type` header, which a client can set to anything.
+- **Client-controlled paths:** the file path is made by the server (`<projectId>/<random uuid>.<ext>`). The client never chooses a file name.
+
+**What I changed or corrected:** I decided between the AI's options (upload path, limits, multer or `express.raw()`) and asked for the migration to wait until I had thought about the size of the change.
+
+**What went wrong:**
+- One new test, "includes imageUrl in the list", failed when I ran the suite. It expected the entries in creation order, but two rows created in the same millisecond have the same `created_at`, so Postgres can return them in either order. It passed for the AI and failed for me. The AI changed the test to look entries up by title. The route code was not wrong. The app has the same tie in `listInspirations`, which is harmless in real use, so I did not change it.
+- The AI made `getOwnedInspiration` return more fields and refactored the create, update and list responses into one helper, after noticing that create and update still returned the raw row with `imagePath` and no `imageUrl`.
+
+**Known limitations:**
+- Deleting a whole project deletes its inspiration rows (cascade), but the image files stay in the bucket. Deleting a single entry does remove its file.
+- The tests mock Storage, so the real bucket and the signed URLs are only checked by hand.
+- There is no automated test for the upload form.
+- A signed link expires after one hour, so an open page can show a broken image until it is reloaded.
+
+## 2026-11-05: Follow-up to images in project inspiration
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** Whether everything with the images was done. I had tested it in the browser (upload, display, replace and delete all worked, against the real Supabase bucket) and committed. The AI listed the loose ends and I asked for all three to be fixed.
+
+**What was generated:**
+- `deleteProject` in `services/projects.ts` now collects the image paths of the project's inspirations before the delete and removes the files afterwards. Before this, the database cascade removed the rows but left the files in the bucket. One new test checks that both files are deleted and that an entry without an image adds nothing.
+- `CLAUDE.md`: the data model has `image_path`, the "images are postponed" rule now describes the Storage setup (private bucket, upload through Express, limits), and the Should list no longer says "images later".
+- `README.md`: a Supabase setup step to create the private bucket `inspiration-images` (without it, uploads fail), and a line in the security check that the bucket must not be public.
+
+**What I changed or corrected:** Nothing yet.
+
+**What went wrong:** The first version of the new test used `mock.calls[0][0]`, which passes at runtime but failed `npm run typecheck` (the index may be `undefined` under strict settings). The AI replaced it with `expect.arrayContaining`. The tests had passed, so only the typecheck showed it.
+
+**Known limitations (updated):**
+- Deleting a project and deleting an entry now remove the files. The cleanup runs after the database delete, so if Storage fails at that moment the project is gone but its files stay. This is unlikely, and the files are unreachable (the bucket is private).
+- The same applies to an upload that succeeds when the following database update fails.
+- Deleting a user's account is not handled (there is no such feature yet).
+- The tests mock Storage, and there is no automated test for the upload form. Both were checked by hand in the browser.
+- A signed link expires after one hour, so an open page can show a broken image until it is reloaded.
+
+## 2026-11-06: Moodboard per item, main photo per item and project color palette (Could, built in sprint 5)
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** For a design area on the overview with a color palette, images and links, a moodboard card per item (links, inspiration images, colors from the palette or new colors, and a short description), and a main photo per item (probably a Figma screenshot). I gave a screenshot of how the moodboard card should look. I asked where the best place to start was. The AI pointed out that none of it was in the plan, so it was added to the scope as a Could item that I chose to build now.
+
+**What was generated:** The work was done in seven steps, with my approval before each one.
+- **Migrations (all additive, applied to Supabase and the test database):**
+  - `item_image_path`: `items.image_path`.
+  - `item_detail_image_path`: `item_details.image_path`.
+  - `project_colors`: a new table, with RLS enabled in the same migration.
+  - `item_colors`: a new join table with composite foreign keys, so an item can only use colors of its own project, with RLS in the same migration. It needed a unique on `project_colors(id, project_id)`.
+  - After each migration, the RLS check from the Definition of Done returned no tables.
+- **Backend:**
+  - `PUT /api/items/:id/image` for the main photo.
+  - A whole item details API: list and create under `/api/items/:itemId/details`, and edit, delete and image under `/api/item-details/:id`.
+  - A palette API: `/api/projects/:projectId/colors` and `/api/colors/:id`.
+  - An item colors API: list all links in a project, and `PUT` and `DELETE` for one link.
+  - Shared code: `services/images.ts` (check and upload, `imageUrl` instead of the storage path, file cleanup), `middleware/imageBody.ts`, `schemas/images.ts`. The inspiration service now uses the same helpers.
+  - Deleting an item or a project now deletes all image files it owns.
+  - New API tests for items' photos, item details, colors and item colors.
+- **Frontend:**
+  - API files and types for item details and colors, and `uploadItemImage`.
+  - Two data hooks, `useItemDetails` and `useColors`.
+  - `MoodboardCard`, a presentational card styled like my screenshot, with add and delete inside it.
+  - `ItemMoodboard` and `ItemColorForm`.
+  - `ItemPhoto` on the item page, and the delete confirmation for an item now counts its moodboard entries.
+  - `ProjectPalette`, with add and delete (confirming how many items use a color) on the Inspiration page and read-only on the overview card.
+- **Docs:** `CLAUDE.md` (data model, images rule, limits, scope) and `README.md` (the bucket is used for all images).
+
+**Decisions:**
+- **Project card:** I chose "extend Inspiration into Design" over a separate card: the existing inspiration entries already have links, notes and images, so a palette was added to them. The page keeps its current look, with edit. The label still says "Inspiration".
+- **Item data:** I chose to reuse `item_details` for the moodboard, adding an image. A row with an image is a visual reference, a row with a link is a link row.
+- **Colors belong to the project:** items only link to them, so "add new color" on an item creates the color in the palette and links it. A palette color's hex only allows `#RRGGBB`, so it is safe in a `style` attribute.
+- **Upload:** as before, `express.raw()` with no new library, through Express.
+- **Fonts:** skipped. It was the first thing on the cut line.
+- **MoodboardCard:** add and delete inside the card, and no edit. To change an entry you delete it and add it again.
+- **Deleting a palette color:** it follows how item delete works (a confirmation in the UI that says what else is removed), not a 409. Item colors are loaded as one list per project, like relationships, so the frontend can count how many items use a color.
+- **Hooks:** I asked for it to be kept small, so there are two hooks, not three: the palette and the item colors are loaded together.
+
+**What I changed or corrected:**
+- I asked "are you sure you are not overengineering and keeping the code conventions and using what is already there". The AI checked the diff. It found `(await withImageUrls([row]))[0]` repeated 10 times and added a small `withImageUrl` helper. The rest was kept.
+- I reminded the AI to always use Zod to validate input. Everything went through Zod except the image file itself, which was checked by hand-written code. It now has a Zod schema (`schemas/images.ts`). The size limit and the allowed types are still enforced by `express.raw()`, because Zod only sees the file after it is in memory. A bad file now gets a 400 before the ownership check, like every other route.
+
+**What went wrong:**
+- **The item details API did not exist.** The AI's plan assumed `item_details` already had routes, because the table and the demo seed existed. Step 2 turned into building the whole API (copied from the inspiration code). The plan I approved was therefore smaller than what was built.
+- **`prisma migrate dev` could not run for `item_colors`.** It wanted a confirmation about the new unique constraint on `project_colors(id, project_id)`, and the AI's shell is non-interactive. The AI generated the same SQL with `prisma migrate diff`, added the RLS line, and created the migration folder by hand, with its own timestamp. The result was checked against the schema with `prisma migrate status`.
+- **A test failed the typecheck.** In the project-delete test, `mock.calls[0][0]` passed at runtime but failed `npm run typecheck`.
+- **Frontend test helpers broke.** Three test files that build `Item` objects by hand needed `imageUrl: null` after the type change, and the first attempt to edit them failed because `sed -i` is not usable in the AI's shell, so the edit was redone in Python.
+- **Not yet tried in the browser:** at the time of writing, I had not tried the moodboard, the item photo or the palette UI. The backend is covered by automated tests (238 pass), the frontend API files by 78 tests, and the cards by typecheck and build only.
+
+**Known limitations:**
+- The cleanup of image files runs after the database delete, so a Storage failure at that moment leaves unreachable files in the private bucket.
+- No component tests: the cards are only checked by hand.
+- After a half-failed add (the entry is saved but the image upload fails), the form keeps its values, so adding again would make a duplicate.
+- There is no duplicate check on palette colors, and no edit for moodboard entries or colors.
+- A signed link expires after one hour.
+
+## 2026-11-09: Merge the Files and Map pages into one "Items" page
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. Merge the Files page and the Map page into one page with a toggle between them.
+2. Rename "Files" to "Items" where it makes sense in the UI (for example the merged page).
+
+**What was generated:**
+- `PlanPage` in `pages/ProjectViews.tsx` (replaces `FilesPage` and `MapPage`) with a List / Map toggle, and `pages/PlanPage.module.css` for the toggle styling.
+- One route `/projects/:projectId/plan`. The chosen view is kept in the URL (`?view=list` or `?view=map`, list is the default), so a refresh or a shared link opens the same view. Switching uses `replace`, so the back button history is not filled up.
+- The old `/files` and `/map` routes redirect to the new page (`Navigate`), so bookmarks still work.
+- One nav link "Items" in `ProjectSubHeader`. The sidebar heading, the page heading, the aria labels and the overview card link were updated to match.
+
+**Decisions:**
+- **Toggle in the URL, not in state:** a search parameter survives a refresh and can be linked to, and needs no new library or state management.
+- **"List" and "Map" as toggle labels:** a page called "Items" with a toggle option also called "Items" would be confusing, so the card view is called "List".
+- **Only visible text was renamed.** Code names (`FileView`, `FileSidebar`, `fileSections.ts`) and the URL path `plan` were left alone to keep the change small and reviewable.
+
+**What I changed or corrected:** First the AI named the toggle "Files" / "Map" and the nav link "Files & Map". I then asked for the rename to Items, which also changed the URL parameter from `files` to `list` so the code matches the labels.
+
+**What went wrong:** Nothing failed. Typecheck passes and the 78 frontend tests pass, but there is no test for the toggle, and I had not tried the page in the browser when this was written.
+
+**Known limitations:**
+- Switching view remounts the view that is left, so the filters and the group mode of the list reset, and the map refetches its data.
+- `CLAUDE.md` and the docs still say "File view".
+- Both views keep their own page header under the toggle, so there is a little duplicate labelling.
+
+## 2026-11-09: Color coordination (item type colors, status icons, group colors)
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** The map and the item list were messy and hard to read. I wanted each item type to have a color used as an indicator through the whole app (for example the type circled in its color on the item detail view), asked if groups could be color coordinated too, and asked for a review of the best and most user friendly color coordination.
+
+**What was generated:**
+- **A review first:** the main problem was that color meant different things in different places. The map border showed the status (grey/amber/green), amber meant both "in progress" and MVP, green was also the brand color, and selection used purple and blue, while the item type had no color at all. Proposal: one visual channel per meaning: item type = hue, status = icon shape, MVP = the only filled badge, groups = a dot, connections neutral until selected.
+- **Type colors in the template** (`feat: add a color per item type to the template`): a `color` per item type in `web.ts`, sent with `GET /api/templates/:key`, so no item types are hard-coded in the frontend and a game template can bring its own colors. 9 colors in related families (page/component blue-teal, design/asset magenta-orange). The AI checked every color with a small script that computes WCAG contrast: at least 4.5:1 on white, on `--bg` and on its own 12% tint. Data tests check `#RRGGBB` and that no two types share a color.
+- **`TypeBadge`** (`feat: show the item type as a colored badge in the detail view`): the type as a pill, colored with a CSS variable (`--type-color`) and `color-mix()` for the tint. Unknown types fall back to grey.
+- **Type colors everywhere** (`feat: color the File view, sidebar, connections and progress by item type`): a colored strip on each File view row, a colored top border on category cards, dots in the sidebar, badges on connections and colored progress bars (`accent-color`). `Connection` now carries the other item's type key instead of its label. Shared helper `typeColor.ts` with tests.
+- **Status icons** (`feat: show item status as icons instead of colors`): `StatusIcon` with inline SVGs (empty circle, half circle, filled circle with a check), using `currentColor`, with `aria-label`/`title` when shown without text.
+- **Map** (`feat: color the map by item type, add legend and minimap, fade filtered items`): node styles moved to a CSS module (left strip in the type color, dashed border while planned), selected connections in the source item's type color, React Flow's `MiniMap` colored by type, and a collapsible legend in a `Panel`.
+- **Group colors** (`feat: add a color to groups, chosen from the template's group colors` and `feat: show group colors as chips, swatches, card borders and map dots`):
+  - Migration `20261109105411_group_color`: Prisma generated `ADD COLUMN color TEXT NOT NULL`, which fails on existing rows. The AI rewrote it as three steps: add the column as nullable, color existing groups per project in creation order (`row_number() OVER (PARTITION BY project_id ...)`), then `SET NOT NULL`. No RLS line was needed (a column, not a table).
+  - `groupColors` (8 lighter colors, 3.2–4:1, enough for non-text) in the template. Zod checks `#RRGGBB` (the palette's hex schema, now exported and shared), and the groups service checks that the color is one of the template's group colors (400 otherwise). Without a color, `pickGroupColor` picks the next unused one. The demo seed uses the same rule.
+  - Frontend: `GroupColorPicker` (hidden radio buttons drawn as swatches, `useId` for the radio name), `GroupChip` ("● name") in rows, sidebar, detail view and the Groups card, group colored card borders in "Group" mode (`FileSection.color`), and group dots on map nodes.
+  - New tests: 8 backend (automatic color, chosen color in lower case, `"red"` and a type color rejected, edit, user B gets 404, `pickGroupColor`), 2 frontend for section colors.
+
+**Decisions:**
+- **Colors live in the template, not in the frontend:** keeps the "never hard-code item types" rule, and colors are presentation like labels, so they can change without a migration.
+- **Status as shape, not color:** so it never competes with the type colors and is readable without color vision. Text is always kept next to the color.
+- **Groups (option 1 of 3, my choice):** a color per group shown as a dot or border. Rejected: drawing groups as areas on the map (an item can be in several groups) and picking from the project palette (mixes product design colors with UI labels).
+- **Fixed set of group colors (my choice) instead of a free color picker:** a free picker would let a group look like an item type. A group stores the hex itself, so changing the template list later does not change existing groups.
+
+**What I changed or corrected:**
+- **Legend:** it was open by default and in the way, and "(dashed border)" made it too wide. Now closed by default, with the note on its own line under "Planned".
+- **Filter on the map:** the outline on matching items was hard to see (and the old purple outline looked like the Function color). I asked for a better way, so non-matching items and connections now fade instead.
+- **Filter plus selection:** with a filter on, clicking an item made its filtered-out connections stay grey. I asked for a "half state", so those are now at 60%. Then I found that clicking an item while filtering dimmed the filtered items too, so the filter stopped working. Now the filter decides, and a selection only adds to it.
+- **Tech stack note:** the AI noticed that `ProjectOverview.tsx` hard-codes the `"tech_stack"` key. I asked for it to go in `docs/todo.md` to handle later.
+
+**What went wrong:**
+- **`docs/todo.md` is gitignored**, so the tech stack note is saved locally but not committed. The AI did not force-add it.
+- **The migration was only tested on an empty database:** the AI ran it on `planter_test`, which has no groups, so the step that colors existing rows was first really run when I applied it to Supabase (11 groups). The AI did not run `prisma migrate` against Supabase itself, and asked me to run both commands.
+- **Small mistakes caught by the typecheck:** making `GroupInput.name` optional by accident (reverted), a non-null assertion (`!`) replaced with a narrowed variable, and `allowed[i]` possibly being `undefined` in `pickGroupColor` (now throws a clear error if a template has no group colors).
+- **A CSS class clash:** the first version put the colored top border on `.card` in the File view, which the "Add item" form also uses. Moved to a separate `.sectionCard` class.
+- **Browser checks:** the AI did not open the app in a browser. I checked the map changes myself (the feedback above). Everything else was checked by typecheck and tests: 82 frontend and 249 backend tests pass.
+
+**Known limitations:**
+- Swatches are read by screen readers as "Color 1"–"Color 8", because the template stores only hex values. Names would need `groupColors` as `{ hex, label }` objects.
+- Safari may not apply `accent-color` to `<progress>`, so the progress bars could keep the default color there.
+- `npm run lint` fails on one older error in `features/moodboard/ItemMoodboard.tsx:52` (`preserve-caught-error`), not touched in this session.
+- `CLAUDE.md` does not yet describe the template's `color` and `groupColors` fields, or the `groups` table.
+
+## 2026-11-09: Cleaner Items list and map controls
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** The Items (list) view looked messy and hard to read, and on the map the filters and the "Add item" button took a lot of space.
+
+**What was generated:**
+- **A review first:** the list had group management (every group, edit/delete, add-item dropdowns and a "New group" form) between the filters and the items, controls spread over three or four rows, an unstyled filter bar, and rows that showed everything at once (status text, group chips, full description, every connection with a type badge). On the map, the add button, filters, delete box and errors were all above the map and pushed it down. The AI proposed four steps and asked me two questions (see Decisions).
+- **Filter pills** (`style: show item filters as compact pills with dropdown menus`): `ItemFilterBar.module.css` replaces inline styles. Each filter is a pill ("Type (2)", outlined when active) whose checkbox list floats under it (`position: absolute`). The `<details>` elements share `name="item-filters"`, a built-in HTML feature that keeps only one open at a time.
+- **One toolbar in the list** (`feat: put the item list controls in one toolbar and hide groups behind a button`): title, count, Category/Group switch, filters, and "Manage groups" / "+ Add item" on one wrapping row. `GroupSection` is only rendered while `managingGroups` is true (button with `aria-expanded` and `aria-controls`).
+- **Compact rows** (`style: make item rows in the list compact (one line, group dots, connection count)`): status icon only, title cut with "…", group dots, "3 connections", warning and MVP on one line, description cut to one line. Full text and the connection list are in `title` tooltips. New `GroupDots` in `GroupChip.tsx`: each dot has the group name as `title`, and the set has one `aria-label`, so the color never stands alone.
+- **Map panels** (`feat: float the map toolbar, add form and messages over the map in panels`): React Flow `Panel`s for the toolbar and add form (top left), the connection prompt (top center) and the delete box, errors and empty state (bottom center). The map height is `calc(100vh - 220px)` with `min-height: 400px` instead of `70vh`. `ConnectionPrompt` returns a fragment instead of a `<div>` so its parts sit on one line in the panel box.
+
+**Decisions:**
+- **Groups behind a "Manage groups" button** (my choice, of: behind a button, only in Group mode, collapsible at the bottom).
+- **Compact rows** (my choice, of: compact, medium with a short connection line, keep as is). The item page still shows everything.
+
+**What I changed or corrected:**
+- **Groups panel:** each group took the full width and was hard to tell apart. I asked for groups that stand out more, two per row. Now each group is a card with a 5px left border and an 8% `color-mix()` tint in its color, a name with an item count, white item tags, and a 2-column grid (1 column under 700px). The "New group" form is in a dashed box under the cards (`style: show each group as a colored card, two per row`).
+- **Items list:** with many items of one type, that column got very long and left gaps next to the shorter ones. I asked for a better layout. The AI offered three (sections with an item grid, masonry cards with CSS `columns`, or a table), and I picked sections: each type (or group) is a full-width section with a heading line in its color, and its items are small cards in an `auto-fill` grid (min 260px), filled left to right (`style: show the item list as full-width sections with a grid of item cards`).
+- **Empty categories:** a heading plus "No items yet." for each empty type took a lot of space. I chose to collapse them into one line at the bottom ("No items yet: ● Testing ● Assets"), hidden while filtering, and replaced by one message when the project has no items (`style: collapse empty categories in the item list into one line`).
+- **Hidden titles:** in the ~260px cards, the tags (`flex-shrink: 0`) left some titles only one letter. The AI first moved the tags next to the description on line 2 (`fix: give item titles the full first line so tags do not hide them`), then I asked for three lines instead: title, description, tags, where lines 2 and 3 are left out when empty (`style: show item cards as three lines (title, description, tags)`).
+
+**What went wrong:**
+- **Indentation:** moving the JSX into the panels left the `ReactFlow` props two spaces too deep (there is no Prettier in the project). Fixed by hand before the commit.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck, lint and the 82 frontend tests pass.
+
+**Known limitations:**
+- An open filter menu does not close on a click outside it (only by clicking its pill or opening another one).
+- The `220px` in the map height is an estimate of the bars above the map.
+- Closing the group panel throws away a half-filled "New group" form.
+- ~~Pressing Backspace on a selected node removed it from the map (not from the database) until the page was reloaded.~~ Fixed (`fix: stop Backspace from removing nodes from the map`): React Flow's `deleteKeyCode` defaults to `"Backspace"`, and `useNodesState` applied the remove change locally. Now `deleteKeyCode={null}`. Making Backspace really delete was rejected: the confirmation must list tasks and moodboard entries, which the map does not load, and a one-key delete is easy to trigger by mistake.
+
+## 2026-11-09: Item page layout from a reference screenshot
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** Make the item detail page look like a screenshot I made (a design mock-up of a "LoginForm" component page). I liked where the parts were placed and the styling of the moodboard card.
+
+**What was generated:**
+- **Mapping the screenshot onto PLANter:** the mock-up's left "Directory" is the file list PLANter already has. The "Wireframe preview" became the item's main photo, "Details & Attributes" became four tiles with data the item already has (status, type, number of connections, tasks done), "Connected Relations" became the connections, "Description & Purpose", "Low-Key Warnings" and "Inspiration & Moodboard" went in the side column. Parts of the mock-up with no data in PLANter (versions, "Sync: Live", "Prototype", states/variations, complexity, "Key UX imperatives", the AI audit) were left out.
+- **Header** (`ItemDetail.tsx`): breadcrumb (project / category / item), the title with type badge, MVP badge and groups, and on the right the status pills, Delete and "Edit item". The old "← Back" link is replaced by the breadcrumb.
+- **Two columns** (`ItemDetail.module.css`): a CSS grid `minmax(0, 1fr) 320px`. Main column: main photo on a grey "stage", details tiles (`<dl>`), connections, tasks. Side column: description, warnings, moodboard. Under 1200px wide the columns stack.
+- **Connections grouped by label:** new `groupConnectionsByLabel` in `connections.ts` (with two tests) puts all "uses" in one box, all "used by" in another, and so on. Each connection is a pill with a dot in the item type's color, the title, the type label (so the color never stands alone) and a × to remove it.
+- **Warnings on the item page:** `ItemPage` now takes the project and the warnings from the Outlet context (`useProjectContext`) instead of loading the project a second time, and passes this item's warnings to `ItemDetail`. They are shown as "<item> <message>" with a `--danger` left border.
+- **Compact moodboard card** (`MoodboardCard.module.css`) for the 320px column: smaller link rows with the note cut with "…", 44px swatches, two image cards per row with a 4:3 crop, and a small fixed-size color picker. `ProjectPalette` shares the swatch classes, so the swatches on the Inspiration page are also smaller.
+
+**What I changed or corrected:** (to fill in)
+- **Moodboard edit mode** (`feat: hide the moodboard forms behind an edit button`): the color form and the "+ Add link or image" button were always shown and took a lot of space in the side column. I asked for an edit icon at the top of the card that opens the choices. Now the header has a pencil button (an inline SVG, no icon library, `aria-pressed` and an `aria-label`). It opens edit mode with two choices, "+ Color" and "+ Link, text or image", and each shows only its own form in a dashed box, with a "Back" button. The AI also suggested showing the × delete buttons only in edit mode, so the normal view is just the content. "Color palette" is only shown when the item has colors, and an empty card says how to add something. After adding an entry the card goes back to the two choices.
+
+**What went wrong:**
+- The first script to change `ItemDetail.tsx` read a file that had not been written yet and stopped before changing anything. It was run again after the file was written.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck, lint and the 84 frontend tests pass.
+- **An old lint error:** `npm run lint` failed on `ItemMoodboard.tsx` (`preserve-caught-error`, from the moodboard commit `7d420b6`), because a new error was thrown in a `catch` without the original. Fixed with `new Error(message, { cause: err })` (`fix: keep the original error as cause in the moodboard image upload`).
+
+**Known limitations:**
+- The 1200px breakpoint is a guess: below it the file list (320px) plus both columns do not fit well.
+- ~~The warnings are loaded with the project and are not reloaded after a change on the item page (for example after adding a task) until you go to another page.~~ Partly fixed on 2026-11-10 (`fix: refresh the warnings after adding a task on the item page`): `ItemTasks` got an optional `onTaskAdded` callback, and the item page passes `warnings.refetch` from the Outlet context. Then also after deleting a task and changing connections (`fix: refresh the warnings after deleting a task or changing connections`): the callback was renamed `onTasksChanged`, the shared `TaskRow` got an optional `onDeleted`, and `ItemDetail` calls `refreshWarnings()` after removing a connection, adding a connected item, connecting an existing item, and a type change that deleted connections. Then also after saving the edit form and after changing the status (`fix: refresh the warnings after editing an item or changing its status`): `refreshWarnings()` is called in `save()` (used by the status checkboxes) and after a successful edit, which also covers a type change that deleted connections. Ticking a task done does not reload them, on purpose (see below).
+- **Progress refresh** (`fix: refresh the progress after status, type and item changes on the item page`): I asked for the progress to reload after a status change and after ticking a task. The AI checked the backend first and pointed out that ticking a task changes neither the progress (only item statuses count, `services/progress.ts`) nor the warnings (the MVP rule only checks if an item has tasks, not if they are done), so that refresh would be a wasted request and was not added. It added a `refreshProgress` prop (`progress.refetch` from the Outlet context) called after a status change, after the edit form (a new type moves the item to another category), after "Add connected item" (a new planned item), and after deleting the item (together with the warnings, before going back to the project page).
+
+## 2026-11-10: Confirmation modal for all deletes
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** Deletes used to use our own modal instead of the browser's built-in alert, but every delete except "delete project" used `window.confirm` again.
+
+**What was generated:**
+- **Finding the cause:** the AI searched for `window.confirm` (8 places) and then the git history. The modal (`ConfirmModal`, `useConfirm`) was made in commit `a69fded` on `feature/errorUi`, which was never merged into the branch I work on. So the code was not lost by a change, it was never here. The project delete is not affected: it has its own inline two-step confirmation in `ProjectSettings`.
+- **Restoring:** `ConfirmModal.tsx`, `ConfirmModal.module.css` and `useConfirm.tsx` were copied from `a69fded` with `git checkout a69fded -- <files>`. Only these three files, not the rest of that commit (form validation with `FormField`).
+- **Using it:** `if (!window.confirm(...))` became `if (!(await confirm({ title, message })))` in `TaskRow`, `SprintSection`, `GroupSection`, `ProjectPalette`, `MapView` and `ItemDetail` (item delete, remove connection, and the "changing the type deletes connections" prompt). Each component calls `useConfirm()` and renders `{modal}`. The warning texts (counts of tasks, connections, entries) are the same as before.
+- `useConfirm` works like `window.confirm`: `confirm()` returns a promise that resolves to `true` or `false`, so the handlers did not need to be restructured.
+
+**What I changed or corrected:** (to fill in)
+
+**What went wrong:**
+- The first replacement script did not add `{modal}` to three components (`GroupSection`, `MapView`, and the edit form branch in `ItemDetail`), because their JSX did not match the pattern. Without it the dialog would never have shown and the delete would have stopped silently. This was found by reading the code and fixed in a second step.
+- `npx tsc --noEmit -p .` printed nothing because the frontend uses project references, so it checked nothing. `npx tsc -b` is the check that works.
+- **Browser checks:** the AI did not open the app in a browser. Typecheck and the 84 frontend tests pass.
+
+**Known limitations:**
+- The modal is not used by project delete (it keeps its own confirmation).
+- No component test: it needs `@testing-library/react`, which is not in the plan.
+
+## 2026-11-11: Moodboard page, "Functionality" label
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. The Inspiration card on the overview should be called "Moodboard & inspiration". The Inspiration page should have a "Moodboard" section on top and the inspiration lower down.
+2. The item type "Function" should be labelled "Functionality", because it is easier to understand.
+3. Then: I should be able to add images and texts to the moodboard too, the input form should be hidden behind an edit icon until it is pressed, and the tab should be called "Moodboard".
+
+**What was generated:**
+- **Label** (`backend/src/templates/web.ts`): the item type with key `function` now has the label and plural label "Functionality". The key is unchanged (keys are permanent, only labels change), so no migration is needed.
+- **Overview card:** `InspirationCard` is labelled "Moodboard & inspiration" and links to the new `/moodboard` route.
+- **Tab and route:** the project tab is "Moodboard" and the route `inspiration` was renamed to `moodboard` (`App.tsx`, `ProjectSubHeader.tsx`).
+- **Decision:** the AI noticed that a project moodboard with images and texts needs somewhere to store them and asked me, because a new table needs a migration and CLAUDE.md says to ask before adding things. I chose to reuse `project_inspirations`: a row with a link is inspiration, a row without a link is moodboard.
+- **`MoodboardCard`** (already used on the item page) got three optional props: `allowUrl`, `allowImage`, and an optional `colorForm`. Without `colorForm` the edit button opens the entry form directly. The label of the add button is built from the allowed fields. `EditIcon` is exported.
+- **New `ProjectMoodboard.tsx`:** the project's moodboard card with the color palette (add, delete with the same "used by N items" confirmation as before) and text/image entries (two requests: the row, then the image). It has no link field.
+- **`InspirationPageCard.tsx`** was rewritten: one `useInspirations` call, `ProjectMoodboard` on top (entries without a url) and a `MoodboardCard` titled "Inspiration" below (entries with a url, no image field, no colors). Both hide their forms behind the pencil button.
+
+**What I changed or corrected:** (to fill in)
+
+**What went wrong:**
+- The first `sed -i` calls to rename the route failed on macOS (they need `-i ''`), so the renames were redone with a small Python script. Until then, the tab and route were out of sync for one step.
+- **Browser checks:** the AI did not open the app in a browser. `npx tsc -b`, `npm run build` and the 84 frontend tests pass. The backend test output was not read, but the only backend change is a label.
+
+**Known limitations:**
+- Entries with both a link and an image (made before this change) now show under Inspiration, which has no image field, so their image is not shown.
+- The old inline edit of an inspiration entry (title, link, notes, replace image) is gone: `MoodboardCard` can only add and delete.
+- The old `/inspiration` URL no longer works.
+- `ProjectPalette` still has an `editable` branch that nothing uses now.
+- Moodboard and inspiration are told apart only by whether a link exists, not by a stored column.
+
+## 2026-11-11: Separate moodboard and inspiration, overview limits, toggle and navigation placement
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:**
+1. Long texts in the moodboard are cut off: they should wrap. The moodboard card on the overview should only show the color palette and text titles, no inspiration.
+2. Text I added under Inspiration showed up under Moodboard. Moodboard and Inspiration should be separate: moodboard has images and text, inspiration has images, text and links (the link is optional).
+3. Limit the overview cards: at most 3 text lines on the moodboard card and 5 items on the tech stack card.
+4. Move the List / Map toggle of the Items page to the sub header (at the left), and the project navigation in the header to the right.
+5. Commit after each step.
+
+**What was generated:**
+- **Wrapping** (`MoodboardCard.module.css`): the note on a link row had `nowrap` and an ellipsis. It now wraps (`overflow-wrap: anywhere`) and the row is aligned to the top.
+- **Overview card** (`InspirationCard.tsx`): lists only text entries (no link, no image) and the palette. Limit 3 entries, each on one line cut with "…" (`.oneLine`). The tech stack card got `TECH_LIMIT = 5`.
+- **Separate sections:** the AI first made the link required in the Inspiration form, which I rejected because it should accept text and images too. The old rule ("a row with a link is inspiration") cannot tell a text note in Inspiration from one in Moodboard, so a stored value is needed. This changes the data model, so the AI explained why before building it:
+  - Prisma: enum `InspirationSection` (`moodboard`, `inspiration`) and column `section` on `project_inspirations`, default `moodboard`. Migration `20261111120000_inspiration_section` also sets `inspiration` on existing rows that have a url.
+  - Zod: `section` in `createInspirationSchema` (default `moodboard`, other values give 400). The service stores it. The demo seed sets it from the url.
+  - Frontend: `Inspiration.section` type. `ProjectMoodboard` sends `moodboard`. `InspirationPageCard` sends `inspiration`, now has the image field (create the row, then upload the image) and both cards filter on `section`.
+  - Test: a new backend test for the default, the stored value and the 400.
+- **Layout:** the toggle moved into new `PlanViewToggle.tsx` and `usePlanView.ts` (shared URL state `?view=map`, separate files because of the `react-refresh/only-export-components` lint rule). `ProjectSubHeader` shows it on the `plan` page. `Header.tsx` wraps the project navigation and the log out button in a `.right` group.
+
+**What I changed or corrected:**
+- Rejected the first attempt (link required in the Inspiration form).
+- I said "text titles" and "no moodboard titles" in the same message, which is contradictory. The AI kept the titles of text entries and left out link and image titles, and said so.
+- (to fill in: anything I change after looking at it in the browser)
+
+**What went wrong:**
+- **Browser checks:** the AI did not open the app in a browser. Frontend typecheck, lint and 84 tests pass, backend typecheck and the inspiration and seed tests pass.
+- The migration was applied to the local test database only. It must be run against Supabase (`prisma migrate deploy`) before deploying.
+
+**Known limitations:**
+- The earlier limitation "moodboard and inspiration are told apart only by whether a link exists" no longer applies: there is now a `section` column.
+- The section of an entry cannot be changed after it is created (no edit, only delete and add again).
+- Entries with both a link and an image made before this change are now under Inspiration, and show their image since the Inspiration card allows images.
+
+## 2026-11-11: Project checklist ("Yet to plan" and "Before you start programming"), backend
+
+**What I asked:**
+1. Explain what the current warnings warn about.
+2. How to add warnings for things you usually forget (tests, authentication...) without cluttering the UI.
+3. A redesign: combine the Tasks and Progress pages, remove the separate Progress page, add a progress bar per category in the item list and a progress ring (total) on the combined page, a short "yet to plan" bulletin and a separate page with the full checklist ("before you start programming").
+4. Start with step 1 (backend).
+
+**What was generated:**
+- **Advice before building:** the AI split "forgot" into two kinds: a whole category missing (project level, little noise) and a single item not covered, e.g. "page not protected" (a lot of noise, since many pages are public). It advised building the project-level checks first and only narrow item-level rules later. It flagged that progress is a Must, so removing the Progress page is only fine if total and per-category progress stay visible elsewhere, and that a ring split into type colors would mix "share of items" and "progress". I chose ring (a): one ring for total progress, category bars next to it.
+- **Template data:** `checklistItemTypes` in `Template` and `web.ts`: Design, Tech stack, Data, Authentication, Tests (not Assets, some projects have none). Labels are written as todos ("Plan the tests").
+- **Service** `services/checklist.ts`: pure function `buildChecklist` that returns every check with `passed`, kind `category` (one per checklist type) or `readiness` (`has_mvp`, `mvp_has_tasks`, `has_sprint`, `connections`). Two readiness checks reuse `findWarnings`, so the checklist and the "!" badges always agree. An empty project or an empty MVP never counts as passed. `getProjectChecklist` loads the data.
+- **Refactor:** the queries of `getProjectWarnings` moved to `loadWarningInput` (ownership check first), shared by warnings and checklist.
+- **Route:** `GET /api/projects/:id/checklist` (requireAuth, Zod params, 404 for another user's project).
+- **Tests:** `tests/checklist.test.ts` (11 unit tests), `tests/checklist.api.test.ts` (401, 400, 404, two users, ✗ to ✓ as a project is planned, other projects ignored), and two template data tests that every checklist type exists.
+
+**What I changed or corrected:**
+- The AI first suggested making `itemId` optional on `Warning`. It changed this to a separate checklist endpoint, so the item warnings and the frontend badges did not need to change.
+- (to fill in)
+
+**What went wrong:**
+- Nothing so far. Backend typecheck and all 270 tests pass. No frontend change yet.
+
+**Next:** category progress bars in the item list, the combined Tasks & progress page with the ring and the bulletin, and the checklist page.
+
+## 2026-11-11: Progress bar per category in the item list (step 2)
+
+**What I asked:** Step 2 of the redesign: a small progress bar for each category in the item list.
+
+**What was generated:**
+- `ProgressBar` got a `compact` option: a slim bar with "3/5 done", the full numbers in `title`. The normal version is unchanged.
+- `FileView` gets `progress` and `onItemAdded` from `PlanPage` (the progress was already loaded for the sub header, so no new request). Each category heading shows the compact bar in the type's color. Not in Group mode, not for types that do not count toward progress, and the numbers ignore the filters. Adding an item reloads the progress.
+- CSS: the heading line is now `.labelRow` (label left, bar right, colored line under both). The bar is next to the `<h2>`, not inside it, so screen readers read the heading as before.
+
+**What I changed or corrected:** Nothing. I checked it in the browser and it looked good.
+
+**What went wrong:** Nothing. Frontend typecheck, lint and 84 tests pass.
+
+## 2026-11-11: Tasks & progress page (step 3)
+
+**What I asked:**
+1. Combine the Tasks and Progress pages, remove the Progress page, show total progress as a ring (option a: one neutral ring, category bars next to it) and a short "Yet to plan" bulletin.
+2. After seeing it: more focus on the warnings. Progress and warnings on top, tasks and sprints below, a toggle to move between them, and the New task and Sprints forms hidden behind buttons. Item warnings under "Yet to plan".
+3. Then: one page with two clearly separate sections, and the toggle jumps between them. First with scroll snap, then I asked to remove the automatic snap so scrolling is free and only the toggle jumps.
+
+**What was generated:**
+- `features/checklist/`: `checklistApi.ts` (+ test), `useChecklist.ts` (loaded by the page, not the project context), `missingCategories.ts` (`getYetToPlan`, + test), `YetToPlan.tsx` (max 4 lines, "See full checklist →", loading and error states, one line when everything is planned).
+- `features/progress/`: `ringOffset.ts` (+ test, the `stroke-dashoffset` math), `ProgressRing.tsx` (SVG, `--primary`, `aria-hidden` with the numbers as text, no fill at 0%, no animation with reduced motion), `ProgressSummary.tsx` (ring + compact bar per category with items). `ProgressOverview.tsx` deleted.
+- `features/warnings/ItemWarningsList.tsx`: every item warning as one line linking to the item, max 5 with "and N more".
+- `components/ViewToggle.tsx` (generic, from the List / Map toggle, also used by `PlanViewToggle`) and `components/useActiveSection.ts` (IntersectionObserver: highlights the section in view).
+- `pages/TasksPage.tsx`: sticky toggle, "Progress & warnings" section (Progress | Yet to plan + Item warnings), "Tasks & sprints" in a tinted panel. The toggle scrolls with `scrollIntoView` (instant with reduced motion).
+- `TodoView`: "Manage sprints" and "+ New task" buttons, both closed by default. New `onTasksChanged` prop (and `onSaved` on `TaskRow`) reloads the warnings and the checklist when a task is added, changed or deleted.
+- Nav: "Tasks & progress" instead of Tasks and Progress. `/progress` redirects to `/tasks`.
+
+**What I changed or corrected:**
+- The first layout (tasks left, progress column right) did not focus enough on the warnings, so I asked for the warnings on top.
+- A version with the item warnings across the full width looked wonky, so they moved under "Yet to plan".
+- The AI first built the toggle as two separate views (`?view=tasks`). I wanted one page with two sections, so it was rebuilt and the `?view=` files removed.
+- I removed the automatic scroll snap: snapping while scrolling felt like losing control of the page.
+
+**What went wrong:**
+- **CSS bug:** the first `ProgressRing` had a rule meant to hide the dot at 0% whose selector matched 100% instead. The AI noticed before running it and replaced it with "do not draw the circle at 0%".
+- **File name clash:** `YetToPlan.tsx` (component) and `yetToPlan.ts` (helper) differ only in case. macOS file names are case-insensitive, so the import found the helper. The typecheck caught it once the component was imported. The helper was renamed to `missingCategories.ts`.
+- **Vite cache:** after the rename, the running dev server still used the old resolution ("does not provide an export named 'YetToPlan'"). Restarting the dev server fixed it.
+- Frontend typecheck, lint, 93 tests and the build pass. I checked the page in the browser after each round.
+
+## 2026-11-11: Checklist page (step 4)
+
+**What I asked:** The full checklist page that "See full checklist" and "and N more" link to. Then: the "Fix missing connections" and "Add tasks to every MVP item" checks should point to the item warnings on the same page instead of to the map and the tasks page, so you see which items are the problem instead of guessing.
+
+**What was generated:**
+- `pages/ChecklistPage.tsx`: "Before you start programming" (summary "6 of 9 done", groups "Categories" and "Ready to build") and "Item warnings" (the full list, no limit). Loading and error states on both cards. Route `checklist`, not in the nav. The sub header trail is Project › Tasks & progress › Checklist.
+- `features/checklist/CheckList.tsx`: ✓ (`--primary`) or ✗ (`--danger`) per check, hidden from screen readers, which get "Done:" / "Not done:" as text instead.
+- `features/checklist/checkLinks.ts` (+ tests): where a failed check links to. Category checks go to the item list (by `kind`, so a new template needs no code change), the sprint check to Tasks & progress, and the MVP tasks and connections checks to `#item-warnings` on the same page (a plain `<a href>`, the browser scrolls by itself). Unknown keys get no link. Navigation only, the rules stay in the backend.
+
+**What I changed or corrected:**
+- The AI first linked "Fix missing connections" to the map and "Add tasks to every MVP item" to the tasks page. I changed both to jump to the item warnings below, which name the exact items.
+
+**What went wrong:** Nothing. Frontend typecheck, lint, 97 tests and the build pass, and I checked the page in the browser.
+
+**Result of the warnings redesign (steps 1–4):** the backend has a project checklist (`GET /api/projects/:id/checklist`) next to the item warnings. The item list shows progress per category. Tasks & progress is one page: progress, "Yet to plan" and item warnings on top, tasks and sprints below, with a toggle that jumps between them. The checklist page shows everything with ✓/✗ and links to where each thing is fixed. The separate Progress page is gone (`/progress` redirects), and total and per-category progress (a Must) are still shown.
+
+## 2026-11-11: CLAUDE.md updated for warnings and checklist
+
+**What I asked:** Update CLAUDE.md after the warnings redesign, so future sessions know about it.
+
+**What was generated:**
+- Templates section: the template's `warningRules` and `checklistItemTypes` are described (they were missing; `warningRules` existed before this session too).
+- Progress section: where progress is shown now (ring and bars on Tasks & progress, a bar per category in the item list), and that `/progress` redirects to `/tasks`.
+- New section "Warnings and checklist": the two endpoints and services, check kinds and keys, that the checklist reuses `findWarnings`, that empty never counts as passed, the UI (one page with two sections and a jump toggle, no scroll snap, checklist page not in the nav), and the guideline to only add rules that are almost always right, to avoid clutter.
+- Project structure: `checklist` in services, `warnings`, `checklist` and `tasks` in features.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:** Nothing. Documentation only, no code changed.
+
+## 2026-11-12: Help and onboarding (help text, Help page, new-project flow, guided tour)
+
+**What I asked:**
+1. Make PLANter understandable for beginners: info about every page and structure, a tutorial with small bubbles the first time you open each part, reachable again later. I had no clear vision and asked the AI to reason about what is most user-friendly.
+2. A new-project page where you can add what you already know ("Already got a good idea?"): pages, groups, tasks and so on.
+3. Our own bubbles (no library), "Skip tutorial" in the tutorial, help reachable from the footer and settings.
+4. After the first version (intro boxes at the top of each page): make it more "flowey", like a real tutorial with cards that pop up. I added screenshots from Amazon, Figma and Trello as inspiration and asked for a mix of Amazon (first time) and Figma.
+5. After seeing the Amazon-style welcome: I asked whether it was unnecessary, since the tour right after shows the same things.
+
+**What was generated:**
+- **Plan before building:** three layers of help (help text in the template, page intros, a tour), and the order to build them. The AI flagged that this is new scope in the last sprint (added as a Could) and that "add what you know" must stay on the right side of the Won't item "automatic generation of a whole plan".
+- **Help text in the template:** `description` and `example` per item type, `description` per relationship type, shown under category headings, in the item form (and as the title placeholder) and on the Help page. Data test: no type without help text.
+- **Label fix:** the AI noticed that `belongs_to` was labelled "used by", the same words as the inverse of `uses`. Relabelled to "part of" / "contains" (keys unchanged, no migration), with a test that no phrase is used for two connections.
+- **Help page** `/help`: how PLANter works, every page, every category and connection (from the template), restart the tutorial. Linked from the footer, project settings and the ? button.
+- **New-project flow:** backend: `POST /api/projects` takes optional `items`, `groups` and `tasks` (max 50 each, reusing the existing schemas), item types checked against the template, saved in one `prisma.$transaction`. `pickGroupColor` moved to its own file to avoid a circular import. Frontend: step 1 (name, description, "Create empty project") and step 2 (chips per category from the template, groups, first tasks, a summary bar that stays at the bottom). `ChipInput` adds a chip on Enter, Add, or when leaving the field.
+- **Guided tour** (`features/tour/`, own code): spotlight (one box with a huge `box-shadow` that dims the rest), Figma-style card (✕, "2 of 6", Skip tutorial, Back, Next/Done) in a portal, `inert` on the app behind it, keyboard support, reduced motion respected. `placeCard` (pure, tested) picks the side, `useTargetRect` finds the element (retries while the page loads, skips missing or empty elements). One tour per page, started once, flags in localStorage. A ? button in the corner shows a page's tour again or restarts the tutorial. The map tour has an animated SVG showing how to drag a connection (`ConnectDemo`).
+- **Tests:** template help text and labels, starter content (8 API tests, including one that proves the transaction rolls back), `starter.ts`, `storage.ts`, `pageHelp.ts`, `placeCard.ts`, tour flags, and a test that every tour step points at a `data-tour` marker that exists in the code.
+
+**What I changed or corrected:**
+- The first version used intro boxes at the top of each page. I wanted it more like a real tutorial, so they were replaced by the tour cards.
+- The AI then built an Amazon-style welcome screen (dimmed page, labels with curved arrows). I questioned it: it pointed at the same four things as the overview tour right after it. It was removed, and the first card of the overview tour became the welcome instead. Less repetition and less code.
+- The AI proposed building the new-project flow before the tour, so the tour could point at the finished UI. I agreed.
+- (to fill in: what I changed after testing in the browser)
+
+**What went wrong:**
+- `localStorage` does not exist in Vitest's default Node environment, so the storage tests failed until the file used `// @vitest-environment jsdom`.
+- The test that checks tour targets first used Node's `fs`, which the frontend TypeScript setup does not know. Rewritten with Vite's `import.meta.glob(..., { query: "?raw" })`.
+- The AI wrote a sloppy line in a test (`"plan" as PageKey`, not a real page key) and fixed it right away.
+- Found along the way: any text field with a null character (`\u0000`) gives a 500 instead of a 400 (Postgres refuses it). Not fixed yet, noted in `docs/todo.md` for the security review.
+- To check that the transaction test and the target test can really fail, the AI broke the code on purpose (removed the transaction, made a typo in a target), saw the tests fail, and put the code back.
+- The AI could not log in to the app, so nothing was checked in the browser by the AI. Typecheck, lint, all backend (280) and frontend (127) tests and the build pass.
+
+## 2026-11-12: Null character in text gave 500 instead of 400
+
+**What I asked:** Put the null character problem (found while testing the new-project transaction) in the todo list, and later: fix it.
+
+**What was generated:**
+- `schemas/text.ts`: `textSchema` (a string with a regex check that rejects `\u0000`) and `urlSchema` (the same for `z.url()`, which also let it through). Every saved text field now starts from one of them: project, item, task, sprint, group and color names and titles, descriptions, inspiration and item detail text and URLs, including the starter lists of a new project. Item and relationship types stay plain strings: they must match a template key, so they were already a 400.
+- `tests/text.test.ts`: the two schemas, and a table that puts a null character in every saved text field of every schema (22 tests).
+- The transaction test in `tests/projects.test.ts` used a null character to make Postgres fail in the middle of the transaction, so it stopped working once Zod rejected it. It now wraps `prisma.$transaction` and gives the service a transaction client (a `Proxy`) whose task insert throws. A new API test checks that a null character gives a 400 and creates nothing.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:**
+- The AI's first attempt to prove the new rollback test can fail (a Perl one-liner that rewrote the service) did not change the file, so that run proved nothing. The AI noticed, said so, and redid it with a realistic mistake: inserting the project and items with `prisma` instead of `tx`. The test then failed (one project was left), and passed again after the file was restored.
+- Backend typecheck and all 303 tests pass.

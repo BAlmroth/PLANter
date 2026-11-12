@@ -82,6 +82,7 @@ Everything that starts with `VITE_` is built into the JavaScript bundle and is p
 2. Apply the database migrations (next section).
 3. **Authentication → URL Configuration:** set the Site URL to the frontend URL, and add it to Redirect URLs (both `http://localhost:5173` and the Vercel URL).
 4. Email confirmation can be on or off. When it is on, Register shows "Check your email" until the link is clicked.
+5. **Storage → New bucket:** create a bucket named `inspiration-images` with **Public bucket turned off**. All images are stored there: project inspiration, the main photo of an item and the moodboard images of an item. Without this bucket, uploading an image fails. Only the backend (with the service role key) can read and write it, and it hands out links that stop working after an hour.
 
 ## Database migrations
 
@@ -109,6 +110,28 @@ cd backend && npm run dev     # http://localhost:3000, GET /health returns { "st
 cd frontend && npm run dev    # http://localhost:5173
 ```
 
+## Demo project
+
+The repo includes demo data: a fully planned portfolio website called **Awesome Demo Portfolio**. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration, so it is a quick way to see (and test) every part of PLANter without planning a project first. The data is in `backend/src/seed/demoPortfolio.ts`.
+
+1. Follow Install, Configure and Database migrations above, then start the app ([Run locally](#run-locally)).
+2. Register an account in the app and log in once. The demo project is created for that account.
+3. Find the id of your account: Supabase → **Authentication → Users** → copy the **User UID**.
+4. Seed it:
+
+   ```
+   cd backend
+   npm run seed:demo -- <your-user-uid>
+   ```
+
+5. Reload the app. "Awesome Demo Portfolio" is in your project list.
+
+Notes:
+
+- The seed writes to the database in `DATABASE_URL` (in `backend/.env`), so check that it points where you expect.
+- It only touches your own demo project: running it again deletes and recreates the project with this name for that user, and nothing else. A project you made yourself with the same name would also be replaced, so rename it first.
+- The data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings.
+
 ## Scripts
 
 | Where | Command | What it does |
@@ -118,6 +141,7 @@ cd frontend && npm run dev    # http://localhost:5173
 | `backend/` | `npm run typecheck` | TypeScript check of `src`, tests and configs |
 | `backend/` | `npm run build` | `prisma generate` and compiles `src` to `dist` |
 | `backend/` | `npm start` | Runs the compiled server (used by Heroku) |
+| `backend/` | `npm run seed:demo -- <user-id>` | Creates (or recreates) the demo project "Awesome Demo Portfolio" for that user, see [Demo project](#demo-project) |
 | `backend/` | `npm run test:db:migrate` | Applies all migrations to the local `planter_test` database |
 | `frontend/` | `npm run dev` | Starts Vite |
 | `frontend/` | `npm test` | Runs the frontend tests |
@@ -169,6 +193,8 @@ After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add 
   ```
   curl "https://<project>.supabase.co/rest/v1/projects" -H "apikey: <anon key>"
   ```
+
+- The Storage bucket `inspiration-images` is private (Supabase → Storage: the bucket must not say "Public"). Opening an image URL without a signature must fail.
 
 - Every API route except `/health` requires a valid token, and data that belongs to another user gives 404. The backend tests check this with two users.
 

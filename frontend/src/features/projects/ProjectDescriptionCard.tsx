@@ -1,40 +1,20 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import { OverviewCard } from "./OverviewCard";
 import { ProjectForm } from "./ProjectForm";
-import { deleteProject, updateProject } from "./projectsApi";
+import { updateProject } from "./projectsApi";
 import type { Project } from "./types";
 import styles from "./ProjectOverview.module.css";
 
 type Props = { project: Project; setProject: (project: Project) => void };
 
-// The project's name and description, with edit and delete (the Description page)
+// The project's name and description, with edit (the Description page)
 export function ProjectDescriptionCard({ project, setProject }: Props) {
-  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  async function handleDelete() {
-    // TODO sprint 4: say what else is deleted (counts of items and tasks)
-    if (!window.confirm("Delete this project and everything in it? This cannot be undone.")) {
-      return;
-    }
-    setDeleteError(null);
-    setDeleting(true);
-    try {
-      await deleteProject(project.id);
-      navigate("/");
-    } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Something went wrong.");
-      setDeleting(false);
-    }
-  }
 
   if (editing) {
     return (
-      <OverviewCard label="Desc">
+      <OverviewCard label="Project description">
         {/* The form mounts here, after the project has loaded, so its start values are correct */}
         <ProjectForm
           initialValues={{ name: project.name, description: project.description ?? "" }}
@@ -58,7 +38,7 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
   }
 
   return (
-    <OverviewCard label="Desc">
+    <OverviewCard label="Project description">
       <h3 className={styles.cardTitle}>{project.name}</h3>
       {/* "" and null both mean no description */}
       <p>{project.description || "No description"}</p>
@@ -67,11 +47,7 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
         <button type="button" onClick={() => setEditing(true)}>
           Edit
         </button>
-        <button type="button" onClick={handleDelete} disabled={deleting}>
-          {deleting ? "Deleting…" : "Delete"}
-        </button>
       </div>
-      {deleteError && <p role="alert">{deleteError}</p>}
     </OverviewCard>
   );
 }

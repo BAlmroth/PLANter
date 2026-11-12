@@ -4,14 +4,17 @@ import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { useSprints } from "../sprints/useSprints";
 import { useTasks } from "../tasks/useTasks";
+import { InspirationCard } from "./InspirationCard";
 import { OverviewCard } from "./OverviewCard";
 import { useProjectContext } from "./useProjectContext";
 import styles from "./ProjectOverview.module.css";
 
 // How many pending tasks the todo card lists
 const TODO_LIMIT = 5;
+// How many tech stack items the tech stack card lists
+const TECH_LIMIT = 5;
 
-// The first page of a project: cards with the description, tech stack, todo list and sprints.
+// The first page of a project: cards with the description, inspiration, tech stack (top row), todo list and sprints (bottom row).
 // Every card is a summary: a click on it opens its own page, a click on an item opens the item.
 export function ProjectOverview() {
   const { project } = useProjectContext();
@@ -36,20 +39,22 @@ export function ProjectOverview() {
 
   return (
     <div className={styles.grid}>
-      <OverviewCard label="description" to="description" className={styles.wide}>
+      <OverviewCard label="description" to="description">
         <h3 className={styles.cardTitle}>{project.name}</h3>
         {/* "" and null both mean no description */}
         <p className={styles.clamp}>{project.description || "No description"}</p>
       </OverviewCard>
 
-      <OverviewCard label={techLabel} to="files">
+      <InspirationCard projectId={project.id} />
+
+      <OverviewCard label={techLabel} to="plan?view=list">
         {items.loading ? (
           <p>Loading…</p>
         ) : techItems.length === 0 ? (
           <p>No tech stack items yet.</p>
         ) : (
           <ul className={styles.list}>
-            {techItems.map((item) => (
+            {techItems.slice(0, TECH_LIMIT).map((item) => (
               <li key={item.id} className={styles.listRow}>
                 <Link to={`items/${item.id}`} className={styles.itemLink}>
                   {item.title}
@@ -64,7 +69,7 @@ export function ProjectOverview() {
       <OverviewCard
         label="Todo"
         to="tasks"
-        className={styles.wide}
+        className={styles.half}
         aside={!tasksLoading && !tasksError && <span className={styles.meta}>{pending.length} pending</span>}
       >
         {tasksLoading && <p>Loading…</p>}
@@ -99,7 +104,7 @@ export function ProjectOverview() {
         )}
       </OverviewCard>
 
-      <OverviewCard label="Sprint" to="tasks">
+      <OverviewCard label="Sprint" to="tasks" className={styles.half}>
         {tasksLoading && <p>Loading…</p>}
         {!tasksLoading && !tasksError && sprints.sprints.length === 0 && <p>No sprints yet.</p>}
         {!tasksLoading && !tasksError && (

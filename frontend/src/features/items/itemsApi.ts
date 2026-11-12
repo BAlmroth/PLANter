@@ -33,3 +33,13 @@ export function deleteItem(id: string) {
         method: "DELETE"
     });
 }
+
+// Sends the file itself as the request body (no FormData). Content-Type tells the backend what it is.
+// Replaces the old photo if there is one. Allowed: JPEG, PNG and WebP up to 5 MB.
+export function uploadItemImage(id: string, file: File) {
+    return apiRequest<Item>(`/api/items/${id}/image`, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+    });
+}

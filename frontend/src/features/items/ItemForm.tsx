@@ -4,8 +4,8 @@ export type ItemFormValues = { title: string; description: string; type: string;
 
 type Props = {
   initialValues?: Partial<ItemFormValues>;
-  // When given, the form shows a type dropdown
-  types?: { key: string; label: string }[];
+  // When given, the form shows a type dropdown, with the chosen type's help text under it
+  types?: { key: string; label: string; description: string; example: string }[];
   // Shows the MVP checkbox (used when editing)
   showMvp?: boolean;
   submitLabel: string;
@@ -29,6 +29,8 @@ export function ItemForm({
   const [type, setType] = useState(initialValues.type ?? types?.[0]?.key ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // The chosen type, for its help text (undefined when there is no dropdown or the type is unknown)
+  const selectedType = types?.find((t) => t.key === type);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -63,12 +65,15 @@ export function ItemForm({
           </select>
         </label>
       )}
+      {/* Changes with the dropdown, so the user sees what the category means before choosing it */}
+      {selectedType && <p>{selectedType.description}</p>}
       <label>
         Title
         <input
           type="text"
           required
           maxLength={100}
+          placeholder={selectedType ? `e.g. ${selectedType.example}` : undefined}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />

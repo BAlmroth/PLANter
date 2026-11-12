@@ -1,3 +1,4 @@
+import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
@@ -16,12 +17,17 @@ type Props = {
   items?: Item[];
   // The same for the sprint
   sprints?: Sprint[];
+  // Called after the task was deleted, for example to load the warnings again
+  onDeleted?: () => void;
+  // Called after a change was saved (for example a new item link), for the same reason
+  onSaved?: () => void;
 };
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 // One task in a list: tick done, edit the title, delete. Errors are shown on the row.
-export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
+export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSaved }: Props) {
+  const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   // "" means no item
@@ -37,6 +43,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
     try {
       const updated = await updateTask(task.id, changes);
       setTasks((current) => current.map((t) => (t.id === task.id ? updated : t)));
+      onSaved?.();
       return true;
     } catch (err) {
       setError(messageFrom(err));
@@ -62,12 +69,13 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete the task "${task.title}"?`)) return;
+    if (!(await confirm({ title: "Delete task?", message: `"${task.title}" will be deleted.` }))) return;
     setError(null);
     setBusy(true);
     try {
       await deleteTask(task.id);
       setTasks((current) => current.filter((t) => t.id !== task.id));
+      onDeleted?.();
     } catch (err) {
       setError(messageFrom(err));
       setBusy(false);
@@ -76,6 +84,7 @@ export function TaskRow({ task, setTasks, extra, items, sprints }: Props) {
 
   return (
     <li className={styles.row}>
+      {modal}
       {editing ? (
         <form onSubmit={handleSaveTitle} className={styles.editForm}>
           <input

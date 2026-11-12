@@ -18,6 +18,8 @@ status: ItemStatus;
 isMvp: boolean;
 positionX: number;
 positionY: number;
+// The main photo: a temporary link (stops working after about an hour), or null if there is no photo
+imageUrl: string | null;
 createdAt: string;
 };
 
@@ -47,12 +49,21 @@ export type Template = {
     label: string;
     pluralLabel: string;
     countsTowardProgress: boolean;
+    // "#RRGGBB", the type's color in the whole UI
+    color: string;
+    // Help text: what the category is, and typical names ("Home, Login, Profile")
+    description: string;
+    example: string;
   }[];
+  // The colors a group can have, "#RRGGBB"
+  groupColors: string[];
   relationshipTypes: {
     key: string;
     label: string;
     inverseLabel: string;
     allowCycles: boolean;
+    // Help text: what the connection means
+    description: string;
   }[];
   allowedCombinations: { source: string; relationship: string; target: string }[];
 };

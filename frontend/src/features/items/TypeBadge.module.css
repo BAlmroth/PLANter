@@ -1,0 +1,13 @@
+/* --type-color is set by TypeBadge from the template. An unknown type has none,
+   so var() falls back to the normal text color (a neutral grey pill). */
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--type-color, var(--text));
+  /* color-mix: 12% of the type color mixed into white, the light tint behind the text */
+  background: color-mix(in srgb, var(--type-color, var(--text)) 12%, white);
+  border: 1.5px solid var(--type-color, var(--text));
+  border-radius: 999px;
+}

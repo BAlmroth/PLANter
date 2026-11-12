@@ -1,0 +1,39 @@
+.demo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+}
+
+.node {
+  fill: var(--surface);
+  stroke: var(--borderDark);
+  stroke-width: 1.5;
+}
+
+.nodeText {
+  font-size: 11px;
+  font-family: var(--sans);
+  fill: var(--text-h);
+  text-anchor: middle;
+}
+
+/* Brand color, like the connection lines people draw on the map */
+.line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.handle {
+  fill: var(--primary);
+}
+
+.cursor {
+  fill: var(--text-h);
+  stroke: var(--surface);
+  stroke-width: 1;
+}

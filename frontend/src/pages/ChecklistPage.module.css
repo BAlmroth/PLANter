@@ -1,0 +1,55 @@
+/* The checklist page: two cards on top of each other, not wider than is comfortable to read */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+}
+
+/* scroll-margin-top: a jump to a card (#item-warnings) stops a little above it instead of at the very edge */
+.card {
+  scroll-margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* The heading with the summary ("6 of 9 done") on the right */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-h);
+}
+
+.summary {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.intro {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* Categories and Ready to build, with space between them */
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

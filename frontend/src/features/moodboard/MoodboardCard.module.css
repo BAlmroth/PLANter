@@ -1,0 +1,228 @@
+/* The inspiration and moodboard card. Colors come from the shared variables in index.css. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* The title on the left and the edit button on the right, with a line under both
+   (the same look as the other card titles on the item page) */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--bg-dark);
+}
+.heading {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* The pencil button: a small square, filled green while the card is in edit mode */
+.editButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.editButton:hover {
+  color: var(--text-h);
+  border-color: var(--borderDark);
+}
+.editButton.active {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* The two choices in edit mode, side by side */
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The open form (color, or link/text/image) in a light box, so it is clearly separate from the content */
+.editBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px dashed var(--borderDark);
+  border-radius: var(--radius);
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* The small caps section label ("COLOR PALETTE") */
+.label {
+  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.links,
+.swatches,
+.references {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row: the title as a link, and the note on the right (wraps when long) */
+.link {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 4px 6px 12px;
+  font-size: 0.9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.linkTitle {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.note {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+}
+.link .note {
+  max-width: 50%;
+  overflow-wrap: anywhere; /* long texts wrap onto more lines instead of being cut */
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.chip {
+  width: 44px;
+  height: 32px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.hex {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* Two small cards per row in the side column */
+.references {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+.reference {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3; /* every card the same height, the image is cropped to fit */
+  object-fit: cover;
+  border-radius: 6px;
+}
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 4px 4px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+/* The small x button. On a swatch or a reference it sits in the corner. */
+.remove {
+  padding: 2px 8px;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text);
+  background: transparent;
+}
+.remove:hover:not(:disabled) {
+  color: var(--danger);
+}
+.swatch .remove,
+.reference .remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 0 5px;
+  background: var(--surface); /* stays readable on top of an image or a color */
+  border-radius: 4px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+/* The color picker keeps a small fixed size, the name field takes the rest */
+.formButtons input[type="color"] {
+  flex-shrink: 0;
+  width: 44px;
+  padding: 2px;
+}
+.secondary {
+  align-self: flex-start;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+.error {
+  margin: 0;
+  color: var(--danger);
+}

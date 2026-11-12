@@ -1,0 +1,57 @@
+/* One readable column */
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 16px 0;
+}
+
+.stepLabel {
+  margin: 0 0 4px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.title {
+  margin: 0 0 8px;
+}
+
+.lead {
+  margin-bottom: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* The less important choice: outlined instead of filled */
+.secondary {
+  color: var(--primary);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}
+
+/* Sticks to the bottom of the screen while scrolling through the categories */
+.footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: 24px;
+  padding: 16px 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.summary {
+  margin-bottom: 8px;
+  color: var(--text-h);
+}

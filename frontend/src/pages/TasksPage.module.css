@@ -1,0 +1,88 @@
+/* The Tasks & progress page: the toggle, then two sections on top of each other */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* The toggle stays at the top of the screen while the page scrolls under it.
+   align-self: only as wide as the toggle, so it does not cover the cards next to it. */
+.toggleBar {
+  position: sticky;
+  top: 16px;
+  z-index: 2;
+  align-self: flex-start;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+/* Scrolling is free. Only the toggle jumps to a section (scrollIntoView in TasksPage), and
+   scroll-margin-top makes it stop a bit above the section, so the heading is not under the sticky toggle. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 76px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-h);
+}
+
+/* Tasks & sprints is a tinted panel, so it is clearly a section of its own.
+   min-height: the last section must be able to reach the top of the screen, or the toggle could not jump to it. */
+.tasksSection {
+  min-height: calc(100vh - 100px);
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+/* Progress & warnings: two columns, Progress on the left and the warnings column on the right.
+   auto-fit: on a narrow screen there is only room for one 280px column, and the columns stack. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+/* "Yet to plan" with the item warnings under it */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Same small caps style as the other card labels */
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-h);
+}
+
+.count {
+  font-weight: 400;
+  color: var(--text);
+}

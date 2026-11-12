@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
-import { startPosition } from "../services/itemLayout.js";
+import { pickGroupColor } from "../services/groupColor.js";
 import { getTemplate } from "../templates/index.js";
 import {
+  DEMO_COLUMN_WIDTH,
+  DEMO_ROW_HEIGHT,
   demoBacklogTasks,
   demoGroups,
   demoInspirations,
@@ -17,7 +19,6 @@ import {
 export async function seedDemoProject(userId: string) {
   const template = getTemplate(demoProject.template);
   if (!template) throw new Error(`Unknown template: ${demoProject.template}`);
-  const typeKeys = template.itemTypes.map((t) => t.key);
 
   // Ids are made here (not by the database) so rows can point at each other before they exist
   const projectId = randomUUID();
@@ -28,22 +29,18 @@ export async function seedDemoProject(userId: string) {
     return id;
   };
 
-  // Same map layout as new items get: one column per type, one row per item
-  const placed: { type: string; positionX: number; positionY: number }[] = [];
-  const itemRows = demoItems.map((item) => {
-    const pos = startPosition(typeKeys, item.type, placed.filter((p) => p.type === item.type));
-    placed.push({ type: item.type, ...pos });
-    return {
-      id: idOf(item.ref),
-      projectId,
-      type: item.type,
-      title: item.title,
-      description: item.description ?? null,
-      status: item.status,
-      isMvp: item.isMvp ?? false,
-      ...pos,
-    };
-  });
+  // The map position comes from the seed data (col and row), with the wide demo spacing
+  const itemRows = demoItems.map((item) => ({
+    id: idOf(item.ref),
+    projectId,
+    type: item.type,
+    title: item.title,
+    description: item.description ?? null,
+    status: item.status,
+    isMvp: item.isMvp ?? false,
+    positionX: item.col * DEMO_COLUMN_WIDTH,
+    positionY: item.row * DEMO_ROW_HEIGHT,
+  }));
 
   const sprints = demoSprints.map((s) => ({ id: randomUUID(), ...s }));
   const taskRows = [
@@ -77,10 +74,17 @@ export async function seedDemoProject(userId: string) {
       ),
     }),
     prisma.projectInspiration.createMany({
-      data: demoInspirations.map((i) => ({ projectId, title: i.title, url: i.url ?? null, text: i.text ?? null })),
+      data: demoInspirations.map((i) => ({ projectId, title: i.title, url: i.url ?? null, text: i.text ?? null, section: i.url ? "inspiration" : "moodboard" })),
     }),
     prisma.group.createMany({
-      data: groups.map((g) => ({ id: g.id, projectId, name: g.name, description: g.description ?? null })),
+      // Each group takes the next color, the same rule as when a user creates groups one by one
+      data: groups.map((g, i) => ({
+        id: g.id,
+        projectId,
+        name: g.name,
+        description: g.description ?? null,
+        color: pickGroupColor(template.groupColors, template.groupColors.slice(0, i)),
+      })),
     }),
     prisma.groupItem.createMany({
       data: groups.flatMap((g) => g.items.map((ref) => ({ groupId: g.id, itemId: idOf(ref), projectId }))),
