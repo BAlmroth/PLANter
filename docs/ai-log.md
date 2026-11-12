@@ -1575,3 +1575,35 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What I changed or corrected:** Nothing.
 
 **What went wrong:** Nothing. Documentation only, no code changed.
+
+## 2026-11-12: Help and onboarding (help text, Help page, new-project flow, guided tour)
+
+**What I asked:**
+1. Make PLANter understandable for beginners: info about every page and structure, a tutorial with small bubbles the first time you open each part, reachable again later. I had no clear vision and asked the AI to reason about what is most user-friendly.
+2. A new-project page where you can add what you already know ("Already got a good idea?"): pages, groups, tasks and so on.
+3. Our own bubbles (no library), "Skip tutorial" in the tutorial, help reachable from the footer and settings.
+4. After the first version (intro boxes at the top of each page): make it more "flowey", like a real tutorial with cards that pop up. I added screenshots from Amazon, Figma and Trello as inspiration and asked for a mix of Amazon (first time) and Figma.
+5. After seeing the Amazon-style welcome: I asked whether it was unnecessary, since the tour right after shows the same things.
+
+**What was generated:**
+- **Plan before building:** three layers of help (help text in the template, page intros, a tour), and the order to build them. The AI flagged that this is new scope in the last sprint (added as a Could) and that "add what you know" must stay on the right side of the Won't item "automatic generation of a whole plan".
+- **Help text in the template:** `description` and `example` per item type, `description` per relationship type, shown under category headings, in the item form (and as the title placeholder) and on the Help page. Data test: no type without help text.
+- **Label fix:** the AI noticed that `belongs_to` was labelled "used by", the same words as the inverse of `uses`. Relabelled to "part of" / "contains" (keys unchanged, no migration), with a test that no phrase is used for two connections.
+- **Help page** `/help`: how PLANter works, every page, every category and connection (from the template), restart the tutorial. Linked from the footer, project settings and the ? button.
+- **New-project flow:** backend: `POST /api/projects` takes optional `items`, `groups` and `tasks` (max 50 each, reusing the existing schemas), item types checked against the template, saved in one `prisma.$transaction`. `pickGroupColor` moved to its own file to avoid a circular import. Frontend: step 1 (name, description, "Create empty project") and step 2 (chips per category from the template, groups, first tasks, a summary bar that stays at the bottom). `ChipInput` adds a chip on Enter, Add, or when leaving the field.
+- **Guided tour** (`features/tour/`, own code): spotlight (one box with a huge `box-shadow` that dims the rest), Figma-style card (✕, "2 of 6", Skip tutorial, Back, Next/Done) in a portal, `inert` on the app behind it, keyboard support, reduced motion respected. `placeCard` (pure, tested) picks the side, `useTargetRect` finds the element (retries while the page loads, skips missing or empty elements). One tour per page, started once, flags in localStorage. A ? button in the corner shows a page's tour again or restarts the tutorial. The map tour has an animated SVG showing how to drag a connection (`ConnectDemo`).
+- **Tests:** template help text and labels, starter content (8 API tests, including one that proves the transaction rolls back), `starter.ts`, `storage.ts`, `pageHelp.ts`, `placeCard.ts`, tour flags, and a test that every tour step points at a `data-tour` marker that exists in the code.
+
+**What I changed or corrected:**
+- The first version used intro boxes at the top of each page. I wanted it more like a real tutorial, so they were replaced by the tour cards.
+- The AI then built an Amazon-style welcome screen (dimmed page, labels with curved arrows). I questioned it: it pointed at the same four things as the overview tour right after it. It was removed, and the first card of the overview tour became the welcome instead. Less repetition and less code.
+- The AI proposed building the new-project flow before the tour, so the tour could point at the finished UI. I agreed.
+- (to fill in: what I changed after testing in the browser)
+
+**What went wrong:**
+- `localStorage` does not exist in Vitest's default Node environment, so the storage tests failed until the file used `// @vitest-environment jsdom`.
+- The test that checks tour targets first used Node's `fs`, which the frontend TypeScript setup does not know. Rewritten with Vite's `import.meta.glob(..., { query: "?raw" })`.
+- The AI wrote a sloppy line in a test (`"plan" as PageKey`, not a real page key) and fixed it right away.
+- Found along the way: any text field with a null character (`\u0000`) gives a 500 instead of a 400 (Postgres refuses it). Not fixed yet, noted in `docs/todo.md` for the security review.
+- To check that the transaction test and the target test can really fail, the AI broke the code on purpose (removed the transaction, made a typo in a target), saw the tests fail, and put the code back.
+- The AI could not log in to the app, so nothing was checked in the browser by the AI. Typecheck, lint, all backend (280) and frontend (127) tests and the build pass.
