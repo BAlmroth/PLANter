@@ -1,0 +1,96 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px;
+  color: var(--on-bar);
+  /* Blueprint look: a faint dot grid over soft glows on dark green */
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(62, 101, 84, 0.9) 80%, transparent 40%),
+    radial-gradient(ellipse at 100% 100%, rgba(28, 40, 38, 0.8) 85%, transparent 60%),
+    #55a17e;
+}
+
+.brand {
+  margin: 0 0 24px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.headline {
+  margin: 0 0 12px;
+  font-size: 2.4rem;
+  color: var(--on-bar);
+}
+
+.lead {
+  max-width: 420px;
+  margin: 0 0 32px;
+  font-size: 1.05rem;
+  color: var(--on-bar);
+  opacity: 0.85;
+}
+
+.sketch {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 32px;
+}
+.line path {
+  fill: none;
+  stroke: var(--on-bar);
+  stroke-opacity: 0.45;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+}
+.sketch circle {
+  stroke: var(--bar-bg);
+  stroke-width: 4;
+}
+.nodeA { fill: var(--bg-dark); }
+.nodeB { fill: var(--accent); }
+.nodeC { fill: var(--primary); }
+.nodeD { fill: var(--danger); }
+.nodeE { fill: var(--bg); }
+
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.points li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.points span {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.dotPrimary { background: var(--bg-dark); }
+.dotAccent { background: var(--accent); }
+.dotDanger { background: var(--danger); }
+
+@media (max-width: 800px) {
+  .hero {
+    padding: 28px 24px;
+  }
+  .headline {
+    font-size: 1.7rem;
+  }
+  .sketch,
+  .points {
+    display: none;
+  }
+  .lead {
+    margin-bottom: 0;
+  }
+}

@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { AuthLayout } from "./AuthLayout";
+import styles from "./AuthForm.module.css";
 
 // Step 1 of a password reset: the user enters their email and Supabase sends a link.
 export function ForgotPassword() {
@@ -27,16 +29,16 @@ export function ForgotPassword() {
   }
 
   return (
-    <main>
-      <h1>Forgot password</h1>
+    <AuthLayout title="Forgot password">
       {sent ? (
         // Same message whether or not the email has an account, so the page
         // cannot be used to find out who is registered.
         <p role="status">
-          If an account exists for {email}, a reset link has been sent. Check your inbox.
+          If an account exists for {email}, a reset link has been sent. Check
+          your inbox.
         </p>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <label>
             Email
             <input
@@ -47,15 +49,19 @@ export function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
-          {error && <p role="alert">{error}</p>}
-          <button type="submit" disabled={submitting}>
+          {error && (
+            <p role="alert" className={styles.error}>
+              {error}
+            </p>
+          )}
+          <button type="submit" className={styles.submit} disabled={submitting}>
             {submitting ? "Please wait…" : "Send reset link"}
           </button>
         </form>
       )}
-      <p>
+      <p className={styles.footer}>
         <Link to="/login">Back to log in</Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }

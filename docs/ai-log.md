@@ -1622,3 +1622,29 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What went wrong:**
 - The AI's first attempt to prove the new rollback test can fail (a Perl one-liner that rewrote the service) did not change the file, so that run proved nothing. The AI noticed, said so, and redid it with a realistic mistake: inserting the project and items with `prisma` instead of `tx`. The test then failed (one project was left), and passed again after the file was restored.
 - Backend typecheck and all 303 tests pass.
+
+## 2026-11-12: Login page with a split layout
+
+**What I asked:**
+1. Fix the login page so it has a nicer style.
+2. A nice start page before login: the form on the right and something fitting on the left, using the whole color palette.
+3. Try a different gradient for the left side, several times. First "another type of gradient", then "I don't like it", then "the orange background looks bad", then "more of an overlapping effect where the top that isn't overlapping has a different color", then "no, redo".
+4. How to make the darker layer stand out more through the lighter ones.
+5. Remove the unused style and fix the forgot password page.
+
+**What was generated:**
+- `auth/AuthForm.module.css`: a centered card with bold labels, a green focus ring, an error box, a full-width button and a footer with a divider.
+- `auth/AuthHero.tsx` and `AuthHero.module.css`: the left side, with the PLANter name, a headline, a short text, a small map sketch (decorative, `aria-hidden`) and three points. It uses only the CSS color variables, not the item type colors from the template. On narrow screens it stacks above the form and shrinks.
+- Background of the left side: five versions were tried (diagonal gradient, dot grid with glows, two overlapping circles, and finally stacked layers with rounded corners and a visible strip at the top).
+- `auth/AuthLayout.tsx`: the shared page shell (hero + card with a title). `AuthForm`, `ForgotPassword` and `ResetPassword` all use it, so the layout lives in one place. Login, Register, Forgot password and Reset password now look the same.
+
+**What I changed or corrected:**
+- I did not like the first three backgrounds, and said the orange looked bad. I asked for an overlapping effect with a different color at the top.
+- I edited the CSS myself between the AI's versions, and changed the border and box-shadow at the end. I will keep working on the look later.
+- I asked how to make the darker layer stand out more and fixed it myself from the suggestions (lighter top layers, a darker front layer, a shadow).
+
+**What went wrong:**
+- One of my own edits had left a radial gradient without color stops, so it was probably invalid CSS. The AI found it and replaced it.
+- The AI guessed the layer offsets (110px and 210px) and the circle sizes for a normal laptop screen. They are fixed values and were not checked on other screen sizes.
+- Running Prettier on `src/auth/*.tsx` also reformatted `AuthProvider.tsx` and `ProtectedRoute.tsx`, which were not part of the task. The AI restored both with `git checkout`.
+- The AI could not see the page, so none of the visual work was checked in a browser by the AI. Typecheck and all 127 frontend tests pass.

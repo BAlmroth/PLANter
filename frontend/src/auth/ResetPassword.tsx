@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./authContext";
+import { AuthLayout } from "./AuthLayout";
+import styles from "./AuthForm.module.css";
 
 // Step 2 of a password reset: the user arrives from the email link.
 // Supabase reads the token in the link and logs the user in with a temporary
@@ -31,20 +33,20 @@ export function ResetPassword() {
   // Opened without a valid link, or the link has expired
   if (!user) {
     return (
-      <main>
-        <h1>Reset password</h1>
-        <p role="alert">This reset link is invalid or has expired.</p>
-        <p>
+      <AuthLayout title="Reset password">
+        <p role="alert" className={styles.error}>
+          This reset link is invalid or has expired.
+        </p>
+        <p className={styles.footer}>
           <Link to="/forgot-password">Request a new link</Link>
         </p>
-      </main>
+      </AuthLayout>
     );
   }
 
   return (
-    <main>
-      <h1>Reset password</h1>
-      <form onSubmit={handleSubmit}>
+    <AuthLayout title="Reset password">
+      <form className={styles.form} onSubmit={handleSubmit}>
         <label>
           New password
           <input
@@ -56,11 +58,15 @@ export function ResetPassword() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={submitting}>
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        <button type="submit" className={styles.submit} disabled={submitting}>
           {submitting ? "Please wait…" : "Set new password"}
         </button>
       </form>
-    </main>
+    </AuthLayout>
   );
 }

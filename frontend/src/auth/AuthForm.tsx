@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./authContext";
 import styles from "./AuthForm.module.css";
+import { AuthLayout } from "./AuthLayout";
 
 type Props = {
   title: string;
@@ -42,43 +43,39 @@ export function AuthForm({
   }
 
   return (
-    <main className={styles.page}>
-      <div className={styles.card}>
-        <p className={styles.brand}>PLANter</p>
-        <h1 className={styles.title}>{title}</h1>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              autoComplete={passwordAutoComplete}
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-          {error && (
-            <p role="alert" className={styles.error}>
-              {error}
-            </p>
-          )}
-          <button type="submit" className={styles.submit} disabled={submitting}>
-            {submitting ? "Please wait…" : submitLabel}
-          </button>
-        </form>
-        <p className={styles.footer}>{footer}</p>
-      </div>
-    </main>
+    <AuthLayout title={title}>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <label>
+          Email
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            autoComplete={passwordAutoComplete}
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        <button type="submit" className={styles.submit} disabled={submitting}>
+          {submitting ? "Please wait…" : submitLabel}
+        </button>
+      </form>
+      <p className={styles.footer}>{footer}</p>
+    </AuthLayout>
   );
 }
