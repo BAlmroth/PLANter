@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
+import { webTemplate } from "../src/templates/web.js";
 
 // user_id is a uuid column, so the fake users need real uuids
 const USER_A = "00000000-0000-4000-8000-00000000000a";
@@ -92,6 +93,97 @@ describe("POST /api/projects", () => {
       .set(asA)
       .send({ name: "x", template: "web", description: "a".repeat(501) });
     expect(res.status).toBe(400);
+  });
+});
+
+// "Already got a good idea?": the new-project page can send items, groups and tasks along
+describe("POST /api/projects with starter content", () => {
+  const starter = {
+    name: "Portfolio",
+    template: "web",
+    items: [
+      { type: "page", title: "Home" },
+      { type: "page", title: "About" },
+      { type: "component", title: "Header" },
+    ],
+    groups: [{ name: "Navigation" }, { name: "Content" }],
+    tasks: [{ title: "Set up the repo" }],
+  };
+
+  // Nothing at all may be left behind when a request is rejected
+  async function countRowsOfA() {
+    return prisma.project.count({ where: { userId: USER_A } });
+  }
+
+  it("creates the project with its items, groups and tasks", async () => {
+    const res = await request(app).post("/api/projects").set(asA).send(starter);
+    expect(res.status).toBe(201);
+    const projectId = res.body.id as string;
+
+    const items = await prisma.item.findMany({ where: { projectId }, orderBy: { title: "asc" } });
+    expect(items.map((i) => [i.type, i.title, i.status])).toEqual([
+      ["page", "About", "planned"],
+      ["component", "Header", "planned"],
+      ["page", "Home", "planned"],
+    ]);
+    expect((await prisma.group.findMany({ where: { projectId } })).map((g) => g.name).sort()).toEqual([
+      "Content",
+      "Navigation",
+    ]);
+    expect((await prisma.task.findMany({ where: { projectId } })).map((t) => t.title)).toEqual(["Set up the repo"]);
+  });
+
+  it("gives every item its own spot on the map", async () => {
+    const res = await request(app).post("/api/projects").set(asA).send(starter);
+    const items = await prisma.item.findMany({ where: { projectId: res.body.id } });
+    const spots = items.map((i) => `${i.positionX},${i.positionY}`);
+    expect(new Set(spots).size).toBe(items.length);
+  });
+
+  it("gives the groups different colors from the template", async () => {
+    const res = await request(app).post("/api/projects").set(asA).send(starter);
+    const colors = (await prisma.group.findMany({ where: { projectId: res.body.id } })).map((g) => g.color);
+    expect(new Set(colors).size).toBe(2);
+    for (const color of colors) expect(webTemplate.groupColors).toContain(color);
+  });
+
+  it("returns 400 for an item type the template does not have, and creates nothing", async () => {
+    const res = await request(app)
+      .post("/api/projects")
+      .set(asA)
+      .send({ ...starter, items: [{ type: "page", title: "Home" }, { type: "spaceship", title: "X" }] });
+    expect(res.status).toBe(400);
+    expect(await countRowsOfA()).toBe(0);
+  });
+
+  it("returns 400 for an empty item title or task title", async () => {
+    const emptyItem = await request(app).post("/api/projects").set(asA).send({ ...starter, items: [{ type: "page", title: " " }] });
+    const emptyTask = await request(app).post("/api/projects").set(asA).send({ ...starter, tasks: [{ title: "" }] });
+    expect(emptyItem.status).toBe(400);
+    expect(emptyTask.status).toBe(400);
+    expect(await countRowsOfA()).toBe(0);
+  });
+
+  it("rolls back the project and items when a later row fails in the database", async () => {
+    // Postgres refuses text with a null character, and Zod lets it through. The task insert
+    // runs last, so the project and items are already created when it fails.
+    vi.spyOn(console, "error").mockImplementation(() => {}); // the error handler logs the 500
+    const res = await request(app).post("/api/projects").set(asA).send({ ...starter, tasks: [{ title: "bad\u0000" }] });
+    expect(res.status).toBe(500);
+    expect(await countRowsOfA()).toBe(0);
+  });
+
+  it("returns 400 for more than 50 entries in a list", async () => {
+    const items = Array.from({ length: 51 }, (_, i) => ({ type: "page", title: `Page ${i}` }));
+    const res = await request(app).post("/api/projects").set(asA).send({ ...starter, items });
+    expect(res.status).toBe(400);
+    expect(await countRowsOfA()).toBe(0);
+  });
+
+  it("does not let PATCH add starter content to an existing project", async () => {
+    const project = await createAs(asA);
+    await request(app).patch(`/api/projects/${project.id}`).set(asA).send({ name: "New", items: starter.items });
+    expect(await prisma.item.count({ where: { projectId: project.id } })).toBe(0);
   });
 });
 

@@ -118,6 +118,7 @@ The tool must be understandable for a beginner, without cluttering the UI.
 - Help about pages lives in `features/help/pageHelp.ts` (one `title` + `intro` per page key). `pageKeyFromPath` picks the key from the URL.
 - `PageIntro` is shown once, above every project page (in `ProjectFrame`). "Got it" shrinks it to an "About this page" button that opens it again.
 - `/help` lists how PLANter works, every page, every category and every connection (from the template), and can show all intros again. Linked from the footer, project settings and every intro.
+- New project ("Already got a good idea?"): `POST /api/projects` takes optional `items` (`type` + `title`), `groups` (`name`) and `tasks` (`title`), max 50 each, reusing the item, group and task schemas. The service checks item types against the template, places items with `startPosition`, colors groups with `pickGroupColor`, and saves everything in one `prisma.$transaction` (all or nothing). No connections: those are made on the map.
 - Seen/closed state is a flag in `localStorage` (`lib/storage.ts`, keys `planter:intro:<page>`), per browser only. Never used for real data.
 
 ## Scope (MoSCoW)

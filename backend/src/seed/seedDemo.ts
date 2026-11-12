@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
-import { pickGroupColor } from "../services/groups.js";
+import { pickGroupColor } from "../services/groupColor.js";
 import { getTemplate } from "../templates/index.js";
 import {
   DEMO_COLUMN_WIDTH,

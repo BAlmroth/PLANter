@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
-import { pickGroupColor } from "../src/services/groups.js";
+import { pickGroupColor } from "../src/services/groupColor.js";
 
 // Own users (...40 and ...41), because test files run in parallel and share one database
 const USER_A = "00000000-0000-4000-8000-000000000040";
