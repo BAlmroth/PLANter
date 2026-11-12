@@ -17,6 +17,8 @@
   background: rgb(217 119 6 / 15%);
   border: 0;
   border-radius: 50%;
+  box-shadow: none;
+  translate: none;
   cursor: pointer;
 }
 .button:hover,
@@ -45,7 +47,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+  box-shadow: var(--shadow-sm);
 }
 
 /* The messages start lowercase ("has no components"), so capitalise the first letter */

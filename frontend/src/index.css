@@ -107,13 +107,14 @@ button {
     translate 80ms,
     box-shadow 80ms;
 }
-/* Hover: the button lifts off its shadow */
-button:hover:not(:disabled) {
+/* Hover: the button lifts off its shadow.
+   :where() keeps these rules weak, so a button class with its own box-shadow / translate wins. */
+button:where(:hover:not(:disabled)) {
   translate: -1px -1px;
   box-shadow: 4px 4px #183f2d;
 }
 /* Pressed in: the button moves onto its shadow */
-button:active:not(:disabled) {
+button:where(:active:not(:disabled)) {
   translate: 3px 3px;
   box-shadow: 0 0 #183f2d;
 }

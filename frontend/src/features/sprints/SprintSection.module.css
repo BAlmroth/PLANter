@@ -52,6 +52,7 @@
   color: var(--text);
   background: transparent;
   box-shadow: none;
+  translate: none;
 }
 .textButton:hover:not(:disabled) {
   color: var(--text-h);

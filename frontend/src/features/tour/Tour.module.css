@@ -105,6 +105,7 @@
   color: var(--text);
   background: none;
   box-shadow: none;
+  translate: none;
   border-radius: var(--radius);
 }
 .close:hover {
@@ -135,6 +136,7 @@
   text-decoration: underline;
   background: none;
   box-shadow: none;
+  translate: none;
 }
 
 .buttons {

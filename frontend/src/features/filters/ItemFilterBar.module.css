@@ -86,5 +86,6 @@ summary.pill::after {
   color: var(--primary);
   background: none;
   box-shadow: none;
+  translate: none;
   text-decoration: underline;
 }

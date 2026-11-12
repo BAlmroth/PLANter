@@ -36,6 +36,7 @@
   color: var(--text);
   background: transparent;
   box-shadow: none;
+  translate: none;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
@@ -190,6 +191,7 @@
   color: var(--text);
   background: transparent;
   box-shadow: none;
+  translate: none;
 }
 .remove:hover:not(:disabled) {
   color: var(--danger);
@@ -224,6 +226,7 @@
   color: var(--text-h);
   background: transparent;
   box-shadow: none;
+  translate: none;
   border: 1px solid var(--border);
 }
 .error {

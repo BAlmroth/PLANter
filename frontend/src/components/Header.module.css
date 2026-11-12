@@ -53,5 +53,6 @@
   color: var(--on-bar);
   background: transparent;
   box-shadow: none;
+  translate: none;
   border: 1px solid rgb(243 240 234 / 40%);
 } */

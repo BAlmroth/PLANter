@@ -34,6 +34,7 @@
   color: var(--text);
   background: none;
   box-shadow: none;
+  translate: none;
   border: none;
   border-radius: 999px;
   cursor: pointer;

@@ -40,6 +40,7 @@
   color: var(--text-h);
   background: none;
   box-shadow: none;
+  translate: none;
   border-radius: 6px;
 }
 
@@ -48,4 +49,5 @@
   background: var(--bg-dark);
   translate: none;
   box-shadow: none;
+  translate: none;
 }

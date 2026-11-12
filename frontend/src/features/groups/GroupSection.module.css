@@ -108,6 +108,7 @@
   color: var(--text);
   background: transparent;
   box-shadow: none;
+  translate: none;
 }
 .textButton:hover:not(:disabled) {
   color: var(--text-h);
@@ -121,6 +122,7 @@
   color: var(--text-h);
   background: transparent;
   box-shadow: none;
+  translate: none;
   border: 1px solid var(--borderDark);
 }
 
@@ -154,6 +156,7 @@
   color: var(--text);
   background: transparent;
   box-shadow: none;
+  translate: none;
 }
 .remove:hover:not(:disabled) {
   color: var(--danger);
