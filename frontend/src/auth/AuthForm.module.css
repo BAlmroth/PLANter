@@ -1,0 +1,79 @@
+/* Centers the card on the page */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--bg-dark);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 40, 38, 0.08);
+}
+
+.brand {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.title {
+  margin: 0 0 24px;
+  font-size: 1.6rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.form input {
+  padding: 10px 12px;
+  font-weight: 400;
+}
+.form input:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(62, 101, 84, 0.2);
+}
+
+.error {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.submit {
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+.footer {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
