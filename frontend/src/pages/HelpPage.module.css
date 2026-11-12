@@ -13,6 +13,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
   line-height: 1.5;
 }
 

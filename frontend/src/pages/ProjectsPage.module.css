@@ -32,9 +32,18 @@
   background: var(--button-bg);
   border-radius: var(--radius);
   text-decoration: none;
+  box-shadow: var(--shadow-btn);
+  transition:
+    translate 80ms,
+    box-shadow 80ms;
 }
 .newButton:hover {
-  filter: brightness(0.9);
+  translate: -1px -1px;
+  box-shadow: 4px 4px #183f2d;
+}
+.newButton:active {
+  translate: 3px 3px;
+  box-shadow: 0 0 #183f2d;
 }
 
 /* Cards sit in a row and wrap onto the next line */

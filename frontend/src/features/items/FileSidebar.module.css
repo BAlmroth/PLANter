@@ -26,7 +26,12 @@
   line-height: 1;
   color: var(--text);
   background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
   border: 1px solid var(--border);
+}
+.refresh:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 .refresh:hover:not(:disabled) {
   color: var(--text-h);

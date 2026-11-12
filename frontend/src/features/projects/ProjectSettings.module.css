@@ -11,6 +11,11 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
+  box-shadow: 2px 2px var(--borderDark);
+}
+.gear:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 .gear:hover {
   color: var(--text-h);
@@ -27,7 +32,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  box-shadow: var(--shadow);
 }
 
 .warning {

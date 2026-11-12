@@ -4,6 +4,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Small caps card label, the same as on the overview */
@@ -106,6 +107,7 @@
   font-size: 0.85rem;
   color: var(--text);
   background: transparent;
+  box-shadow: none;
 }
 .textButton:hover:not(:disabled) {
   color: var(--text-h);
@@ -118,6 +120,7 @@
 .secondary {
   color: var(--text-h);
   background: transparent;
+  box-shadow: none;
   border: 1px solid var(--borderDark);
 }
 
@@ -150,6 +153,7 @@
   padding: 0 6px;
   color: var(--text);
   background: transparent;
+  box-shadow: none;
 }
 .remove:hover:not(:disabled) {
   color: var(--danger);

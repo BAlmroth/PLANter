@@ -24,7 +24,12 @@
 .secondary {
   color: var(--text-h);
   background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
   border: 1px solid var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 
 .count {
@@ -48,6 +53,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Small caps card label, with the "done" count on the right */

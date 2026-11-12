@@ -10,9 +10,12 @@
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 .card:hover {
   border-color: var(--borderDark);
+  translate: -1px -1px;
+  box-shadow: 5px 5px var(--borderDark);
 }
 
 .title {

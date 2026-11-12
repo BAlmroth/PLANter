@@ -39,6 +39,11 @@
   color: var(--primary);
   background: var(--surface);
   border: 1.5px solid var(--border);
+  box-shadow: 2px 2px var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 
 /* Sticks to the bottom of the screen while scrolling through the categories */

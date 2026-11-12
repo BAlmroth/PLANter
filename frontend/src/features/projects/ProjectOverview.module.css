@@ -17,6 +17,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Cards with a link: the label link covers the whole card */
@@ -25,6 +26,8 @@
 }
 .clickable:hover {
   border-color: var(--borderDark);
+  translate: -1px -1px;
+  box-shadow: 5px 5px var(--borderDark);
 }
 .cardLink {
   color: inherit;

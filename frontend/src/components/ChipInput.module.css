@@ -33,6 +33,7 @@
   line-height: 1.2;
   color: var(--text);
   background: none;
+  box-shadow: none;
   border: none;
   border-radius: 999px;
   cursor: pointer;

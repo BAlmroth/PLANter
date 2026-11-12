@@ -115,6 +115,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Card title with a line under it */
@@ -244,6 +245,7 @@
   line-height: 1.4;
   color: var(--text);
   background: transparent;
+  box-shadow: none;
 }
 .remove:hover:not(:disabled) {
   color: var(--danger);
@@ -259,12 +261,22 @@
 .secondary {
   color: var(--text-h);
   background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
   border: 1px solid var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 .danger {
   color: var(--danger);
   background: transparent;
+  box-shadow: 2px 2px var(--danger);
   border: 1px solid var(--danger);
+}
+.danger:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--danger);
 }
 
 /* --- Side column --- */

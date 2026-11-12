@@ -52,5 +52,6 @@
 /* .user button {
   color: var(--on-bar);
   background: transparent;
+  box-shadow: none;
   border: 1px solid rgb(243 240 234 / 40%);
 } */

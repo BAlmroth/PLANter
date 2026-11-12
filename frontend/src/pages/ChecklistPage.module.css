@@ -16,6 +16,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* The heading with the summary ("6 of 9 done") on the right */
