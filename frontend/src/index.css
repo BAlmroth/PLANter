@@ -130,3 +130,11 @@ button:disabled {
 [role="alert"] {
   color: var(--danger);
 }
+
+/* React Flow's zoom buttons are plain buttons too: no retro shadow or lift on them */
+.react-flow__controls button,
+.react-flow__controls button:hover:not(:disabled),
+.react-flow__controls button:active:not(:disabled) {
+  translate: none;
+  box-shadow: none;
+}

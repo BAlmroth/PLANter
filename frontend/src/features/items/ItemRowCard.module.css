@@ -1,6 +1,7 @@
 /* One item as a small card in the section's grid: status and title, then the description, then the tags
    (lines 2 and 3 only when there is something to show). The left strip is the item type's color (--type-color, set by ItemRow), grey for an unknown type. */
 .row {
+  position: relative; /* the title link's ::after is positioned against the card */
   min-width: 0;
   padding: 8px 10px;
   background: var(--surface);
@@ -8,6 +9,18 @@
   border-left: 4px solid var(--type-color, var(--border));
   border-radius: 6px;
   box-shadow: var(--shadow-sm);
+}
+/* A card with an open "!" popover (or the hovered card) is painted above the cards after it,
+   otherwise the popover would be hidden behind the row below. */
+.row:hover,
+.row:has([aria-expanded="true"]) {
+  z-index: 2;
+}
+.row:hover {
+  border-color: var(--borderDark);
+  border-left-color: var(--type-color, var(--borderDark));
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 
 .top {
@@ -28,9 +41,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.title:hover {
+/* Stretches the link over the whole card, so a click anywhere opens the item.
+   The "!" badge is positioned too and comes later in the page, so it stays on top and clickable. */
+.title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.row:hover .title {
   color: var(--primary);
-  text-decoration: underline;
 }
 
 /* Line 3: the tags, on their own line so they never take space from the title or the description.
