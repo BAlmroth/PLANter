@@ -3,11 +3,12 @@ import { getTemplate } from "../templates/index.js";
 import { createGroupSchema } from "./groups.js";
 import { createItemSchema } from "./items.js";
 import { createTaskSchema } from "./tasks.js";
+import { textSchema } from "./text.js";
 
 // The project's own fields. Shared by create and update.
 const projectFieldsSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  description: z.string().max(500).optional(),
+  name: textSchema.trim().min(1).max(100),
+  description: textSchema.max(500).optional(),
   template: z
     .string()
     .refine((key) => getTemplate(key) !== undefined, "Unknown template"),

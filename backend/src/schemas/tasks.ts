@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { textSchema } from "./text.js";
 
 // zod schema for tasks. No projectId: it comes from the URL (create) or from the task itself.
 export const createTaskSchema = z.object({
-  title: z.string().trim().min(1).max(100),
+  title: textSchema.trim().min(1).max(100),
   itemId: z.uuid().optional(), // the item the task is about, if any
   sprintId: z.uuid().optional(), // the sprint the task is in, if any
 });

@@ -1,16 +1,16 @@
 import { z } from "zod";
+import { textSchema, urlSchema } from "./text.js";
 
 // Only http and https links: this blocks "javascript:" links
-const httpUrl = z
-  .url()
+const httpUrl = urlSchema
   .max(2000)
   .refine((value) => /^https?:\/\//i.test(value), "url must start with http:// or https://");
 
 // zod schema for project inspiration. No projectId: it comes from the URL.
 export const createInspirationSchema = z.object({
-  title: z.string().trim().min(1).max(100),
+  title: textSchema.trim().min(1).max(100),
   url: httpUrl.optional(),
-  text: z.string().max(2000).optional(),
+  text: textSchema.max(2000).optional(),
   // Which card on the Moodboard page the entry belongs to
   section: z.enum(["moodboard", "inspiration"]).default("moodboard"),
 });

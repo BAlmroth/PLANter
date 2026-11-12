@@ -1607,3 +1607,18 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Found along the way: any text field with a null character (`\u0000`) gives a 500 instead of a 400 (Postgres refuses it). Not fixed yet, noted in `docs/todo.md` for the security review.
 - To check that the transaction test and the target test can really fail, the AI broke the code on purpose (removed the transaction, made a typo in a target), saw the tests fail, and put the code back.
 - The AI could not log in to the app, so nothing was checked in the browser by the AI. Typecheck, lint, all backend (280) and frontend (127) tests and the build pass.
+
+## 2026-11-12: Null character in text gave 500 instead of 400
+
+**What I asked:** Put the null character problem (found while testing the new-project transaction) in the todo list, and later: fix it.
+
+**What was generated:**
+- `schemas/text.ts`: `textSchema` (a string with a regex check that rejects `\u0000`) and `urlSchema` (the same for `z.url()`, which also let it through). Every saved text field now starts from one of them: project, item, task, sprint, group and color names and titles, descriptions, inspiration and item detail text and URLs, including the starter lists of a new project. Item and relationship types stay plain strings: they must match a template key, so they were already a 400.
+- `tests/text.test.ts`: the two schemas, and a table that puts a null character in every saved text field of every schema (22 tests).
+- The transaction test in `tests/projects.test.ts` used a null character to make Postgres fail in the middle of the transaction, so it stopped working once Zod rejected it. It now wraps `prisma.$transaction` and gives the service a transaction client (a `Proxy`) whose task insert throws. A new API test checks that a null character gives a 400 and creates nothing.
+
+**What I changed or corrected:** Nothing.
+
+**What went wrong:**
+- The AI's first attempt to prove the new rollback test can fail (a Perl one-liner that rewrote the service) did not change the file, so that run proved nothing. The AI noticed, said so, and redid it with a realistic mistake: inserting the project and items with `prisma` instead of `tx`. The test then failed (one project was left), and passed again after the file was restored.
+- Backend typecheck and all 303 tests pass.

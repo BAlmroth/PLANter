@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { textSchema } from "./text.js";
 
 // Only "#RRGGBB" is allowed, and it is stored in upper case. Because nothing else gets through,
 // a color is safe to use in a style attribute in the frontend. Also used for group colors.
@@ -11,7 +12,7 @@ export const hexColorSchema = z
 // zod schema for a palette color. No projectId: it comes from the URL.
 export const createColorSchema = z.object({
   hex: hexColorSchema,
-  name: z.string().trim().max(100).optional(),
+  name: textSchema.trim().max(100).optional(),
 });
 export type CreateColorInput = z.infer<typeof createColorSchema>;
 

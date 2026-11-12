@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { textSchema } from "./text.js";
 
 // zod schema for sprints. No projectId: it comes from the URL (create) or from the sprint itself.
 export const createSprintSchema = z.object({
-  name: z.string().trim().min(1).max(100),
+  name: textSchema.trim().min(1).max(100),
 });
 export type CreateSprintInput = z.infer<typeof createSprintSchema>;
 

@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { hexColorSchema } from "./colors.js";
+import { textSchema } from "./text.js";
 
 // zod schema for groups. No projectId: it comes from the URL (create) or from the group itself.
 // color: Zod checks the shape (#RRGGBB, upper case). Whether it is one of the template's
 // groupColors is checked in the groups service, which knows the project's template.
 // Left out on create: the service picks the next unused color.
 export const createGroupSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  description: z.string().max(500).optional(),
+  name: textSchema.trim().min(1).max(100),
+  description: textSchema.max(500).optional(),
   color: hexColorSchema.optional(),
 });
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

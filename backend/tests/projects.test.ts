@@ -164,12 +164,43 @@ describe("POST /api/projects with starter content", () => {
     expect(await countRowsOfA()).toBe(0);
   });
 
-  it("rolls back the project and items when a later row fails in the database", async () => {
-    // Postgres refuses text with a null character, and Zod lets it through. The task insert
-    // runs last, so the project and items are already created when it fails.
-    vi.spyOn(console, "error").mockImplementation(() => {}); // the error handler logs the 500
-    const res = await request(app).post("/api/projects").set(asA).send({ ...starter, tasks: [{ title: "bad\u0000" }] });
-    expect(res.status).toBe(500);
+  it("rolls back the project and items when a later insert fails", async () => {
+    // Make the task insert, the last one, fail inside the transaction. Everything else goes to the
+    // real database, so the project and items are already inserted when it throws.
+    // A Proxy wraps the transaction client `tx`: asking it for `task` gives a fake that throws,
+    // anything else is passed on to the real `tx`.
+    const realTransaction = prisma.$transaction.bind(prisma);
+    const failingTaskInsert = (async (fn: (tx: object) => Promise<unknown>) =>
+      realTransaction(async (tx) =>
+        fn(
+          new Proxy(tx, {
+            get: (target, prop, receiver) =>
+              prop === "task"
+                ? { createMany: () => Promise.reject(new Error("insert failed")) }
+                : Reflect.get(target, prop, receiver),
+          }),
+        ),
+      // $transaction has several overloads that TypeScript cannot match to this one function
+    )) as unknown as typeof prisma.$transaction;
+
+    const transactionSpy = vi.spyOn(prisma, "$transaction").mockImplementation(failingTaskInsert);
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {}); // the error handler logs the 500
+    try {
+      const res = await request(app).post("/api/projects").set(asA).send(starter);
+      expect(res.status).toBe(500);
+      expect(await countRowsOfA()).toBe(0);
+    } finally {
+      transactionSpy.mockRestore();
+      consoleSpy.mockRestore();
+    }
+  });
+
+  it("returns 400 for a null character in any text, instead of a database error", async () => {
+    const res = await request(app)
+      .post("/api/projects")
+      .set(asA)
+      .send({ ...starter, tasks: [{ title: "bad\u0000" }] });
+    expect(res.status).toBe(400);
     expect(await countRowsOfA()).toBe(0);
   });
 
