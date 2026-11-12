@@ -88,8 +88,8 @@ describe("calculateProgress", () => {
     const template: Template = {
       ...webTemplate,
       itemTypes: [
-        { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
-        { key: "note", label: "Note", pluralLabel: "Notes", countsTowardProgress: false, color: "#4B5563" },
+        { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
+        { key: "note", label: "Note", pluralLabel: "Notes", countsTowardProgress: false, color: "#4B5563", description: "", example: "" },
       ],
     };
     const items = [

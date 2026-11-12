@@ -13,6 +13,10 @@ export type Template = {
     // "#RRGGBB". The type's color everywhere in the UI (pill, map node, progress bar).
     // Presentation only, like the label: it can be changed without a migration.
     color: string;
+    // Help text for beginners: what this category is, in one plain sentence,
+    // and a few typical names. Presentation only, like the label.
+    description: string;
+    example: string;
   }[];
   // The colors a group can have ("#RRGGBB"). Lighter than the item type colors, so a group
   // never looks like an item type. A group stores the hex itself, so changing this list
@@ -23,6 +27,7 @@ export type Template = {
     label: string;        // shown on the source item "uses: Button"
     inverseLabel: string; // shown on the target item "used by: LoginPage"
     allowCycles: boolean;
+    description: string;  // help text: what the connection means, in one plain sentence
   }[];
   // Which source type can connect to which target type, with which relationship
   allowedCombinations: { source: string; relationship: string; target: string }[];

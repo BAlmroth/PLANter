@@ -50,8 +50,8 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - A template is plain data (strings, arrays, objects, no functions), so it can be sent as JSON. It contains:
-  - item types: `key`, `label`, whether the type counts toward progress, and `color` (`#RRGGBB`, the type's color in the whole UI)
-  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), and `allowCycles`
+  - item types: `key`, `label`, whether the type counts toward progress, `color` (`#RRGGBB`, the type's color in the whole UI), and help text for beginners: `description` (one plain sentence) and `example` (typical names, shown as the title placeholder)
+  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), `allowCycles`, and `description` (help text)
   - the allowed combinations of source type, relationship type and target type
   - `groupColors`: the colors a group can have (`#RRGGBB`). Lighter than the item type colors and never the same, so a group never looks like an item type
   - `warningRules`: an item of `itemType` with no `relationship` in a `direction` (`incoming`/`outgoing`) gets a warning with `message` (for example a page with no component belonging to it)

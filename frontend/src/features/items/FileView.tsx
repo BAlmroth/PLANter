@@ -217,7 +217,13 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
           No items yet:
           {emptySections.map((section) => (
             // The dot is in the section's color, with the name next to it so the color never stands alone
-            <span key={section.key} className={styles.emptyName} style={typeColorVar(section.color ?? undefined)}>
+            // title: hover shows what the category is, so an empty one still explains itself
+            <span
+              key={section.key}
+              className={styles.emptyName}
+              style={typeColorVar(section.color ?? undefined)}
+              title={section.description ?? undefined}
+            >
               {section.title}
             </span>
           ))}

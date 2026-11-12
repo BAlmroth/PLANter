@@ -7,8 +7,8 @@ const template: Template = {
   key: "web",
   label: "Web",
   itemTypes: [
-    { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
-    { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673" },
+    { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "A screen.", example: "" },
+    { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673", description: "", example: "" },
   ],
   groupColors: [],
   relationshipTypes: [],
@@ -55,6 +55,12 @@ describe("getFileSections: category", () => {
   it("gives each section its item type's color, and Unknown none", () => {
     const sections = getFileSections("category", [...items, item("x", "old-type")], template, []);
     expect(sections.map((s) => s.color)).toEqual(["#2563A8", "#0F7673", null]);
+  });
+
+  it("uses the item type's help text as the description, and Unknown has none", () => {
+    const sections = getFileSections("category", [...items, item("x", "old-type")], template, []);
+    expect(sections[0].description).toBe("A screen.");
+    expect(sections.at(-1)?.description).toBeNull();
   });
 });
 

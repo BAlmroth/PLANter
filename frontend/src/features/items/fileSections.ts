@@ -8,7 +8,7 @@ export type FileViewMode = "category" | "group";
 export type FileSection = {
   key: string;
   title: string;
-  // Only groups have one
+  // A group's own description, or the item type's help text from the template
   description: string | null;
   // "#RRGGBB": the item type's color or the group's color. null for "Unknown" and "No group".
   color: string | null;
@@ -36,7 +36,7 @@ export function getFileSections(mode: FileViewMode, items: Item[], template: Tem
   const sections: FileSection[] = template.itemTypes.map((type) => ({
     key: type.key,
     title: type.pluralLabel,
-    description: null,
+    description: type.description,
     color: type.color,
     items: items.filter((item) => item.type === type.key),
   }));

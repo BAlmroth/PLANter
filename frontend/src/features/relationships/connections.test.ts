@@ -12,9 +12,9 @@ import type { Relationship } from "./types";
 const template: Template = {
   key: "web",
   label: "Web",
-  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" }],
+  itemTypes: [{ key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "", example: "" }],
   groupColors: [],
-  relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true }],
+  relationshipTypes: [{ key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" }],
   allowedCombinations: [],
 };
 
@@ -61,14 +61,14 @@ describe("getConnectOptions", () => {
     key: "web",
     label: "Web",
     itemTypes: [
-      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8" },
-      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#2563A8" },
-      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8" },
+      { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
+      { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
+      { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#2563A8", description: "", example: "" },
     ],
     groupColors: [],
     relationshipTypes: [
-      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
-      { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false },
+      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" },
+      { key: "belongs_to", label: "belongs to", inverseLabel: "contains", allowCycles: false, description: "" },
     ],
     allowedCombinations: [
       { source: "page", relationship: "uses", target: "asset" },
@@ -117,8 +117,8 @@ describe("getAllowedRelationshipTypes", () => {
     ...template,
     groupColors: [],
     relationshipTypes: [
-      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true },
-      { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true },
+      { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true, description: "" },
+      { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true, description: "" },
     ],
     allowedCombinations: [
       { source: "page", relationship: "uses", target: "component" },

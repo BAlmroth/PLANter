@@ -54,6 +54,17 @@ describe("web template data", () => {
     }
   });
 
+  it("has help text for every item and relationship type", () => {
+    // Beginners rely on these, so an empty one would show a blank help line
+    for (const t of webTemplate.itemTypes) {
+      expect(t.description.trim(), `description of "${t.key}"`).not.toBe("");
+      expect(t.example.trim(), `example of "${t.key}"`).not.toBe("");
+    }
+    for (const r of webTemplate.relationshipTypes) {
+      expect(r.description.trim(), `description of "${r.key}"`).not.toBe("");
+    }
+  });
+
   it("has a #RRGGBB color for every item type", () => {
     // The color ends up in a style attribute, so it must be a plain hex color
     for (const t of webTemplate.itemTypes) {
