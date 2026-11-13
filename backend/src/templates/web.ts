@@ -63,9 +63,9 @@ itemTypes: [
     { key: "writes_to", label: "writes to", inverseLabel: "written by", allowCycles: true,
       description: "The functionality saves or changes that data." },
     { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true,
-      description: "Uses that design or asset, for example a color palette or a logo." },
+      description: "Uses that design, asset or tech, for example a color palette, a logo or a library." },
     { key: "protects", label: "protects", inverseLabel: "protected by", allowCycles: true,
-      description: "Only users who pass this check can reach that page or functionality." },
+      description: "Only users who pass this check can reach that page, component, functionality or data." },
     { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true,
       description: "This test checks that that thing works." },
   ],
@@ -80,6 +80,7 @@ itemTypes: [
     { source: "component", relationship: "triggers", target: "function" },
     { source: "page", relationship: "navigates_to", target: "page" },
     { source: "component", relationship: "navigates_to", target: "page" },
+    { source: "function", relationship: "navigates_to", target: "page" }, // e.g. "Log in" sends you to Home
     { source: "function", relationship: "triggers", target: "function" },
 
     // Data: what touches a table
@@ -91,15 +92,26 @@ itemTypes: [
     { source: "component", relationship: "uses", target: "design" },
     { source: "page", relationship: "uses", target: "asset" },
     { source: "component", relationship: "uses", target: "asset" },
+    { source: "design", relationship: "uses", target: "asset" }, // e.g. "Brand style" uses "Logo"
+
+    // Tech stack: what the parts are built with (page and component are left out on purpose,
+    // since almost everything on the front end would point at "React")
+    { source: "function", relationship: "uses", target: "tech_stack" },
+    { source: "data", relationship: "uses", target: "tech_stack" },
+    { source: "authentication", relationship: "uses", target: "tech_stack" },
+    { source: "testing", relationship: "uses", target: "tech_stack" },
 
     // Security
     { source: "authentication", relationship: "protects", target: "page" },
+    { source: "authentication", relationship: "protects", target: "component" },
     { source: "authentication", relationship: "protects", target: "function" },
+    { source: "authentication", relationship: "protects", target: "data" },
 
     // Testing
     { source: "testing", relationship: "tests", target: "page" },
     { source: "testing", relationship: "tests", target: "component" },
     { source: "testing", relationship: "tests", target: "function" },
+    { source: "testing", relationship: "tests", target: "data" },
     { source: "testing", relationship: "tests", target: "authentication" },
   ],
 
