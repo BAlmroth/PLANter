@@ -1648,3 +1648,25 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The AI guessed the layer offsets (110px and 210px) and the circle sizes for a normal laptop screen. They are fixed values and were not checked on other screen sizes.
 - Running Prettier on `src/auth/*.tsx` also reformatted `AuthProvider.tsx` and `ProtectedRoute.tsx`, which were not part of the task. The AI restored both with `git checkout`.
 - The AI could not see the page, so none of the visual work was checked in a browser by the AI. Typecheck and all 127 frontend tests pass.
+
+## 2026-11-13: Loading animation and one loading state per page
+
+**What I asked:**
+1. The small "Loading…" text in the top left corner looks odd, then everything pops up. Make a nice loading animation that fits PLANter.
+2. It should be simpler and look good when loading is fast. Also I don't like the jumping (for example the overview boxes loading one by one). Show loading until everything is in place.
+3. Make the animation something with nodes. Then: show the nodes all the time and cycle through them. Then: go back to the version I liked (nodes pop in and lines draw) and just speed it up.
+
+**What was generated:**
+- `components/Loader.tsx` and `Loader.module.css`: a loader with three sizes (`page`, `section`, `inline`) and a label. Pure CSS, fades in after 0.15 s so a very fast load shows nothing instead of a flash, and shows the finished graph without motion under reduced motion. Four versions were tried: a sprout in a pot, three bouncing dots, three nodes with a moving highlight, and (final) three nodes that pop in with lines drawing between them, in a 1.2 s loop.
+- `components/useLoadGate.ts` and `LoadGate.tsx`: a "gate". Components that fetch call `useGateLoading(loading)`. The gate keeps the page mounted but invisible (`visibility: hidden` and `inert`) with one loader on top, until all of them have loaded the first time. Then everything shows at once. Only the first load holds the gate, so "Try again" and refetches after edits do not hide the page again.
+- `ProjectPage.tsx`: two gates. An outer one holds the whole project frame on first load (sub header, sidebar, page, progress). An inner one holds the middle area each time the user changes page, so the sidebar stays. The tutorial does not start while a gate is pending.
+- All 21 plain `<p>Loading…</p>` lines were replaced by `<Loader>`, and 14 components report to the gate.
+
+**What I changed or corrected:** I asked for a simpler animation, for nodes instead of the sprout and dots, and for the earlier node version back, only faster.
+
+**What went wrong:**
+- The first file name `loadGate.ts` clashed with `LoadGate.tsx` on a case-insensitive file system (TypeScript error). It was renamed to `useLoadGate.ts`.
+- ESLint rejected setting state inside an effect (`react-hooks/set-state-in-effect`). It was changed to set the state during render, which React allows when it only depends on the props.
+- The first Loader (the sprout) was replaced after one round, because it did not solve the real problem: the jumping came from many separate loading states, not from the look of one of them.
+- The old inline "Loading…" lines in the cards are still in the code, but they are never visible now because they sit inside the hidden content.
+- The AI could not see the page, so the animation and the gate were not checked in a browser by the AI. Typecheck, lint, build and all 127 frontend tests pass.
