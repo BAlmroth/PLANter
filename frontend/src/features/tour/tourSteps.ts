@@ -151,7 +151,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "yet-to-plan",
       title: "Yet to plan",
-      body: "Categories most projects need that your plan does not have yet, like tests or authentication.",
+      body: "Categories most projects need that your plan does not have yet, like tests or security.",
     },
     {
       target: "item-warnings",

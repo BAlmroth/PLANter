@@ -1,7 +1,7 @@
  import type { Template } from "./index.js";
 
 // KEYS ARE PERMANENT, LABELS ARE CUSTIMIZABLE.
-// Read each relationship as a sentence: "<source> <label> <target>", e.g. "authentication protects page".
+// Read each relationship as a sentence: "<source> <label> <target>", e.g. "authentication (shown as Security) protects page".
 
 
 export const webTemplate: Template = {
@@ -25,9 +25,9 @@ itemTypes: [
   { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true, color: "#8A5A0B",
     description: "Something the app stores, usually a table in the database.",
     example: "Users, Orders, Comments" },
-  { key: "authentication", label: "Authentication", pluralLabel: "Authentication", countsTowardProgress: true, color: "#B4234F",
-    description: "How users log in, and what is protected from whom.",
-    example: "Email login, Admin only" },
+  { key: "authentication", label: "Security", pluralLabel: "Security", countsTowardProgress: true, color: "#B4234F",
+    description: "How the app protects users and itself: login, permissions, input checks and error handling.",
+    example: "Email login, Admin only, Input validation, Error handling" },
   { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true, color: "#A3368F",
     description: "How it should look: colors, fonts, layouts and wireframes.",
     example: "Color palette, Mobile layout, Figma wireframe" },
@@ -116,7 +116,7 @@ itemTypes: [
     { itemType: "design", label: "Plan the design" },
     { itemType: "tech_stack", label: "Choose the tech stack" },
     { itemType: "data", label: "Plan the data" },
-    { itemType: "authentication", label: "Plan authentication" },
+    { itemType: "authentication", label: "Plan security" },
     { itemType: "testing", label: "Plan the tests" },
   ],
 };

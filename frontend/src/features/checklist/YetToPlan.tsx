@@ -13,7 +13,7 @@ type Props = {
   checklistPath: string;
 };
 
-// A short "Yet to plan" list: the categories the project has no item of yet, like tests or authentication.
+// A short "Yet to plan" list: the categories the project has no item of yet, like tests or security.
 // The page loads the checklist and passes it in, so the page decides when it is loaded again.
 export function YetToPlan({ checklist, checklistPath }: Props) {
   const missing = getYetToPlan(checklist.checks);
