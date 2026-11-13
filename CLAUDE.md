@@ -1,6 +1,6 @@
 # PLANter
 
-PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "reads from", "protects", "tests"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
+PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "reads from", "protects", "tests"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
 
 This is a thesis project (examensarbete) for a web developer education. Full plan: `docs/project-plan.md`.
 
@@ -125,7 +125,7 @@ The tool must be understandable for a beginner, without cluttering the UI.
 
 ## Scope (MoSCoW)
 
-**Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, authentication, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
+**Must (the MVP)**: register, log in and log out (Supabase Auth); projects CRUD; data protected per user; generic data model with one web template (pages, components, functions, data, design, assets, security, testing, tech stack) and a project description; items CRUD with status; typed relationships with Zod rules; File view; relationship map in React Flow; progress overview (planned vs completed, per category and total); API validation and error handling; deployed version; README; secrets in environment variables.
 
 **Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (with images); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
 

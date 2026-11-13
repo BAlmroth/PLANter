@@ -1670,3 +1670,23 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The first Loader (the sprout) was replaced after one round, because it did not solve the real problem: the jumping came from many separate loading states, not from the look of one of them.
 - The old inline "Loading…" lines in the cards are still in the code, but they are never visible now because they sit inside the hidden content.
 - The AI could not see the page, so the animation and the gate were not checked in a browser by the AI. Typecheck, lint, build and all 127 frontend tests pass.
+
+## 2026-11-13: Authentication becomes Security, and more allowed connections
+
+**What I asked:**
+1. What would go under the authentication category, and which category error handling belongs to.
+2. Whether to turn authentication into a broader security category (auth, error handling, XSS and so on).
+3. Do the label and description change first, then extend the relationships, add a test, update the tour and update everything else so it is correct.
+
+**What was generated:**
+- `templates/web.ts`: the `authentication` item type now has the label "Security", a broader description and example, and the checklist entry reads "Plan security". The key is still `authentication`, so there is no migration (labels are free, keys are permanent).
+- Nine new allowed combinations: security protects component and data, function navigates to page, design uses asset, function/data/security/test use tech stack, and test tests data. The descriptions of `uses` and `protects` were widened to match.
+- `tests/relationshipRules.test.ts`: 9 tests for the new combinations and 6 for combinations that are left out on purpose (page/component using tech stack, component reading data, and three reversed directions).
+- Tour and comment text changed from "authentication" to "security". README, CLAUDE.md and a comment in `web.ts` were updated to match.
+
+**What I changed or corrected:** I decided to rename only the label first and keep the key. I asked for more relationships, a test, and for everything to be made consistent.
+
+**What went wrong:**
+- Nothing broke, but the AI could not see the app, so the new label and connection menus were not checked in a browser.
+- The key `authentication` and the label "Security" now differ. A full key rename (with a data migration) was offered and postponed.
+- `docs/project-plan.md` still says "authentication" because it is the approved plan. It was left unchanged on purpose.

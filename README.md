@@ -1,6 +1,6 @@
 # PLANter
 
-A visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, authentication, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
+A visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
 
 Thesis project (examensarbete). The full plan is in `docs/project-plan.md`, and the rules for the code are in `CLAUDE.md`.
 
