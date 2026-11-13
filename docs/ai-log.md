@@ -1708,3 +1708,40 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The AI first assumed the problem was only the handle types and did not check where the "cannot be connected" message came from. That cost one round.
 - Nothing was checked in a browser. Typecheck, build and all 127 frontend tests pass, but no test covers dragging on the map, so the behaviour has to be tested by hand.
 - The backend was not changed. It still checks the combination against the template and ownership, so the swap only affects which direction the prompt suggests.
+
+## 2026-11-13: Tidy up and map direction
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** The map was ugly and hard to read unless I moved the cards myself. I asked if connected items could be placed next to each other. I chose a left-to-right layout and said I wanted to write it myself, with no library. I then said the map was still hard to read: too many cards and lines, and I could not see the flow. I asked if top to bottom would be better, asked for a switch to compare both, asked to put the controls under one "Manage" button, noticed that "part of" connections started on the wrong side, asked if cards could have different sizes (for example bigger pages), and asked for a full window option for the map. I then asked for a clearer full window button (it looked like React Flow's fit view button), for the filters to sit behind a Filter button, and for the full window button to have its own color and sit next to the legend.
+
+**What was generated:**
+- `features/map/tidyLayout.ts` (+ `tidyLayout.test.ts`, 9 tests): a pure function that lays the items out in levels. An item is one level after the items that point at it. Cycles are handled by skipping "back edges" in a depth-first search. Within a level, items are sorted by the average row of their neighbours, so connected items sit close together. Items with no connections get their own last level. Levels and rows are spaced by the real size of each card (see card sizes below), so big cards never overlap. A `direction` argument (`horizontal` or `vertical`) only changes the last step, where level and index become x and y.
+- `MapView.tsx`: a "Manage" button that opens a panel with "Tidy up" and a Left → right / Top ↓ bottom switch. Tidy up asks for confirmation, saves only the items that moved with `updateItem`, and then calls `fitView`. The chosen direction is kept in `localStorage` (`planter:map:vertical`).
+- `ItemNode.tsx` / `types.ts`: the connection dots are on the left and right, or on the top and bottom, depending on the direction.
+- Arrowheads on every connection (`markerEnd`). They were missing, so the direction of a line could not be seen.
+- `readsBackward?: boolean` on relationship types (backend `templates/index.ts`, `web.ts`, frontend `items/types.ts`). It is set on `belongs_to`, `protects` and `tests`, which are stored pointing towards the thing they relate to. The layout flips those connections so the flow reads page → component → function → data. It is presentation only: the stored direction, the labels, the warnings and the cycle check are unchanged, so no migration was needed.
+- Reversed drawing of backward connections (`MapView.tsx`, `edges`). I noticed that a component inside a page was drawn as "part of" starting at the component. For types with `readsBackward` the line is now drawn from the other item: it starts at the page and points to the component, with the reverse wording (`inverseLabel`: "contains", "protected by", "tested by"). Only the drawing is turned. The saved connection, the File view, the delete message and the impact view still use the stored direction.
+- Card sizes. A new optional `size` (`small` | `medium` | `large`) on item types in the template (`templates/index.ts`, `web.ts`, frontend `Template` type): pages large; components, functionality, data, security and design medium; assets, tests and tech stack small. The pixel sizes are in one new file, `features/map/cardSize.ts` (widths 150, 190 and 250 px), used by both `ItemNode` (fixed width through the CSS variable `--card-width`, font size per size class) and `tidyLayout`. The size is presentation only, like the color, so no migration was needed.
+- Full window (`MapView.tsx`, `MapView.module.css`). The map can fill the whole window. This is done with CSS (`position: fixed`, class `expanded`) and not with the browser's Fullscreen API, so it also works on iPhones and needs no permission. While it is open the page behind cannot scroll, the map zooms to fit again, and Esc closes it, unless a confirm dialog or the tutorial is open (they use Esc themselves). The first version was an extra icon button in React Flow's zoom controls, but it looked exactly like the "fit view" button next to it. It is now a text button ("Full window" / "Exit full window") in the top right, next to the legend, in a dark color of its own (not amber, which is reserved for the MVP badge). `data-tour="map-legend"` moved to a wrapper around the legend, so the tutorial does not highlight the button too.
+- Toolbar panels. The top-left toolbar is now three buttons: **Filter ▾** (shows the number of active filters, for example "Filter (2)"), **+ Add item** and **Manage ▾**. Filter opens `ItemFilterBar` in a panel under the toolbar, Manage opens Tidy up and the direction switch. `ItemFilterBar` itself is unchanged, so the File view still works as before.
+
+**What I changed or corrected:**
+- I chose to write the layout myself instead of adding Dagre or ELK, because I need to understand every line.
+- I rejected the AI's first suggestion of moving items automatically when they are connected, because it would move things I had placed. Tidy up only runs when I click it, after a confirmation.
+- I decided to keep the line labels when the AI suggested making the lines quieter, and said the real problem was that I could not see the flow.
+
+**What went wrong:**
+- The first version followed the stored direction of each connection. The AI warned about this before building it, but it was still not enough: some relationship types point towards the parent, so the flow was scattered. This was fixed with `readsBackward`.
+- The AI first suggested the layout was the problem and that one column per type might be better. Looking at the code afterwards showed that the arrows had no arrowheads and that the stored directions were inconsistent, which were the real causes.
+- Nothing was checked in a browser. Typecheck and all 135 frontend tests pass, but no test covers the map, so the look of the layout, the spacing (`LEVEL_HEIGHT`, `ITEM_WIDTH`) and the zoom after Tidy up have to be judged by hand.
+- `fitView` is called after a 50 ms `setTimeout` to wait for the nodes to move, which is a workaround and may need to change.
+- New items still start in the old type-column positions until Tidy up is used.
+- There is no tutorial step for the Manage button.
+- The first version of the card-size change put a JSX comment directly after `return (` in `ItemNode.tsx`, which is invalid. `tsc` caught it and it was fixed straight away.
+- Card heights in `cardSize.ts` are estimates (one line of title). A title that wraps to three or more lines is taller than the layout assumes, so cards can end up close together.
+- New items still get the backend's fixed start positions (220 px columns, `services/itemLayout.ts`). A large page card is 250 px wide, so a new page can overlap the next column until Tidy up is used.
+- The first full window button was an icon next to the zoom controls and was mistaken for "fit view". I only noticed after the user pointed it out, because the AI had not seen the page.
+- The round ? help button (bottom right) may be covered by the map in full window. Its z-index was not checked.
+- The tutorial has no step for Manage, Filter or Full window. The "Add and filter" step still reads correctly, but the filters are now one click away.
+- The "delete connection" message still uses the stored wording ("Button part of Home"), while the line on the map now says "contains".
