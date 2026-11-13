@@ -1,7 +1,7 @@
 import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Background, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
+import { Background, ConnectionMode, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
@@ -12,6 +12,7 @@ import { createItem, updateItem } from "../items/itemsApi";
 import { getTypeColor } from "../items/typeColor";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
+import { getAllowedRelationshipTypes } from "../relationships/connections";
 import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
@@ -247,6 +248,21 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   // The messages that float at the bottom of the map. Only shown when there is at least one.
   const hasMessage = items.items.length === 0 || (selectedEdge && edgeSource && edgeTarget) || saveError;
   // A new connection is waiting for its relationship type
+  // The template decides the direction of a relationship (a page uses a component, never the other way around).
+  // If the arrow was dragged the "wrong" way, turn it around, so it does not matter which card you start on.
+  function handleConnect(connection: Connection) {
+    let sourceId = connection.source;
+    let targetId = connection.target;
+    const from = items.items.find((item) => item.id === sourceId);
+    const to = items.items.find((item) => item.id === targetId);
+    if (from && to && template.template) {
+      const forward = getAllowedRelationshipTypes(from.type, to.type, template.template);
+      const backward = getAllowedRelationshipTypes(to.type, from.type, template.template);
+      if (forward.length === 0 && backward.length > 0) [sourceId, targetId] = [targetId, sourceId];
+    }
+    setPending({ sourceId, targetId });
+  }
+
   const prompting = Boolean(pendingSource && pendingTarget && template.template);
 
   return (
@@ -267,10 +283,11 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         onNodeDoubleClick={(_event, node) => navigate(`/projects/${project.id}/items/${node.id}`)}
         onNodesChange={onNodesChange}
         onNodeDragStop={(_event, _node, draggedNodes) => handleDragStop(draggedNodes as ItemNodeType[])}
-        // Drag from the dot on the right of a node to the dot on the left of another one
-        onConnect={(connection: Connection) =>
-          setPending({ sourceId: connection.source, targetId: connection.target })
-        }
+        // Loose mode: a connection can start and end on any dot. Without it, a drag only works from a "source" dot
+        // (right) to a "target" dot (left). The direction is still where you start dragging: source = the node you
+        // dragged from, target = the node you dropped on.
+        connectionMode={ConnectionMode.Loose}
+        onConnect={handleConnect}
         // Click a connection to get a delete button, click the background to dismiss it
         onEdgeClick={(_event, edge) => {
           setSelectedEdgeId(edge.id);
