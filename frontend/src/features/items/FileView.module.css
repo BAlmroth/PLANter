@@ -44,23 +44,26 @@
 /* Category | Group switch: the active one is filled, the other one is an outline */
 .modes {
   display: flex;
-  gap: 4px;
+  gap: 8px;
 }
 .mode {
-  padding: 4px 12px;
-  font-size: 0.85rem;
+  padding: 8px 20px;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: var(--text-h);
-  background: transparent;
-  box-shadow: 2px 2px var(--borderDark);
-  border: 1px solid var(--borderDark);
+  background: var(--surface);
+  box-shadow: 3px 3px var(--borderDark);
+  border: 2px solid var(--borderDark);
 }
 .mode:hover:not(:disabled) {
   translate: -1px -1px;
-  box-shadow: 3px 3px var(--borderDark);
+  box-shadow: 4px 4px var(--borderDark);
 }
 .modeActive {
-  padding: 4px 12px;
-  font-size: 0.85rem;
+  padding: 8px 20px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: 2px solid var(--primary);
 }
 
 /* The sections, one under the other */

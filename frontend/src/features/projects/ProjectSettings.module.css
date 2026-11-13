@@ -53,7 +53,14 @@
   color: var(--primary);
 }
 
+/* The same outlined red button as on the item page (not the green default) */
 .danger {
-  color: #b00020;
-  border-color: #b00020;
+  color: var(--danger);
+  background: transparent;
+  box-shadow: 2px 2px var(--danger);
+  border: 1px solid var(--danger);
+}
+.danger:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--danger);
 }
