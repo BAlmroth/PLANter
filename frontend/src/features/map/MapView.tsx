@@ -22,6 +22,8 @@ import { ItemNode } from "./ItemNode";
 import { MapLegend } from "./MapLegend";
 import type { ItemNodeType } from "./types";
 import styles from "./MapView.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
@@ -56,6 +58,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
+  useGateLoading(loading);
   const error = template.error ?? items.error ?? relationships.error ?? groups.error;
 
   // Rebuilt only when the data changes, not on every render
@@ -220,7 +223,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     if (groups.error) groups.refetch();
   }
 
-  if (loading) return <p>Loading map…</p>;
+  if (loading) return <Loader label="Loading map…" size="page" />;
 
   if (error) {
     return (

@@ -7,6 +7,7 @@ import { TypeBadge } from "../features/items/TypeBadge";
 import { useTemplate } from "../features/items/useTemplate";
 import { resetTours } from "../features/tour/tourSteps";
 import styles from "./HelpPage.module.css";
+import { Loader } from "../components/Loader";
 
 // The help page outside any project. "web" is the only template; when the game template
 // exists, this page can take the template from the project it was opened from.
@@ -60,7 +61,7 @@ export function HelpPage() {
         </dl>
       </section>
 
-      {loading && <p>Loading categories and connections…</p>}
+      {loading && <Loader label="Loading categories and connections…" size="section" />}
       {error && (
         <div role="alert">
           <p>{error}</p>

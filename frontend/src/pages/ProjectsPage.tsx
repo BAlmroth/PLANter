@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ProjectCard } from "../features/projects/ProjectCard";
 import { useProjects } from "../features/projects/useProjects";
 import styles from "./ProjectsPage.module.css";
+import { Loader } from "../components/Loader";
 
 // The list of the logged-in user's projects
 export function ProjectsPage() {
@@ -18,7 +19,7 @@ export function ProjectsPage() {
         </div>
       </header>
 
-      {loading && <p>Loading projects…</p>}
+      {loading && <Loader label="Loading projects…" size="section" />}
 
       {error && (
         <div role="alert">

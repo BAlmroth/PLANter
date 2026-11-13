@@ -19,6 +19,8 @@ import { typeColorVar } from "./typeColor";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileView.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // The File view: a project's items grouped by category, read-only apart from adding items.
 // Editing, deleting and connecting are done in the detail view of an item.
@@ -44,6 +46,7 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
   const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
+  useGateLoading(loading);
   const error = template.error ?? items.error ?? relationships.error ?? groups.error;
 
   // Retry only the request that failed
@@ -54,7 +57,7 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
     if (groups.error) groups.refetch();
   }
 
-  if (loading) return <p>Loading items…</p>;
+  if (loading) return <Loader label="Loading items…" size="section" />;
 
   if (error || !template.template) {
     return (

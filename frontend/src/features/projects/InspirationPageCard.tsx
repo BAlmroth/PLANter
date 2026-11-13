@@ -2,13 +2,16 @@ import { createInspiration, deleteInspiration, uploadInspirationImage } from "..
 import { useInspirations } from "../inspirations/useInspirations";
 import { MoodboardCard, type NewEntry } from "../moodboard/MoodboardCard";
 import { ProjectMoodboard } from "../moodboard/ProjectMoodboard";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // The Moodboard page: the moodboard (colors, texts and images) on top, and the inspiration (links, texts and images) below.
 // Both are rows in project_inspirations, told apart by their section.
 export function InspirationPageCard({ projectId }: { projectId: string }) {
   const { inspirations, loading, error, refetch, setInspirations } = useInspirations(projectId);
+  useGateLoading(loading);
 
-  if (loading) return <p>Loading…</p>;
+  if (loading) return <Loader label="Loading…" size="section" />;
   if (error) {
     return (
       <div role="alert">

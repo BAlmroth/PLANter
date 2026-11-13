@@ -3,6 +3,8 @@ import { ProgressBar } from "./ProgressBar";
 import { ProgressRing } from "./ProgressRing";
 import type { Progress } from "./types";
 import styles from "./ProgressSummary.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 type Props = {
   progress: Progress;
@@ -13,8 +15,9 @@ type Props = {
 // the template is only used for the category labels and colors.
 export function ProgressSummary({ progress, templateKey }: Props) {
   const templateState = useTemplate(templateKey);
+  useGateLoading(templateState.loading);
 
-  if (templateState.loading) return <p>Loading categories…</p>;
+  if (templateState.loading) return <Loader label="Loading categories…" size="inline" />;
 
   if (templateState.error) {
     return (

@@ -8,6 +8,8 @@ import { InspirationCard } from "./InspirationCard";
 import { OverviewCard } from "./OverviewCard";
 import { useProjectContext } from "./useProjectContext";
 import styles from "./ProjectOverview.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // How many pending tasks the todo card lists
 const TODO_LIMIT = 5;
@@ -31,6 +33,7 @@ export function ProjectOverview() {
   const pending = tasks.tasks.filter((task) => !task.done);
   const tasksLoading = tasks.loading || sprints.loading;
   const tasksError = tasks.error ?? sprints.error;
+  useGateLoading(template.loading || items.loading || tasksLoading);
 
   function tryAgain() {
     if (tasks.error) tasks.refetch();
@@ -49,7 +52,7 @@ export function ProjectOverview() {
 
       <OverviewCard label={techLabel} to="plan?view=list">
         {items.loading ? (
-          <p>Loading…</p>
+          <Loader label="Loading…" size="inline" />
         ) : techItems.length === 0 ? (
           <p>No tech stack items yet.</p>
         ) : (
@@ -72,7 +75,7 @@ export function ProjectOverview() {
         className={styles.half}
         aside={!tasksLoading && !tasksError && <span className={styles.meta}>{pending.length} pending</span>}
       >
-        {tasksLoading && <p>Loading…</p>}
+        {tasksLoading && <Loader label="Loading…" size="inline" />}
         {tasksError && (
           <div role="alert">
             <p>{tasksError}</p>
@@ -105,7 +108,7 @@ export function ProjectOverview() {
       </OverviewCard>
 
       <OverviewCard label="Sprint" to="tasks" className={styles.half}>
-        {tasksLoading && <p>Loading…</p>}
+        {tasksLoading && <Loader label="Loading…" size="inline" />}
         {!tasksLoading && !tasksError && sprints.sprints.length === 0 && <p>No sprints yet.</p>}
         {!tasksLoading && !tasksError && (
           <ul className={styles.list}>

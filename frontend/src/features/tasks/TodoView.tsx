@@ -10,6 +10,8 @@ import { createTask } from "./tasksApi";
 import { TaskRow } from "./TaskRow";
 import { useTasks } from "./useTasks";
 import styles from "./TodoView.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
@@ -47,6 +49,7 @@ export function TodoView({ project, onTasksChanged }: Props) {
   const [managingSprints, setManagingSprints] = useState(false);
 
   const loading = tasks.loading || items.loading || sprints.loading;
+  useGateLoading(loading);
   const error = tasks.error ?? items.error ?? sprints.error;
 
   async function handleAdd(e: FormEvent) {
@@ -81,7 +84,7 @@ export function TodoView({ project, onTasksChanged }: Props) {
     if (sprints.error) sprints.refetch();
   }
 
-  if (loading) return <p>Loading todo list…</p>;
+  if (loading) return <Loader label="Loading todo list…" size="section" />;
 
   if (error) {
     return (

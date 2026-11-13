@@ -6,6 +6,8 @@ import { isHexColor } from "../colors/isHexColor";
 import type { ProjectColor } from "../colors/types";
 import { useColors } from "../colors/useColors";
 import styles from "./MoodboardCard.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
@@ -13,6 +15,7 @@ const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "
 // without it only shows the swatches (the overview card).
 export function ProjectPalette({ projectId, editable }: { projectId: string; editable: boolean }) {
   const { colors, links, loading, error, refetch, setColors, setLinks } = useColors(projectId);
+  useGateLoading(loading);
   // The browser's color picker always gives "#rrggbb", which the backend accepts
   const { confirm, modal } = useConfirm();
   const [hex, setHex] = useState("#3e6554");
@@ -60,7 +63,7 @@ export function ProjectPalette({ projectId, editable }: { projectId: string; edi
     <div>
       {modal}
       <h3 className={styles.label}>Color palette</h3>
-      {loading && <p>Loading…</p>}
+      {loading && <Loader label="Loading…" size="inline" />}
       {error && (
         <div role="alert">
           <p>{error}</p>

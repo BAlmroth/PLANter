@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./authContext";
 import { AuthLayout } from "./AuthLayout";
 import styles from "./AuthForm.module.css";
+import { Loader } from "../components/Loader";
 
 // Step 2 of a password reset: the user arrives from the email link.
 // Supabase reads the token in the link and logs the user in with a temporary
@@ -28,7 +29,7 @@ export function ResetPassword() {
     }
   }
 
-  if (loading) return <p>Loading…</p>;
+  if (loading) return <Loader label="Loading…" size="page" />;
 
   // Opened without a valid link, or the link has expired
   if (!user) {

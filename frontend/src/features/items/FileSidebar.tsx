@@ -9,6 +9,8 @@ import { StatusIcon } from "./StatusIcon";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileSidebar.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // The names of the groups an item is in, as a small line under its name. Nothing for an item in no group.
 function GroupNames({ itemId, groups }: { itemId: string; groups: Group[] }) {
@@ -31,6 +33,7 @@ export function FileSidebar({ project }: { project: Project }) {
   const groups = useGroups(project.id);
 
   const loading = template.loading || items.loading || groups.loading;
+  useGateLoading(loading);
   const error = template.error ?? items.error ?? groups.error;
 
   function tryAgain() {
@@ -44,7 +47,7 @@ export function FileSidebar({ project }: { project: Project }) {
     groups.refetch();
   }
 
-  if (loading) return <p>Loading items…</p>;
+  if (loading) return <Loader label="Loading items…" size="section" />;
 
   if (error || !template.template) {
     return (

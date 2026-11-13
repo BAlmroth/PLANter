@@ -34,6 +34,8 @@ import { typeColorStyle } from "./typeColor";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
@@ -81,6 +83,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const [error, setError] = useState<string | null>(null);
 
   const loading = template.loading || items.loading || relationships.loading || tasks.loading || groups.loading || details.loading;
+  useGateLoading(loading);
   const loadError = template.error ?? items.error ?? relationships.error ?? tasks.error ?? groups.error ?? details.error;
 
   function tryAgain() {
@@ -92,7 +95,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
     if (details.error) details.refetch();
   }
 
-  if (loading) return <p>Loading item…</p>;
+  if (loading) return <Loader label="Loading item…" size="page" />;
 
   if (loadError || !template.template) {
     return (

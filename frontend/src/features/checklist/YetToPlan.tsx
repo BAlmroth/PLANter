@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { useChecklist } from "./useChecklist";
 import { getYetToPlan } from "./missingCategories";
 import styles from "./YetToPlan.module.css";
+import { Loader } from "../../components/Loader";
 
 // At most this many lines, so the bulletin stays small. The rest is on the checklist page.
 const LIMIT = 4;
@@ -23,7 +24,7 @@ export function YetToPlan({ checklist, checklistPath }: Props) {
         Yet to plan
       </h3>
 
-      {checklist.loading && <p className={styles.note}>Checking…</p>}
+      {checklist.loading && <Loader label="Checking…" size="inline" />}
 
       {checklist.error && (
         <div role="alert">

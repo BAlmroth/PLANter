@@ -7,6 +7,8 @@ import { createInspiration, deleteInspiration, uploadInspirationImage } from "..
 import type { Inspiration } from "../inspirations/types";
 import { MoodboardCard, type NewEntry } from "./MoodboardCard";
 import styles from "./MoodboardCard.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 const messageFrom = (err: unknown) => (err instanceof Error ? err.message : "Something went wrong.");
 
@@ -21,6 +23,7 @@ type Props = {
 // Texts and images are rows in project_inspirations (section "moodboard"), so no extra table is needed.
 export function ProjectMoodboard({ projectId, entries, setInspirations }: Props) {
   const { colors, links, loading, error, refetch, setColors, setLinks } = useColors(projectId);
+  useGateLoading(loading);
   const { confirm, modal } = useConfirm();
 
   // Two requests: the row first, then the image. If the image fails the row stays and the card shows the error.
@@ -61,7 +64,7 @@ export function ProjectMoodboard({ projectId, entries, setInspirations }: Props)
     setColors((current) => [...current, color]);
   }
 
-  if (loading) return <p>Loading moodboard…</p>;
+  if (loading) return <Loader label="Loading moodboard…" size="section" />;
   if (error) {
     return (
       <div role="alert">

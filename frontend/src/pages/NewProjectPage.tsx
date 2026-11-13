@@ -7,6 +7,7 @@ import { createProject } from "../features/projects/projectsApi";
 import { StarterForm } from "../features/projects/StarterForm";
 import { EMPTY_STARTER, starterSummary, toCreateInput, type Starter } from "../features/projects/starter";
 import styles from "./NewProjectPage.module.css";
+import { Loader } from "../components/Loader";
 
 // There is only one template for now (the game template is a Could) so there is no dropdown.
 // When a second template exists: add GET /api/templates (a list) and a select
@@ -124,7 +125,7 @@ export function NewProjectPage() {
       ) : template ? (
         <StarterForm template={template} starter={starter} setStarter={setStarter} />
       ) : (
-        <p>Loading categories…</p>
+        <Loader label="Loading categories…" size="section" />
       )}
 
       {/* Stays at the bottom of the screen, so "Create project" is always in reach in a long list */}
