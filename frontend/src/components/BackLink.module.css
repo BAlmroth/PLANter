@@ -1,0 +1,15 @@
+/* A quiet text button, in the same style as the breadcrumb next to it */
+.back {
+  padding: 2px 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  background: none;
+  box-shadow: none;
+  translate: none;
+  border-radius: 4px;
+}
+.back:hover {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}

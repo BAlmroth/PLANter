@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
+import { Breadcrumb } from "../components/Breadcrumb";
 import { PAGE_HELP } from "../features/help/pageHelp";
 import { TypeBadge } from "../features/items/TypeBadge";
 import { useTemplate } from "../features/items/useTemplate";
@@ -20,6 +22,10 @@ export function HelpPage() {
 
   return (
     <main className={styles.page}>
+      <div className={styles.top}>
+        <BackLink />
+        <Breadcrumb crumbs={[{ label: "Projects", to: "/" }, { label: "Help" }]} />
+      </div>
       <h1>Help</h1>
 
       <section className={styles.card} aria-labelledby="how-it-works">

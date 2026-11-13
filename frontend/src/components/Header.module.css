@@ -10,6 +10,13 @@
   border-bottom: 1px solid var(--border);
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
 .logo {
   display: flex;
   align-items: center;

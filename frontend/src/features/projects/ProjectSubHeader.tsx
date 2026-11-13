@@ -59,7 +59,8 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
   return (
     <div className={styles.subHeader}>
       <div className={styles.heading}>
-        <Breadcrumb crumbs={crumbs} />
+        {/* Every trail starts at the projects list */}
+        <Breadcrumb crumbs={[{ label: "Projects", to: "/" }, ...crumbs]} />
         <h1 className={styles.title}>{title}</h1>
       </div>
 

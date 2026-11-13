@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Breadcrumb } from "../components/Breadcrumb";
 import { ApiError } from "../lib/api";
 import { useTemplate } from "../features/items/useTemplate";
 import { createProject } from "../features/projects/projectsApi";
@@ -12,6 +13,8 @@ import styles from "./NewProjectPage.module.css";
 const DEFAULT_TEMPLATE = "web";
 
 type Step = "basics" | "starter";
+
+const CRUMBS = [{ label: "Projects", to: "/" }, { label: "New project" }];
 
 // Creating a project in two steps:
 // 1. name and description, with "Create empty project" for a quick start
@@ -61,6 +64,7 @@ export function NewProjectPage() {
   if (step === "basics") {
     return (
       <main className={styles.page}>
+        <Breadcrumb crumbs={CRUMBS} />
         <p className={styles.stepLabel}>Step 1 of 2</p>
         <h1 className={styles.title}>New project</h1>
         <p className={styles.lead}>What are you building? A name is enough to start.</p>
@@ -102,6 +106,7 @@ export function NewProjectPage() {
 
   return (
     <main className={styles.page}>
+      <Breadcrumb crumbs={CRUMBS} />
       <p className={styles.stepLabel}>Step 2 of 2</p>
       <h1 className={styles.title}>Already got a good idea?</h1>
       <p className={styles.lead}>
