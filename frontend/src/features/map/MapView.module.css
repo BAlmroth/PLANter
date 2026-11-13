@@ -10,6 +10,19 @@
   overflow: hidden;
 }
 
+/* Full window: the map is fixed over the whole page. 100dvh is the visible height on phones. */
+.expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  width: auto;
+  height: 100vh;
+  height: 100dvh;
+  border: none;
+  border-radius: 0;
+  background: var(--bg);
+}
+
 /* A white box floating over the map. Used for the toolbar, the connection prompt and the messages. */
 .box {
   padding: 8px 10px;
@@ -32,6 +45,47 @@
 .small {
   padding: 4px 12px;
   font-size: 0.85rem;
+}
+
+/* The full window button and the legend in a row. The legend can grow downwards when opened. */
+.topRight {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* A different color from the other buttons (green), so it stands out: dark, like the text */
+.fullWindow {
+  background: var(--text-h);
+  border-color: var(--text-h);
+  color: #fff;
+}
+
+.fullWindow:hover {
+  background: #000;
+}
+
+/* The "Manage" panel opens under the toolbar, inside the same box */
+.manage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, #ddd);
+}
+
+/* The two direction buttons side by side. The active one is filled, so it reads without color alone ("pressed"). */
+.direction {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.direction button[aria-pressed="true"] {
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
 }
 
 /* The add form opens under the toolbar, inside the same box. ItemForm is shared, so it is styled from here. */

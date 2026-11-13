@@ -13,6 +13,9 @@ export type Template = {
     // "#RRGGBB". The type's color everywhere in the UI (pill, map node, progress bar).
     // Presentation only, like the label: it can be changed without a migration.
     color: string;
+    // How big the card is on the map: pages large, small things (assets, tests) small.
+    // Presentation only, like color and label. Missing = "medium".
+    size?: "small" | "medium" | "large";
     // Help text for beginners: what this category is, in one plain sentence,
     // and a few typical names. Presentation only, like the label.
     description: string;
@@ -27,6 +30,10 @@ export type Template = {
     label: string;        // shown on the source item "uses: Button"
     inverseLabel: string; // shown on the target item "used by: LoginPage"
     allowCycles: boolean;
+    // Presentation only, like a label: the map reads the flow from left to right, "page -> component -> data".
+    // For a type stored the other way round ("component belongs_to page") this is true, so the
+    // map's layout puts the target on the left. The stored direction does not change.
+    readsBackward?: boolean;
     description: string;  // help text: what the connection means, in one plain sentence
   }[];
   // Which source type can connect to which target type, with which relationship

@@ -51,6 +51,8 @@ export type Template = {
     countsTowardProgress: boolean;
     // "#RRGGBB", the type's color in the whole UI
     color: string;
+    // How big the card is on the map. Missing = "medium".
+    size?: "small" | "medium" | "large";
     // Help text: what the category is, and typical names ("Home, Login, Profile")
     description: string;
     example: string;
@@ -62,6 +64,8 @@ export type Template = {
     label: string;
     inverseLabel: string;
     allowCycles: boolean;
+    // true: the map's layout puts the target on the left ("component belongs_to page": page first)
+    readsBackward?: boolean;
     // Help text: what the connection means
     description: string;
   }[];
