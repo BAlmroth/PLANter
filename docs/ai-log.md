@@ -1690,3 +1690,21 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - Nothing broke, but the AI could not see the app, so the new label and connection menus were not checked in a browser.
 - The key `authentication` and the label "Security" now differ. A full key rename (with a data migration) was offered and postponed.
 - `docs/project-plan.md` still says "authentication" because it is the approved plan. It was left unchanged on purpose.
+
+## 2026-11-13: Connecting map nodes from either dot
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** On the map, dragging from the right dot of one card to the left dot of another worked, but not the other way around. I wanted a connection to work even when I start on the "wrong" dot.
+
+**What was generated:**
+- `MapView.tsx`: `connectionMode={ConnectionMode.Loose}` on `<ReactFlow>`. The dots are typed (left = `target`, right = `source`), and by default React Flow only accepts a drag from a source dot to a target dot. In loose mode any dot can start and end a connection.
+- `MapView.tsx`: a new `handleConnect` function. The template decides the direction of a relationship (a page uses a component, not the other way around). If the dragged direction has no allowed relationship type but the opposite direction has, source and target are swapped before the connection prompt is shown. If both directions are allowed, the drag direction is kept. If neither is allowed, the "cannot be connected" message still appears.
+- Committed as `7bcd397`.
+
+**What I changed or corrected:** The first fix (loose mode) was not enough. I reported that it snapped to the right dot on the second card, but starting on the wrong dot on the first card still said "cannot be connected". The AI then found that the message came from the template's direction rule and not from the handles, and added the swap.
+
+**What went wrong:**
+- The AI first assumed the problem was only the handle types and did not check where the "cannot be connected" message came from. That cost one round.
+- Nothing was checked in a browser. Typecheck, build and all 127 frontend tests pass, but no test covers dragging on the map, so the behaviour has to be tested by hand.
+- The backend was not changed. It still checks the combination against the template and ownership, so the swap only affects which direction the prompt suggests.
