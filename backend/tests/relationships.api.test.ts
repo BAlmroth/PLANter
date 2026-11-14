@@ -139,6 +139,13 @@ describe("POST /api/relationships in a game project", () => {
     expect((await connect(house2.id, house1.id, "upgrades_to")).status).toBe(400);
   });
 
+  it("lets a quest unlock inventory, and rejects an unlock loop through mixed types", async () => {
+    const { key, quest } = await gameSetup();
+    // "Find the key" unlocks the Castle key (now for sale), the key unlocks the quest again: a soft-lock
+    expect((await connect(quest.id, key.id, "unlocks")).status).toBe(201);
+    expect((await connect(key.id, quest.id, "unlocks")).status).toBe(400);
+  });
+
   it("allows a location built from inventory, but not the other way round", async () => {
     const project = await prisma.project.create({ data: { userId: USER_A, name: "G", template: "game" } });
     const house = await prisma.item.create({ data: { projectId: project.id, type: "location", title: "House 2" } });

@@ -87,7 +87,7 @@ export const gameTemplate: Template = {
     // No cycles: "the key is behind the door the key opens" is a soft-lock (the player gets stuck).
     // The cycle check in the relationship service catches it when the connection is made.
     { key: "unlocks", label: "unlocks", inverseLabel: "unlocked by", allowCycles: false,
-      description: "This makes that available, for example a key that opens an area or a quest that starts the next one." },
+      description: "This makes that available, for example a key that opens an area, a quest that starts the next one, or a blueprint that lets you craft something new." },
     { key: "gives", label: "gives", inverseLabel: "given by", allowCycles: true,
       description: "The character hands this to the player: a quest, a gift, something from a shop or loot from a defeated enemy." },
     { key: "rewards", label: "rewards", inverseLabel: "earned from", allowCycles: true,
@@ -155,6 +155,15 @@ export const gameTemplate: Template = {
     { source: "inventory", relationship: "unlocks", target: "location" }, // the castle key
     { source: "inventory", relationship: "unlocks", target: "quest" },    // a letter that starts a quest
     { source: "ability", relationship: "unlocks", target: "location" },   // double jump reaches the ledge
+    // Things that become available to buy, craft or learn. Not the same as "rewards":
+    // rewards = the player gets it, unlocks = the player can now get it.
+    { source: "quest", relationship: "unlocks", target: "inventory" },    // House 2 appears in the shop
+    { source: "story", relationship: "unlocks", target: "inventory" },    // chapter 3 unlocks the steel axe
+    { source: "inventory", relationship: "unlocks", target: "inventory" }, // a blueprint unlocks a recipe
+    { source: "quest", relationship: "unlocks", target: "ability" },      // finishing training unlocks Fireball
+    { source: "story", relationship: "unlocks", target: "ability" },
+    { source: "quest", relationship: "unlocks", target: "character" },    // after the rescue, the blacksmith moves in
+    { source: "story", relationship: "unlocks", target: "character" },
 
     // Getting things: quest givers, gifts, shops, loot and rewards
     { source: "character", relationship: "gives", target: "quest" },
