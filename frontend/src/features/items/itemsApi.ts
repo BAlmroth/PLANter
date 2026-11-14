@@ -1,8 +1,13 @@
 import { apiRequest } from "../../lib/api";
-import type { CreateItemInput, Item, UpdateItemInput, Template } from "./types";
+import type { CreateItemInput, Item, UpdateItemInput, Template, TemplateSummary } from "./types";
 
 
 // One function per backend route. Each one throws an ApiError when the request fails.
+
+// The templates a new project can use (web, game)
+export function listTemplates() {
+  return apiRequest<TemplateSummary[]>("/api/templates");
+}
 
 //get the labels for intended template
 export function getTemplate(key: string) {

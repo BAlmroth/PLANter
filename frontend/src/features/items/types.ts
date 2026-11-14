@@ -40,6 +40,13 @@ export type UpdateItemInput = Partial<CreateItemInput> & {
   confirmRelationshipRemoval?: boolean;
 };
 
+// One entry of GET /api/templates: enough to choose a template for a new project
+export type TemplateSummary = {
+  key: string;
+  label: string;
+  description: string;
+};
+
 // The shape of what GET /api/templates/:key returns
 export type Template = {
   key: string;
