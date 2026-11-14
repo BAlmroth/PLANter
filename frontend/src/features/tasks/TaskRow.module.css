@@ -14,13 +14,26 @@
 .check {
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   color: var(--text-h);
-  cursor: pointer;
 }
-.check input {
-  accent-color: var(--primary);
+
+/* The status as a small pill (icon and name, the shapes of StatusIcon). A click moves it to the next status. */
+.statusButton {
+  min-width: 108px;
+  padding: 2px 10px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+  border-radius: 999px;
+  box-shadow: none;
+  translate: none;
+}
+.statusButton:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--bg-dark);
 }
 
 /* A finished task is crossed out and faded */
