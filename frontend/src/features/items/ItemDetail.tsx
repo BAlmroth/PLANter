@@ -214,6 +214,16 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
     }
   }
 
+  // Saves the conditions text of the Requirements card. Errors show in the editor itself.
+  async function handleChangeConditions(conditions: string) {
+    try {
+      replaceItem(await updateItem(item!.id, { conditions }));
+      return null;
+    } catch (err) {
+      return messageFrom(err);
+    }
+  }
+
   if (editing) {
     return (
       <ItemEditForm
@@ -280,6 +290,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
               onAddConnectedItem={addConnectedItem}
               onConnectExisting={connectExisting}
               onChangeAmount={handleChangeAmount}
+              onChangeConditions={handleChangeConditions}
             />
           )}
 

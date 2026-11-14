@@ -14,6 +14,9 @@ type: string;
 
 title: string;
 description: string | null;
+// Requirements that are not items ("Only in summer"), shown in the Requirements card. null or "" = none.
+// Optional in the type so test data without the field still fits.
+conditions?: string | null;
 status: ItemStatus;
 isMvp: boolean;
 positionX: number;
@@ -27,6 +30,7 @@ export type CreateItemInput = {
   title: string;
   type: string;
   description?: string;
+  conditions?: string;
   status?: ItemStatus;
   isMvp?: boolean;
 };

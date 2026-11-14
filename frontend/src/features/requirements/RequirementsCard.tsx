@@ -7,6 +7,7 @@ import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import type { ConnectOption, Connection } from "../relationships/connections";
 import { connectionText } from "../relationships/quantity";
 import { AmountEditor } from "./AmountEditor";
+import { ConditionsEditor } from "./ConditionsEditor";
 import type { RequirementRow } from "./requirements";
 
 type Props = {
@@ -21,6 +22,8 @@ type Props = {
   onConnectExisting: (option: ConnectOption, otherItemId: string, quantity: number | undefined) => Promise<string | null>;
   // Returns an error message, or null when it worked
   onChangeAmount: (connectionId: string, quantity: number | null) => Promise<string | null>;
+  // Saves the item's conditions text ("" clears it). Returns an error message, or null when it worked.
+  onChangeConditions: (conditions: string) => Promise<string | null>;
 };
 
 // Which "+ Add" form is open: for which row, and picking an existing item or creating a new one
@@ -31,7 +34,7 @@ type Adding = { relationshipType: string; mode: "existing" | "new" };
 // The parent only shows this card when the template has requirement types for the item's category
 // (never in the web template).
 export function RequirementsCard({
-  item, template, allItems, rows, busy, onRemove, onAddConnectedItem, onConnectExisting, onChangeAmount,
+  item, template, allItems, rows, busy, onRemove, onAddConnectedItem, onConnectExisting, onChangeAmount, onChangeConditions,
 }: Props) {
   const [adding, setAdding] = useState<Adding | null>(null);
   // The connection whose amount is being edited
@@ -123,6 +126,11 @@ export function RequirementsCard({
             )}
           </div>
         ))}
+        {/* Not a connection: what is needed but is not an item ("only in summer") */}
+        <div className={styles.relationGroup}>
+          <h3 className={styles.label}>Conditions</h3>
+          <ConditionsEditor conditions={item.conditions} busy={busy} onSave={onChangeConditions} />
+        </div>
       </div>
 
       {/* Below the rows, full width: the same forms as on the Connections card, limited to one type */}

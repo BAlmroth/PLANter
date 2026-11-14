@@ -8,6 +8,8 @@ export const createItemSchema = z.object({
   // Not textSchema: the type must match a template key exactly, so anything else is already a 400
   type: z.string().min(1),
   description: textSchema.max(500).optional(),
+  // "Only in summer": requirements that are not items. "" clears it, like description.
+  conditions: textSchema.max(500).optional(),
   status: statusSchema.optional(), // db default "planned"
   isMvp: z.boolean().optional(),   // bd default false
 });

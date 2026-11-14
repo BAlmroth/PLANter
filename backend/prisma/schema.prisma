@@ -57,6 +57,9 @@ model Item {
   type        String
   title       String
   description String?
+  // Requirements that are not items, ex "Only in summer, player level 5" (the Requirements card).
+  // Optional free text like description. Max 500 characters, checked by Zod.
+  conditions  String?
   status      Status         @default(planned)
   isMvp       Boolean        @default(false) @map("is_mvp")
   positionX   Float          @default(0) @map("position_x")

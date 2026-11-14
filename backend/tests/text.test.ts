@@ -41,6 +41,7 @@ const cases: [string, z.ZodType, Record<string, unknown>, string][] = [
   ["item title", createItemSchema, { title: "T", type: "page" }, "title"],
   ["item description", createItemSchema, { title: "T", type: "page", description: "d" }, "description"],
   ["item update", updateItemSchema, { title: "T" }, "title"],
+  ["item conditions", updateItemSchema, { conditions: "c" }, "conditions"],
   ["task title", createTaskSchema, { title: "T" }, "title"],
   ["task update", updateTaskSchema, { title: "T" }, "title"],
   ["sprint name", createSprintSchema, { name: "S" }, "name"],

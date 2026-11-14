@@ -47,7 +47,7 @@ export async function getItem(itemId: string, userId: string) {
 // projectId comes from the URL, and getOwnedProject has checked that the user owns it.
 export async function createItem(projectId: string, userId: string, input: CreateItemInput) {
   const project = await getOwnedProject(projectId, userId);
-  const { title, type, description, status, isMvp } = input;
+  const { title, type, description, conditions, status, isMvp } = input;
   checkItemTypeInTemplate(project.template, type);
 
   // Place the new item in its category's column, so items do not pile up at 0, 0 on the map
@@ -64,6 +64,7 @@ export async function createItem(projectId: string, userId: string, input: Creat
       type,
       ...startPosition(itemTypeKeys, type, sameType),
       ...(description !== undefined && { description }),
+      ...(conditions !== undefined && { conditions }),
       ...(status !== undefined && { status }),
       ...(isMvp !== undefined && { isMvp }),
     },
@@ -96,7 +97,7 @@ async function findRelationshipsInvalidAfterTypeChange(itemId: string, newType: 
 // number, and must send confirmRelationshipRemoval: true to delete them and change the type.
 export async function updateItem(itemId: string, userId: string, input: UpdateItemInput) {
   const item = await getOwnedItem(itemId, userId);
-  const { title, type, description, status, isMvp, positionX, positionY, confirmRelationshipRemoval } = input;
+  const { title, type, description, conditions, status, isMvp, positionX, positionY, confirmRelationshipRemoval } = input;
 
   let invalidIds: string[] = [];
   if (type !== undefined) {
@@ -117,6 +118,7 @@ export async function updateItem(itemId: string, userId: string, input: UpdateIt
     ...(title !== undefined && { title }),
     ...(type !== undefined && { type }),
     ...(description !== undefined && { description }),
+    ...(conditions !== undefined && { conditions }),
     ...(status !== undefined && { status }),
     ...(isMvp !== undefined && { isMvp }),
     ...(positionX !== undefined && { positionX }),
