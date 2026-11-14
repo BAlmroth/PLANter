@@ -130,6 +130,14 @@ describe("POST /api/relationships in a game project", () => {
     // Water made from Tea: Tea needs Coffee, Coffee needs Water, so Water would need itself
     expect((await connect(water.id, tea.id, "made_from")).status).toBe(400);
   });
+
+  it("allows an upgrade and rejects an upgrade loop with 400", async () => {
+    const project = await prisma.project.create({ data: { userId: USER_A, name: "G", template: "game" } });
+    const create = (title: string) => prisma.item.create({ data: { projectId: project.id, type: "location", title } });
+    const [house1, house2] = [await create("House 1"), await create("House 2")];
+    expect((await connect(house1.id, house2.id, "upgrades_to")).status).toBe(201);
+    expect((await connect(house2.id, house1.id, "upgrades_to")).status).toBe(400);
+  });
 });
 
 describe("GET /api/projects/:projectId/relationships", () => {

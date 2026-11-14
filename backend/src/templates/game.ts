@@ -101,6 +101,10 @@ export const gameTemplate: Template = {
     // No cycles: a recipe that needs its own result somewhere down the chain can never be made.
     { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, readsBackward: true,
       description: "This is crafted, cooked or mixed from that, for example a potion made from water and a herb." },
+    // Levels of the same thing: house 1 -> house 2, iron axe -> steel axe. Stored from the lower level
+    // to the higher, so the map reads from worst to best. No cycles: an upgrade chain has to end.
+    { key: "upgrades_to", label: "upgrades to", inverseLabel: "upgraded from", allowCycles: false,
+      description: "This can be upgraded into that better version, for example a house into a bigger house." },
     { key: "grants", label: "grants", inverseLabel: "granted by", allowCycles: true,
       description: "Having or using this gives the player that ability, for example boots that grant a double jump." },
 
@@ -169,6 +173,11 @@ export const gameTemplate: Template = {
     { source: "inventory", relationship: "uses", target: "inventory" },  // a bow uses arrows
     { source: "inventory", relationship: "made_from", target: "inventory" }, // emerald tea made from water and emerald
     { source: "inventory", relationship: "grants", target: "ability" },
+
+    // Upgrades: always to a better version of the same category
+    { source: "location", relationship: "upgrades_to", target: "location" },   // house 1 -> house 2
+    { source: "inventory", relationship: "upgrades_to", target: "inventory" }, // iron axe -> steel axe
+    { source: "ability", relationship: "upgrades_to", target: "ability" },     // fireball -> big fireball
 
     // Screens
     { source: "ui", relationship: "opens", target: "ui" },

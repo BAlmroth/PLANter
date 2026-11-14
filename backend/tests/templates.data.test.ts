@@ -190,6 +190,14 @@ describe("game template rules", () => {
     expect(relationship("part_of")?.allowCycles).toBe(false);
     // A recipe that needs its own result can never be made
     expect(relationship("made_from")?.allowCycles).toBe(false);
+    // An upgrade chain has to end: house 1 -> house 2 -> house 1 is a mistake
+    expect(relationship("upgrades_to")?.allowCycles).toBe(false);
+  });
+
+  it("only upgrades within the same category", () => {
+    const upgrades = gameTemplate.allowedCombinations.filter((c) => c.relationship === "upgrades_to");
+    expect(upgrades.length).toBeGreaterThan(0);
+    for (const c of upgrades) expect(c.source, `${c.source} -> ${c.target}`).toBe(c.target);
   });
 
   it("allows loops between places and screens", () => {
