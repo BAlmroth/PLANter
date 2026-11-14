@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Dropdown } from "../../components/Dropdown";
 import { ApiError } from "../../lib/api";
 import type { MoodboardColor } from "./MoodboardCard";
 import styles from "./MoodboardCard.module.css";
@@ -55,14 +56,16 @@ export function ItemColorForm({ unused, onLink, onCreate }: Props) {
     <div className={styles.form}>
       {unused.length > 0 && (
         <form onSubmit={handleLink} className={styles.formButtons}>
-          <select value={colorId} onChange={(e) => setColorId(e.target.value)} aria-label="Color from the palette" required>
-            <option value="">Add from the palette…</option>
-            {unused.map((color) => (
-              <option key={color.id} value={color.id}>
-                {color.name ? `${color.name} (${color.hex})` : color.hex}
-              </option>
-            ))}
-          </select>
+          <Dropdown
+            label="Color from the palette"
+            value={colorId}
+            placeholder="Add from the palette…"
+            options={unused.map((color) => ({
+              value: color.id,
+              label: color.name ? `${color.name} (${color.hex})` : color.hex,
+            }))}
+            onChange={setColorId}
+          />
           <button type="submit" disabled={busy || colorId === ""}>
             Add
           </button>

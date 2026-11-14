@@ -72,11 +72,15 @@
   align-items: center;
   gap: 8px;
 }
-.editForm input,
-.editForm select {
+.editForm input {
   flex: 1 1 160px;
   width: auto;
   margin: 0;
+}
+/* The Item and Sprint dropdowns share the line with the title */
+.editField {
+  flex: 1 1 160px;
+  min-width: 0;
 }
 
 .secondary {

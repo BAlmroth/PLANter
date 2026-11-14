@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Dropdown } from "../../components/Dropdown";
 import type { Item } from "../items/types";
 import { getTypeChoices, type ConnectOption } from "./connections";
 
@@ -46,44 +47,41 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
     <form onSubmit={handleSubmit}>
       <label>
         What type of item?
-        <select
+        <Dropdown
+          label="What type of item?"
           value={type}
-          onChange={(e) => {
-            setType(e.target.value);
+          options={typeChoices.map((option) => ({ value: option.newItemType, label: option.newItemTypeLabel }))}
+          onChange={(value) => {
+            setType(value);
             setItemId("");
             setOptionKey("");
           }}
-        >
-          {typeChoices.map((option) => (
-            <option key={option.newItemType} value={option.newItemType}>
-              {option.newItemTypeLabel}
-            </option>
-          ))}
-        </select>
+          block
+        />
       </label>
       {itemChoices.length === 0 ? (
         <p>No other {selected?.newItemTypeLabel ?? "such"} items in this project yet.</p>
       ) : (
         <label>
           Which one?
-          <select value={selectedItem?.id ?? ""} onChange={(e) => setItemId(e.target.value)}>
-            {itemChoices.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
+          <Dropdown
+            label="Which one?"
+            value={selectedItem?.id ?? ""}
+            options={itemChoices.map((item) => ({ value: item.id, label: item.title }))}
+            onChange={setItemId}
+            block
+          />
         </label>
       )}
       <label>
         How is it connected to “{thisTitle}”?
-        <select value={selected?.key ?? ""} onChange={(e) => setOptionKey(e.target.value)}>
-          {verbChoices.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.verb}
-            </option>
-          ))}
-        </select>
+        <Dropdown
+          label="How is it connected"
+          value={selected?.key ?? ""}
+          options={verbChoices.map((option) => ({ value: option.key, label: option.verb }))}
+          onChange={setOptionKey}
+          block
+        />
       </label>
       {selected && selectedItem && (
         <p>

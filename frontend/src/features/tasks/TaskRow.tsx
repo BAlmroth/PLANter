@@ -1,3 +1,4 @@
+import { Dropdown } from "../../components/Dropdown";
 import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
@@ -102,24 +103,24 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSa
             onChange={(e) => setTitle(e.target.value)}
           />{" "}
           {items && (
-            <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)}>
-              <option value="">No item</option>
-              {items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              label="Item"
+              value={itemId}
+              options={[{ value: "", label: "No item" }, ...items.map((i) => ({ value: i.id, label: i.title }))]}
+              onChange={setItemId}
+              block
+              className={styles.editField}
+            />
           )}{" "}
           {sprints && (
-            <select aria-label="Sprint" value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-              <option value="">No sprint</option>
-              {sprints.map((sprint) => (
-                <option key={sprint.id} value={sprint.id}>
-                  {sprint.name}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              label="Sprint"
+              value={sprintId}
+              options={[{ value: "", label: "No sprint" }, ...sprints.map((s) => ({ value: s.id, label: s.name }))]}
+              onChange={setSprintId}
+              block
+              className={styles.editField}
+            />
           )}{" "}
           <button type="submit" disabled={busy}>
             Save

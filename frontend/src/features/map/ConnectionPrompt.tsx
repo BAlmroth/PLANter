@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Dropdown } from "../../components/Dropdown";
 import type { Item, Template } from "../items/types";
 import { getAllowedRelationshipTypes } from "../relationships/connections";
 
@@ -40,13 +41,14 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
       {selected ? (
         <p>
           {source.title}{" "}
-          <select value={selected.key} onChange={(e) => setTypeKey(e.target.value)}>
-            {types.map((type) => (
-              <option key={type.key} value={type.key}>
-                {type.label}
-              </option>
-            ))}
-          </select>{" "}
+          <Dropdown
+            label="Connection type"
+            value={selected.key}
+            options={types.map((type) => ({ value: type.key, label: type.label }))}
+            onChange={setTypeKey}
+            inline
+            openUp
+          />{" "}
           {target.title}
         </p>
       ) : (

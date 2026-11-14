@@ -118,14 +118,6 @@
   padding: 4px 12px;
   font-size: 0.85rem;
 }
-/* The <select> is block and full width by default (index.css). Here it sits inside the sentence. */
-.message select {
-  display: inline-block;
-  width: auto;
-  margin: 0 4px;
-  padding: 4px 8px;
-}
-
 /* An outline button for Cancel, so the main action stands out */
 .secondary {
   padding: 4px 12px;

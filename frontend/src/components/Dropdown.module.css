@@ -106,3 +106,38 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* block: a field in a form. The button fills the width, the name on the left and the arrow on the right. */
+.block {
+  width: 100%;
+}
+.block .button {
+  width: 100%;
+  max-width: none;
+  justify-content: space-between;
+}
+.block .name {
+  text-align: left;
+}
+
+/* inline: a small dropdown inside a sentence */
+.inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+.inline .button {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+/* openUp: the list opens above the button */
+.up .menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
