@@ -105,8 +105,13 @@ describe("seedDemoProject with images (database, fake storage)", () => {
     expect(saved).toContain(tea.imagePath);
     const withImage = await prisma.projectInspiration.count({ where: { projectId: result.projectId, imagePath: { not: null } } });
     expect(withImage).toBe(gameDemo.inspirations.filter((i) => i.image).length);
-    const sketch = await prisma.itemDetail.findFirstOrThrow({ where: { item: { projectId: result.projectId }, title: "First sketch" } });
-    expect(saved).toContain(sketch.imagePath);
+    // Every item reference with an image got its own uploaded file
+    const detailImages = await prisma.itemDetail.findMany({
+      where: { item: { projectId: result.projectId }, imagePath: { not: null } },
+      select: { imagePath: true },
+    });
+    expect(detailImages).toHaveLength(gameDemo.items.flatMap((i) => (i.details ?? []).filter((d) => d.image)).length);
+    for (const d of detailImages) expect(saved).toContain(d.imagePath);
 
     expect(await prisma.projectColor.count({ where: { projectId: result.projectId } })).toBe(gameDemo.colors.length);
     expect(await prisma.itemColor.count({ where: { projectId: result.projectId } })).toBe(
