@@ -297,7 +297,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   const typeInfo = loadedTemplate.itemTypes.find((t) => t.key === item.type);
-  const doneTasks = itemTasks.filter((task) => task.done).length;
+  const doneTasks = itemTasks.filter((task) => task.status === "done").length;
 
   return (
     <div className={styles.page}>

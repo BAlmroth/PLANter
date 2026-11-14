@@ -9,10 +9,10 @@ export const createTaskSchema = z.object({
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
-// For PATCH: the same fields and done, all optional, but at least one must be sent.
+// For PATCH: the same fields and status, all optional, but at least one must be sent.
 // itemId and sprintId: null removes the link.
 export const updateTaskSchema = createTaskSchema
-  .extend({ done: z.boolean(), itemId: z.uuid().nullable(), sprintId: z.uuid().nullable() })
+  .extend({ status: z.enum(["planned", "in_progress", "done"]), itemId: z.uuid().nullable(), sprintId: z.uuid().nullable() })
   .partial()
   .refine((body) => Object.keys(body).length > 0, "edit at least one field to update");
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

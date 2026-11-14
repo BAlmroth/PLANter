@@ -1,0 +1,127 @@
+/* The task board: three columns side by side. On a narrow screen they stack. */
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.column {
+  padding: 16px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Status icon and name on the left, the number of tasks on the right.
+   Big text and a thick line in the brand color, the same for all three columns:
+   the status is told apart by its icon shape and name, not by a color of its own. */
+.columnHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-h);
+  border-bottom: 3px solid var(--primary);
+}
+/* StatusIcon is small by default, make it bigger here (it takes the text color) */
+.columnHeading svg {
+  width: 22px;
+  height: 22px;
+}
+.columnHeading > span:first-child {
+  gap: 8px;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+.columnCount {
+  min-width: 26px;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A task card, white on the grey column, with the same hard shadow as the other cards */
+.card {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.title {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 0;
+}
+
+.sprintTag {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+/* Back on the left, forward on the right */
+.moves {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.forward {
+  margin-left: auto;
+}
+
+/* Small buttons without a background, like Edit and Delete in the list */
+.move {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  translate: none;
+}
+.move:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+
+.error {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}

@@ -57,7 +57,7 @@ describe("tasks API", () => {
     const { projectId, itemId } = await setup();
     const created = await request(app).post(`/api/projects/${projectId}/tasks`).set(asA).send({ title: "Build form", itemId });
     expect(created.status).toBe(201);
-    expect(created.body).toMatchObject({ title: "Build form", itemId, done: false, projectId });
+    expect(created.body).toMatchObject({ title: "Build form", itemId, status: "planned", projectId });
 
     const list = await request(app).get(`/api/projects/${projectId}/tasks`).set(asA);
     expect(list.body).toHaveLength(1);
@@ -72,16 +72,17 @@ describe("tasks API", () => {
     expect(bad.status).toBe(400);
   });
 
-  it("lists open tasks before done tasks", async () => {
+  it("lists planned tasks first, then in progress, then done", async () => {
     const { projectId } = await setup();
     await prisma.task.createMany({
       data: [
-        { projectId, title: "A done", done: true },
-        { projectId, title: "B open" },
+        { projectId, title: "A done", status: "done" },
+        { projectId, title: "B doing", status: "in_progress" },
+        { projectId, title: "C planned" },
       ],
     });
     const list = await request(app).get(`/api/projects/${projectId}/tasks`).set(asA);
-    expect(list.body.map((t: { title: string }) => t.title)).toEqual(["B open", "A done"]);
+    expect(list.body.map((t: { title: string }) => t.title)).toEqual(["C planned", "B doing", "A done"]);
   });
 
   it("returns 404 when the item is in another project", async () => {
@@ -94,12 +95,19 @@ describe("tasks API", () => {
     expect(res.status).toBe(404);
   });
 
-  it("updates done, title and unlinks the item", async () => {
+  it("updates status, title and unlinks the item", async () => {
     const { projectId, itemId } = await setup();
     const task = await prisma.task.create({ data: { projectId, itemId, title: "T" } });
-    const res = await request(app).patch(`/api/tasks/${task.id}`).set(asA).send({ done: true, title: "T2", itemId: null });
+    const res = await request(app).patch(`/api/tasks/${task.id}`).set(asA).send({ status: "in_progress", title: "T2", itemId: null });
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ done: true, title: "T2", itemId: null });
+    expect(res.body).toMatchObject({ status: "in_progress", title: "T2", itemId: null });
+  });
+
+  it("rejects a status that does not exist", async () => {
+    const { projectId } = await setup();
+    const task = await prisma.task.create({ data: { projectId, title: "T" } });
+    const res = await request(app).patch(`/api/tasks/${task.id}`).set(asA).send({ status: "blocked" });
+    expect(res.status).toBe(400);
   });
 
   it("deletes a task, and an item delete removes its tasks", async () => {
@@ -116,7 +124,7 @@ describe("tasks API", () => {
     const task = await prisma.task.create({ data: { projectId, title: "T" } });
     expect((await request(app).get(`/api/projects/${projectId}/tasks`).set(asB)).status).toBe(404);
     expect((await request(app).post(`/api/projects/${projectId}/tasks`).set(asB).send({ title: "X" })).status).toBe(404);
-    expect((await request(app).patch(`/api/tasks/${task.id}`).set(asB).send({ done: true })).status).toBe(404);
+    expect((await request(app).patch(`/api/tasks/${task.id}`).set(asB).send({ status: "done" })).status).toBe(404);
     expect((await request(app).delete(`/api/tasks/${task.id}`).set(asB)).status).toBe(404);
     expect(await prisma.task.count({ where: { id: task.id } })).toBe(1);
   });

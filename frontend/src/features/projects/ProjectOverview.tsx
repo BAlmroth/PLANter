@@ -30,7 +30,7 @@ export function ProjectOverview() {
   const techItems = items.items.filter((item) => item.type === "tech_stack");
   const techLabel = template.template?.itemTypes.find((type) => type.key === "tech_stack")?.pluralLabel ?? "Tech stack";
 
-  const pending = tasks.tasks.filter((task) => !task.done);
+  const pending = tasks.tasks.filter((task) => task.status !== "done");
   const tasksLoading = tasks.loading || sprints.loading;
   const tasksError = tasks.error ?? sprints.error;
   useGateLoading(template.loading || items.loading || tasksLoading);
@@ -114,7 +114,7 @@ export function ProjectOverview() {
           <ul className={styles.list}>
             {sprints.sprints.map((sprint) => {
               const sprintTasks = tasks.tasks.filter((task) => task.sprintId === sprint.id);
-              const done = sprintTasks.filter((task) => task.done).length;
+              const done = sprintTasks.filter((task) => task.status === "done").length;
               return (
                 <li key={sprint.id} className={styles.listRow}>
                   {sprint.name}

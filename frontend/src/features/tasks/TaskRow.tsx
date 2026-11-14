@@ -135,8 +135,8 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSa
       ) : (
         <>
           <label className={styles.check}>
-            <input type="checkbox" checked={task.done} disabled={busy} onChange={() => save({ done: !task.done })} />
-            <span className={task.done ? styles.done : undefined}>{task.title}</span>
+            <input type="checkbox" checked={task.status === "done"} disabled={busy} onChange={() => save({ status: task.status === "done" ? "planned" : "done" })} />
+            <span className={task.status === "done" ? styles.done : undefined}>{task.title}</span>
             {extra}
           </label>
           <span className={styles.actions}>

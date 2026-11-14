@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
-import type { Item } from "../items/types";
 import { useItems } from "../items/useItems";
+import { useTemplate } from "../items/useTemplate";
 import { SprintSection } from "../sprints/SprintSection";
 import { useSprints } from "../sprints/useSprints";
+import { tasksForScope } from "./boardColumns";
 import { createTask } from "./tasksApi";
+import { LinkedItem } from "./LinkedItem";
+import { TaskBoard } from "./TaskBoard";
 import { TaskRow } from "./TaskRow";
 import { useTasks } from "./useTasks";
 import styles from "./TodoView.module.css";
@@ -14,17 +16,6 @@ import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
-
-// A link to the item a task is about. Nothing is shown if the item is not in the list.
-function ItemLink({ project, itemId, items }: { project: Project; itemId: string; items: Item[] }) {
-  const item = items.find((i) => i.id === itemId);
-  if (!item) return null;
-  return (
-    <Link to={`/projects/${project.id}/items/${item.id}`} className={styles.itemLink}>
-      {item.title}
-    </Link>
-  );
-}
 
 type Props = {
   project: Project;
@@ -37,6 +28,8 @@ export function TodoView({ project, onTasksChanged }: Props) {
   const tasks = useTasks(project.id);
   const items = useItems(project.id);
   const sprints = useSprints(project.id);
+  // Only for the item colors on the board, so it never blocks the page
+  const template = useTemplate(project.template);
   const [title, setTitle] = useState("");
   // "" means no item
   const [itemId, setItemId] = useState("");
@@ -47,6 +40,10 @@ export function TodoView({ project, onTasksChanged }: Props) {
   // Which panels are open. The New task form stays open after adding, so several tasks can be added in a row.
   const [addingTask, setAddingTask] = useState(false);
   const [managingSprints, setManagingSprints] = useState(false);
+  // Board (columns per status) or List (one card per sprint)
+  const [view, setView] = useState<"board" | "list">("board");
+  // What the board shows: "all", "none" (no sprint) or a sprint id
+  const [scope, setScope] = useState("all");
 
   const loading = tasks.loading || items.loading || sprints.loading;
   useGateLoading(loading);
@@ -110,7 +107,30 @@ export function TodoView({ project, onTasksChanged }: Props) {
   return (
     <section className={styles.page}>
       <div className={styles.header}>
-        <span className={styles.count}>{tasks.tasks.filter((task) => !task.done).length} pending</span>
+        {/* aria-pressed tells screen readers which of the two views is on */}
+        <div className={styles.viewToggle} role="group" aria-label="View">
+          <button type="button" aria-pressed={view === "board"} onClick={() => setView("board")}>
+            Board
+          </button>
+          <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>
+            List
+          </button>
+        </div>
+        {view === "board" && (
+          <label className={styles.scope}>
+            Show
+            <select value={scope} onChange={(e) => setScope(e.target.value)}>
+              <option value="all">All tasks</option>
+              {sprints.sprints.map((sprint) => (
+                <option key={sprint.id} value={sprint.id}>
+                  {sprint.name}
+                </option>
+              ))}
+              <option value="none">No sprint</option>
+            </select>
+          </label>
+        )}
+        <span className={styles.count}>{tasks.tasks.filter((task) => task.status !== "done").length} pending</span>
         {/* The forms are closed by default, so the page starts with the tasks.
             aria-expanded tells screen readers whether the panel each button controls is open. */}
         <div className={styles.actions}>
@@ -193,12 +213,24 @@ export function TodoView({ project, onTasksChanged }: Props) {
         </div>
       )}
 
-      {groups.map((group) => (
+      {view === "board" && (
+        <TaskBoard
+          projectId={project.id}
+          tasks={tasksForScope(tasks.tasks, scope)}
+          items={items.items}
+          sprints={sprints.sprints}
+          template={template.template}
+          setTasks={tasks.setTasks}
+          onMoved={onTasksChanged}
+        />
+      )}
+
+      {view === "list" && groups.map((group) => (
         <section key={group.id} className={styles.card}>
           <h2 className={styles.label}>
             {group.name}
             <span className={styles.groupCount}>
-              {group.tasks.filter((task) => task.done).length} / {group.tasks.length} done
+              {group.tasks.filter((task) => task.status === "done").length} / {group.tasks.length} done
             </span>
           </h2>
           {group.tasks.length === 0 ? (
@@ -212,7 +244,13 @@ export function TodoView({ project, onTasksChanged }: Props) {
                   setTasks={tasks.setTasks}
                   items={items.items}
                   sprints={sprints.sprints}
-                  extra={task.itemId && <ItemLink project={project} itemId={task.itemId} items={items.items} />}
+                  extra={
+                    <LinkedItem
+                      projectId={project.id}
+                      item={items.items.find((i) => i.id === task.itemId)}
+                      template={template.template}
+                    />
+                  }
                   onSaved={onTasksChanged}
                   onDeleted={onTasksChanged}
                 />
