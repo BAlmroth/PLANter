@@ -1,7 +1,6 @@
 import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
@@ -17,20 +16,18 @@ import { useSprints } from "../sprints/useSprints";
 import { useTasks } from "../tasks/useTasks";
 import { ItemConnections } from "./ItemConnections";
 import { ItemDetailsTiles } from "./ItemDetailsTiles";
-import { ItemForm } from "./ItemForm";
+import { ItemEditForm } from "./ItemEditForm";
 import { ItemHeader } from "./ItemHeader";
 import { ItemPhoto } from "./ItemPhoto";
 import { ItemWarnings } from "./ItemWarnings";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
+import { messageFrom } from "./messageFrom";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
-import { getInvalidRelationshipCount } from "./typeChange";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
-
-const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 type Props = {
   project: Project;
@@ -235,57 +232,19 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
 
   if (editing) {
     return (
-      <section className={styles.card}>
-        {modal}
-        <h2 className={styles.title}>Edit {item.title}</h2>
-        <ItemForm
-          types={loadedTemplate.itemTypes}
-          showMvp
-          initialValues={{
-            title: item.title,
-            description: item.description ?? "",
-            type: item.type,
-            isMvp: item.isMvp,
-          }}
-          submitLabel="Save changes"
-          onCancel={() => setEditing(false)}
-          onSubmit={async ({ title, description, type, isMvp }) => {
-            // "" clears the description, like for projects. The type is only sent when it changed.
-            const changes: UpdateItemInput = {
-              title,
-              description,
-              isMvp,
-              ...(type !== item.type && { type }),
-            };
-            try {
-              let saved: Item;
-              try {
-                saved = await updateItem(item.id, changes);
-              } catch (err) {
-                // 409: the new type would break some connections. Ask, then send again with the flag.
-                const count = getInvalidRelationshipCount(err);
-                if (count === null) throw err;
-                const newLabel = loadedTemplate.itemTypes.find((t) => t.key === type)?.label ?? type;
-                const what = count === 1 ? "1 connection that is" : `${count} connections that are`;
-                if (!(await confirm({ title: "Change type?", message: `Changing the type to ${newLabel} deletes ${what} no longer allowed.`, confirmLabel: "Change type" }))) {
-                  return "The type was not changed.";
-                }
-                saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
-                // The server deleted some connections, so load the list again
-                relationships.refetch();
-              }
-              replaceItem(saved);
-              // The title, type or MVP flag may have changed, and with them the warnings
-              refreshWarnings();
-              refreshProgress(); // a new type moves the item to another category
-              setEditing(false);
-              return null;
-            } catch (err) {
-              return messageFrom(err);
-            }
-          }}
-        />
-      </section>
+      <ItemEditForm
+        item={item}
+        template={loadedTemplate}
+        onSaved={(saved) => {
+          replaceItem(saved);
+          // The title, type or MVP flag may have changed, and with them the warnings
+          refreshWarnings();
+          refreshProgress(); // a new type moves the item to another category
+          setEditing(false);
+        }}
+        onConnectionsRemoved={relationships.refetch}
+        onCancel={() => setEditing(false)}
+      />
     );
   }
 
