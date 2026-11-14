@@ -308,8 +308,8 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
       {/* --- Header: badges on the left, status and actions on the right --- */}
       <header className={styles.header}>
         <div className={styles.heading}>
-          {/* The title and the trail are in the sub header */}
           <div className={styles.titleRow}>
+            <h1 className={styles.title}>{item.title}</h1>
             <TypeBadge typeKey={item.type} template={loadedTemplate} />
             {item.isMvp && <span className={styles.mvp}>MVP</span>}
             <GroupChips groups={itemGroups} />
