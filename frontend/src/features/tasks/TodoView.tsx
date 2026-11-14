@@ -1,12 +1,11 @@
-import { useState, type FormEvent } from "react";
-import { ApiError } from "../../lib/api";
+import { useState } from "react";
 import type { Project } from "../projects/types";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { SprintSection } from "../sprints/SprintSection";
 import { useSprints } from "../sprints/useSprints";
 import { tasksForScope } from "./boardColumns";
-import { createTask } from "./tasksApi";
+import { NewTaskForm } from "./NewTaskForm";
 import { LinkedItem } from "./LinkedItem";
 import { TaskBoard } from "./TaskBoard";
 import { TaskRow } from "./TaskRow";
@@ -15,8 +14,6 @@ import styles from "./TodoView.module.css";
 import { Dropdown } from "../../components/Dropdown";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
-
-const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 type Props = {
   project: Project;
@@ -31,13 +28,6 @@ export function TodoView({ project, onTasksChanged }: Props) {
   const sprints = useSprints(project.id);
   // Only for the item colors on the board, so it never blocks the page
   const template = useTemplate(project.template);
-  const [title, setTitle] = useState("");
-  // "" means no item
-  const [itemId, setItemId] = useState("");
-  const [sprintId, setSprintId] = useState("");
-  // Shown under the form when adding fails (errors of a task are shown on its row)
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
   // Which panels are open. The New task form stays open after adding, so several tasks can be added in a row.
   const [addingTask, setAddingTask] = useState(false);
   const [managingSprints, setManagingSprints] = useState(false);
@@ -46,35 +36,12 @@ export function TodoView({ project, onTasksChanged }: Props) {
   // What the board shows: "all", "none" (no sprint) or a sprint id
   const [scope, setScope] = useState("all");
 
+  // true when the board shows one sprint (and not all tasks or the tasks without a sprint)
+  const scopeIsSprint = scope !== "all" && scope !== "none";
+
   const loading = tasks.loading || items.loading || sprints.loading;
   useGateLoading(loading);
   const error = tasks.error ?? items.error ?? sprints.error;
-
-  async function handleAdd(e: FormEvent) {
-    e.preventDefault();
-    if (title.trim() === "") {
-      setActionError("Title is required.");
-      return;
-    }
-    setActionError(null);
-    setAdding(true);
-    try {
-      const task = await createTask(project.id, {
-        title,
-        ...(itemId !== "" && { itemId }),
-        ...(sprintId !== "" && { sprintId }),
-      });
-      tasks.setTasks((current) => [...current, task]);
-      onTasksChanged?.();
-      setTitle("");
-      setItemId("");
-      setSprintId("");
-    } catch (err) {
-      setActionError(messageFrom(err));
-    } finally {
-      setAdding(false);
-    }
-  }
 
   function tryAgain() {
     if (tasks.error) tasks.refetch();
@@ -171,44 +138,16 @@ export function TodoView({ project, onTasksChanged }: Props) {
           {addingTask && (
             <section id="new-task-panel" className={styles.card}>
               <h2 className={styles.label}>New task</h2>
-              <form onSubmit={handleAdd} className={styles.addForm}>
-                <label className={styles.titleField}>
-                  Title
-                  <input
-                    type="text"
-                    required
-                    maxLength={100}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </label>
-                <label>
-                  Item (optional)
-                  <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-                    <option value="">No item</option>
-                    {items.items.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Sprint (optional)
-                  <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-                    <option value="">No sprint</option>
-                    {sprints.sprints.map((sprint) => (
-                      <option key={sprint.id} value={sprint.id}>
-                        {sprint.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit" disabled={adding}>
-                  {adding ? "Adding…" : "Add task"}
-                </button>
-              </form>
-              {actionError && <p role="alert">{actionError}</p>}
+              <NewTaskForm
+                projectId={project.id}
+                items={items.items}
+                sprints={sprints.sprints}
+                defaultSprintId={view === "board" && scopeIsSprint ? scope : ""}
+                onCreated={(task) => {
+                  tasks.setTasks((current) => [...current, task]);
+                  onTasksChanged?.();
+                }}
+              />
             </section>
           )}
         </div>

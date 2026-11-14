@@ -77,23 +77,6 @@
   text-transform: none;
 }
 
-/* New task: the title on its own row, the two dropdowns side by side, then the button */
-.addForm {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 8px;
-}
-.addForm label {
-  font-size: 0.9rem;
-}
-.titleField {
-  grid-column: 1 / -1;
-}
-.addForm button {
-  justify-self: start;
-}
-
 .list {
   margin: 0;
   padding: 0;

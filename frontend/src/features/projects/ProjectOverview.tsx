@@ -5,6 +5,7 @@ import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { useSprints } from "../sprints/useSprints";
 import { tasksForScope } from "../tasks/boardColumns";
+import { NewTaskForm } from "../tasks/NewTaskForm";
 import { TaskBoard } from "../tasks/TaskBoard";
 import { useTasks } from "../tasks/useTasks";
 import { InspirationCard } from "./InspirationCard";
@@ -28,6 +29,8 @@ export function ProjectOverview() {
   const sprints = useSprints(project.id);
   // What the todo board shows: "all", "none" (no sprint) or a sprint id
   const [scope, setScope] = useState("all");
+  // The New task form above the board
+  const [addingTask, setAddingTask] = useState(false);
 
   // The tech stack card lists the items of the "tech_stack" category of the web template.
   // A template without that category just gets an empty card.
@@ -94,6 +97,16 @@ export function ProjectOverview() {
             <Link to="tasks" className={styles.itemLink}>
               Open Tasks &amp; sprints
             </Link>
+            {!tasksLoading && !tasksError && (
+              <button
+                type="button"
+                aria-expanded={addingTask}
+                aria-controls="overview-new-task"
+                onClick={() => setAddingTask((open) => !open)}
+              >
+                {addingTask ? "Close new task" : "+ New task"}
+              </button>
+            )}
           </span>
         }
       >
@@ -108,6 +121,19 @@ export function ProjectOverview() {
         )}
         {!tasksLoading && !tasksError && (
           <>
+            {addingTask && (
+              <div id="overview-new-task" className={styles.newTask}>
+                {/* key: when another sprint is chosen the form starts again with that sprint selected */}
+                <NewTaskForm
+                  key={scope}
+                  projectId={project.id}
+                  items={items.items}
+                  sprints={sprints.sprints}
+                  defaultSprintId={scope !== "all" && scope !== "none" ? scope : ""}
+                  onCreated={(task) => tasks.setTasks((current) => [...current, task])}
+                />
+              </div>
+            )}
             {/* The sprint choice and its progress live here now, instead of in a card of their own */}
             <div className={styles.scope}>
               Show
