@@ -2,27 +2,10 @@
 // Plain data only (no database calls), so a test can check it against the web template.
 // Every item has a `ref`, a short name used here to point at the item (for relationships,
 // groups, tasks and so on). The runner (seedDemo.ts) turns refs into real ids.
+import type { DemoData, SeedItem } from "./types.js";
 
-export type Status = "planned" | "in_progress" | "done";
-
-export type SeedItem = {
-  ref: string;
-  type: string; // a key from the web template
-  title: string;
-  description?: string;
-  status: Status;
-  isMvp?: boolean;
-  // Where the item sits on the map, in grid steps (the runner multiplies by DEMO_COLUMN_WIDTH and
-  // DEMO_ROW_HEIGHT). Hand placed: columns by role, rows by feature, so related items sit side by side.
-  col: number;
-  row: number;
-  details?: { title: string; url?: string; text?: string }[];
-};
-
-// Map spacing for the demo, in pixels per grid step. Much wider than the spacing for new items
-// (services/itemLayout.ts), so the arrows between items are easy to follow.
-export const DEMO_COLUMN_WIDTH = 420;
-export const DEMO_ROW_HEIGHT = 220;
+// Kept here too, so existing imports still work
+export { DEMO_COLUMN_WIDTH, DEMO_ROW_HEIGHT } from "./types.js";
 
 export const demoProject = {
   name: "Awesome Demo Portfolio",
@@ -267,3 +250,14 @@ export const demoInspirations: { title: string; url?: string; text?: string }[] 
   { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Playful 3D idea. Too big for my scope, but fun." },
   { title: "Keep it simple", text: "Recruiters spend seconds on a portfolio: projects first, contact one click away." },
 ];
+
+// Everything above as one object, for the runner (seedDemo.ts)
+export const portfolioDemo: DemoData = {
+  project: demoProject,
+  items: demoItems,
+  relationships: demoRelationships,
+  groups: demoGroups,
+  sprints: demoSprints,
+  backlogTasks: demoBacklogTasks,
+  inspirations: demoInspirations,
+};

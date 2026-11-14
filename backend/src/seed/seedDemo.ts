@@ -2,21 +2,26 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
 import { pickGroupColor } from "../services/groupColor.js";
 import { getTemplate } from "../templates/index.js";
-import {
-  DEMO_COLUMN_WIDTH,
-  DEMO_ROW_HEIGHT,
-  demoBacklogTasks,
-  demoGroups,
-  demoInspirations,
-  demoItems,
-  demoProject,
-  demoRelationships,
-  demoSprints,
-} from "./demoPortfolio.js";
+import { gameDemo } from "./demoGame.js";
+import { portfolioDemo } from "./demoPortfolio.js";
+import { DEMO_COLUMN_WIDTH, DEMO_ROW_HEIGHT, type DemoData } from "./types.js";
 
-// Creates the demo project for one user. Run it again and the old demo project is replaced,
-// so the seed can be repeated without piling up copies.
-export async function seedDemoProject(userId: string) {
+// The demos the runner can create, by name: npm run seed:demo -- <user-id> [web|game]
+export const DEMOS: Record<string, DemoData> = { web: portfolioDemo, game: gameDemo };
+
+// Creates a demo project for one user (the web portfolio unless another demo is given).
+// Run it again and the old copy of THAT demo is replaced (found by name), so the seed can be
+// repeated without piling up copies, and the other demo is left alone.
+export async function seedDemoProject(userId: string, demo: DemoData = portfolioDemo) {
+  const {
+    project: demoProject,
+    items: demoItems,
+    relationships: demoRelationships,
+    groups: demoGroups,
+    sprints: demoSprints,
+    backlogTasks: demoBacklogTasks,
+    inspirations: demoInspirations,
+  } = demo;
   const template = getTemplate(demoProject.template);
   if (!template) throw new Error(`Unknown template: ${demoProject.template}`);
 
@@ -36,6 +41,7 @@ export async function seedDemoProject(userId: string) {
     type: item.type,
     title: item.title,
     description: item.description ?? null,
+    conditions: item.conditions ?? null,
     status: item.status,
     isMvp: item.isMvp ?? false,
     positionX: item.col * DEMO_COLUMN_WIDTH,
@@ -66,6 +72,7 @@ export async function seedDemoProject(userId: string) {
         sourceItemId: idOf(r.source),
         targetItemId: idOf(r.target),
         type: r.type,
+        quantity: r.quantity ?? null,
       })),
     }),
     prisma.itemDetail.createMany({

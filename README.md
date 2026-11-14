@@ -1,19 +1,22 @@
 # PLANter
 
-A visual planning tool for code projects for websites and apps. A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
+A visual planning tool for code projects for websites, apps and games. A project is broken down into items (for a website: pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
 
 
 ## Features
 
 - Register, log in and log out (Supabase Auth). Every user only sees their own projects.
-- Projects with a template (currently the web template), a description and a color palette.
-- Items in categories (pages, components, functions, data, design, assets, security, testing, tech stack) with a status (planned, in progress, done), an MVP flag, a main photo and a moodboard of links, images and colors.
-- Typed connections between items ("belongs to", "triggers", "uses", "reads from", "protects", "tests"), checked against rules in the template. Circular connections are rejected where they make no sense.
+- Projects with a template, chosen when the project is created, plus a description and a color palette. Two templates:
+  - **Web**: pages, components, functionality, data, design, assets, security, tests and tech stack.
+  - **Game**: mechanics, story, characters, locations, quests, abilities, inventory, screens & UI, art, audio, playtests and engine & tools. Sub-kinds like enemies, weapons or currencies are groups.
+- Items in the template's categories with a status (planned, in progress, done), an MVP flag, a main photo and a moodboard of links, images and colors.
+- Typed connections between items, checked against rules in the template (web: "part of", "triggers", "uses", "reads from", "protects", "tests" and more; game: "unlocks", "made from", "costs", "upgrades to", "appears in" and more). Circular connections are rejected where they make no sense, which in a game catches progression soft-locks ("the key is behind the door it opens").
+- Game projects: amounts on recipes and prices ("made from 20 × Wood", "costs 500 × Gold"), and a Requirements card on the item page that shows what it takes to get an item (made from, costs, unlocked by, and free-text conditions like "only in summer").
 - Three ways to look at a project: the File view (items grouped by category), the relationship map (React Flow, create items and connections and save positions) and an overview.
 - Groups of items, project inspiration (links, text, images), search and filters.
 - Tasks and sprints, with a board (planned, in progress, done).
 - Progress per category and in total, warnings for things that are easy to forget, and a project checklist.
-- Help for beginners: a short tutorial on every page and a `/help` page.
+- Help for beginners: a short tutorial on every page and a `/help` page that shows the categories and connections of the project's template.
 
 ## Tech stack
 
@@ -121,9 +124,14 @@ cd backend && npm run dev     # http://localhost:3000, GET /health returns { "st
 cd frontend && npm run dev    # http://localhost:5173
 ```
 
-## Demo project
+## Demo projects
 
-The repo includes demo data: a fully planned portfolio website called **Awesome Demo Portfolio**. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration, so it is a quick way to see (and test) every part of PLANter without planning a project first. The data is in `backend/src/seed/demoPortfolio.ts`.
+The repo includes demo data for both templates:
+
+- **Awesome Demo Portfolio** (web, the default): a fully planned portfolio website. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration. Data: `backend/src/seed/demoPortfolio.ts`.
+- **Emerald Brew** (game): a small cozy game about mixing ingredients into new items. 25 items that use every game category and every connection type, with recipes and prices with amounts, an upgrade, "unlocked by" and a condition. Open "Emerald tea" or "Cottage, level 2" to see the Requirements card. Data: `backend/src/seed/demoGame.ts`.
+
+Either one is a quick way to see (and test) every part of PLANter without planning a project first.
 
 1. Follow Install, Configure and Database migrations above, then start the app ([Run locally](#run-locally)).
 2. Register an account in the app and log in once. The demo project is created for that account.
@@ -132,16 +140,17 @@ The repo includes demo data: a fully planned portfolio website called **Awesome 
 
    ```
    cd backend
-   npm run seed:demo -- <your-user-uid>
+   npm run seed:demo -- <your-user-uid>         # the web demo
+   npm run seed:demo -- <your-user-uid> game    # the game demo
    ```
 
-5. Reload the app. "Awesome Demo Portfolio" is in your project list.
+5. Reload the app. "Awesome Demo Portfolio" (or "Emerald Brew") is in your project list.
 
 Notes:
 
 - The seed writes to the database in `DATABASE_URL` (in `backend/.env`), so check that it points where you expect.
-- It only touches your own demo project: running it again deletes and recreates the project with this name for that user, and nothing else. A project you made yourself with the same name would also be replaced, so rename it first.
-- The data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings.
+- It only touches your own demo project: running it again deletes and recreates the project with this name for that user, and nothing else (seeding the game demo leaves the web demo alone, and the other way round). A project you made yourself with the same name would also be replaced, so rename it first.
+- The web data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings. The game demo has no warnings.
 
 ## Scripts
 
@@ -152,7 +161,7 @@ Notes:
 | `backend/` | `npm run typecheck` | TypeScript check of `src`, tests and configs |
 | `backend/` | `npm run build` | `prisma generate` and compiles `src` to `dist` |
 | `backend/` | `npm start` | Runs the compiled server (used by Heroku) |
-| `backend/` | `npm run seed:demo -- <user-id>` | Creates (or recreates) the demo project "Awesome Demo Portfolio" for that user, see [Demo project](#demo-project) |
+| `backend/` | `npm run seed:demo -- <user-id> [web\|game]` | Creates (or recreates) the demo project "Awesome Demo Portfolio" (web, the default) or "Emerald Brew" (game) for that user, see [Demo projects](#demo-projects) |
 | `backend/` | `npm run test:db:migrate` | Applies all migrations to the local `planter_test` database |
 | `frontend/` | `npm run dev` | Starts Vite |
 | `frontend/` | `npm test` | Runs the frontend tests |

@@ -129,7 +129,7 @@ The tool must be understandable for a beginner, without cluttering the UI.
 
 **Should**: create items and connections from the map and save node positions; todo list; impact view; warnings for overlooked things; filter the map; search items; mark items as MVP (`is_mvp`); item details (links and text per item) and project-level inspiration (with images); link tasks to items; sprints; automated tests for core logic; responsive layout; loading and error states and delete confirmation.
 
-**Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode. Built in sprint 5 (the user's own addition): the item moodboard (links, images, colors, one card per item), a main photo per item, and the project color palette on the Inspiration page. Fonts were planned and not built.
+**Could**: game template; AI analysis ("what might I have missed?") and AI-created sprint plan, called only from the backend; MoSCoW tag on items; drag-and-drop sprint board; task dependencies; sprint dates and timeline; vision, target users and user journeys sections; auto-layout and grouping on the map; filter in the File view; dark mode. Built in sprint 5 (the user's own addition): the item moodboard (links, images, colors, one card per item), a main photo per item, and the project color palette on the Inspiration page. Fonts were planned and not built. Also built in sprint 5: the game template (`templates/game.ts`, chosen on the new-project page via `GET /api/templates`), amounts on connections (`quantity`, `hasQuantity`), the Requirements card (`features/requirements/`) with item conditions, and the demo game project "Emerald Brew".
 
 **Won't**: real-time collaboration, code generation from the plan, integrations (GitHub, Linear, Figma), mobile app, templates beyond web and game, editor for user-created templates and item types, teams, roles, permissions and payments, automatic generation of a whole plan from an idea.
 
@@ -198,7 +198,7 @@ planter/
 - Frontend (`frontend/`): `npm run dev` (Vite, port 5173), `npm test`, `npm run build`
 - Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`, `npm run typecheck` (src, tests and configs)
 - Test database: Postgres.app (PostgreSQL, port 5432) must be running, with a database `planter_test`. `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
-- Demo data (`backend/`): `npm run seed:demo -- <supabase-user-id>` creates (or replaces) the project "Awesome Demo Portfolio" for that user
+- Demo data (`backend/`): `npm run seed:demo -- <supabase-user-id> [web|game]` creates (or replaces) the project "Awesome Demo Portfolio" (web, the default) or "Emerald Brew" (game) for that user
 - Prisma (`backend/`): `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
 
 ## Environment variables
