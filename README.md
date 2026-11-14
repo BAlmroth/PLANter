@@ -173,6 +173,8 @@ Notes:
 
 ## Deploy
 
+The deployed app is always the `main` branch. Work happens on `dev` (and feature branches), and is merged into `main` (with a pull request) when it is ready to go live. Both the backend and the frontend are deployed from `main`.
+
 ### Backend (Heroku)
 
 Heroku gets only the `backend/` folder, sent with `git subtree` from the repo root.
@@ -183,10 +185,12 @@ Heroku gets only the `backend/` folder, sent with `git subtree` from the repo ro
    heroku config:set FRONTEND_URL=https://<your-app>.vercel.app
    ```
 
-2. Push the backend of the local `dev` branch to Heroku's `main`:
+2. Push the backend of the local `main` branch to Heroku's `main` (pull first, so it has the merged changes):
 
    ```
-   git subtree push --prefix backend heroku dev:main
+   git checkout main
+   git pull
+   git subtree push --prefix backend heroku main
    ```
 
    Heroku runs `npm run build` and then `npm start`.
@@ -199,7 +203,7 @@ Migrations are not run by the deploy. Apply new ones with `npx prisma migrate de
 1. Import the repository in Vercel. Root Directory: `frontend`. Framework preset: Vite.
 2. Add the three `VITE_` variables before the first build. A change in them needs a new deploy, because they are built into the bundle.
 3. `frontend/vercel.json` sends every path to `index.html`, so reloading a page like `/projects/<id>` works.
-4. Vercel builds the branch set as Production Branch (**Settings → Git**) on every push.
+4. Set the Production Branch to `main` (**Settings → Git**). Vercel deploys `main` to production on every push, and builds other branches (like `dev`) only as previews.
 
 After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add the Vercel URL in Supabase (Site URL and Redirect URLs).
 
