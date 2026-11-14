@@ -150,17 +150,21 @@
   color: var(--text-h);
 }
 
-/* Two small cards per row in the side column */
+/* Small square cards: two per row in the side column, more on the wide Moodboard page */
 .references {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
 }
+/* A square: the image takes the space that is left after the caption, so a long text
+   never makes the card taller than it is wide */
 .reference {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
   padding: 4px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -168,20 +172,35 @@
 }
 .image {
   display: block;
+  flex: 1 1 auto;
+  min-height: 0; /* lets the image shrink inside the square (a flex item will not by default) */
   width: 100%;
-  aspect-ratio: 4 / 3; /* every card the same height, the image is cropped to fit */
-  object-fit: cover;
+  object-fit: cover; /* cropped to fill, never stretched */
   border-radius: 6px;
 }
 .caption {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: 2px;
   min-width: 0;
   padding: 0 4px 4px;
   font-family: var(--mono);
   font-size: 0.75rem;
-  overflow-wrap: anywhere;
+}
+/* The title on one line, the note on at most two, both ending in "…" when longer.
+   The full text is still in the page (screen readers read all of it) and in the card's tooltip. */
+.caption strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.caption .note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 /* The small x button. On a swatch or a reference it sits in the corner. */
