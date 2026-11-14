@@ -162,7 +162,10 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
         Groups <span className={styles.labelCount}>{groups.length}</span>
       </h2>
       {groups.length === 0 ? (
-        <p className={styles.empty}>No groups yet.</p>
+        <p className={styles.empty}>
+          No groups yet. A group collects items that belong together, like everything for the checkout. Add one
+          below.
+        </p>
       ) : (
         <ul className={styles.list}>
           {groups.map((group) => {

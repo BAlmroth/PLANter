@@ -176,7 +176,14 @@ export function TodoView({ project, onTasksChanged }: Props) {
             </span>
           </h2>
           {group.tasks.length === 0 ? (
-            <p className={styles.empty}>No tasks.</p>
+            // Says how to fill the group: a sprint gets tasks by picking it on a task
+            <p className={styles.empty}>
+              {group.id !== "no-sprint"
+                ? "No tasks in this sprint yet. Pick the sprint when you add or edit a task."
+                : tasks.tasks.length === 0
+                  ? "No tasks yet. Use “+ New task” to add your first one."
+                  : "Every task is in a sprint."}
+            </p>
           ) : (
             <ul className={styles.list}>
               {group.tasks.map((task) => (
