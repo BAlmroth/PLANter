@@ -52,7 +52,12 @@
   stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: 1.2s ease-in-out infinite;
+  /* Written as separate properties, not the "animation" shorthand: the shorthand has no name here
+     (each line and node sets its own animation-name below), and the production CSS minifier
+     turned a shorthand without a name into "animation: none", so nothing moved when deployed. */
+  animation-duration: 1.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 .edge1 {
   animation-name: draw1;
@@ -64,7 +69,10 @@
   transform-box: fill-box;
   transform-origin: center;
   transform: scale(0);
-  animation: 1.2s ease-in-out infinite;
+  /* Separate properties for the same reason as .edge */
+  animation-duration: 1.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 .nodeA {
   animation-name: popA;
