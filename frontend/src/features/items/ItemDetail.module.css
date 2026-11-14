@@ -32,7 +32,7 @@
 
 .title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 2.1rem;
   overflow-wrap: anywhere; /* a long title without spaces must not push the page wider */
 }
 
@@ -122,7 +122,7 @@
 .cardTitle {
   margin: 0 0 16px;
   padding-bottom: 10px;
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   border-bottom: 1px solid var(--bg-dark);
 }
 
@@ -144,11 +144,11 @@
 .label {
   margin: 0 0 8px;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--text-h);
 }
 
 .empty {

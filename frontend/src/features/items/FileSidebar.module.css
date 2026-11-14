@@ -11,8 +11,8 @@
   justify-content: space-between;
   align-items: center;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-h);
@@ -55,10 +55,10 @@
 .groupTitle {
   margin: 0 0 4px;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--text);
+  color: var(--text-h);
 }
 /* A dot in the type's color (--type-color, set on the section) before the category name */
 .groupTitle::before {
