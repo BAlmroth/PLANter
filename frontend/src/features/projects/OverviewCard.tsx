@@ -7,13 +7,14 @@ type Props = {
   to?: string; // when given, a click anywhere on the card opens this page
   aside?: ReactNode; // shown on the right of the label
   className?: string;
+  tourId?: string; // the data-tour name the tutorial points at
   children: ReactNode;
 };
 
 // One white card on the overview page
-export function OverviewCard({ label, to, aside, className, children }: Props) {
+export function OverviewCard({ label, to, aside, className, tourId, children }: Props) {
   return (
-    <section className={`${styles.card} ${to ? styles.clickable : ""} ${className ?? ""}`}>
+    <section className={`${styles.card} ${to ? styles.clickable : ""} ${className ?? ""}`} data-tour={tourId}>
       <header className={styles.cardHeader}>
         <h2 className={styles.label}>
           {/* The link's ::after is stretched over the whole card (same idea as ProjectCard) */}

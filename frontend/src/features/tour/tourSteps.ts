@@ -42,6 +42,12 @@ export const TOURS: Record<PageKey, TourStep[]> = {
       body: "The share of your items that are done. It grows as you mark items as done.",
     },
     {
+      target: "overview-todo",
+      title: "Your to-dos",
+      body: "Tasks sit in three columns: Planned, In progress and Done. Move a card with the arrows, and use the pencil to edit or delete it. Pick a sprint above the board to see only its tasks.",
+      placement: "top",
+    },
+    {
       target: "help-button",
       title: "Help is always here",
       body: "Show the tour for a page again, restart the tutorial, or read the guides.",
@@ -162,6 +168,17 @@ export const TOURS: Record<PageKey, TourStep[]> = {
       target: "tasks-section",
       title: "Tasks & sprints",
       body: "Write down the concrete to-dos, link them to items, and sort them into sprints.",
+      placement: "top",
+    },
+    {
+      target: "task-view",
+      title: "Board or list",
+      body: "Switch between the board and the list. On the board, choose to show all tasks or just one sprint. Add tasks and manage sprints from the buttons on the right.",
+    },
+    {
+      target: "task-board",
+      title: "The board",
+      body: "A task starts in Planned. Move it with the arrows to In progress and then Done. The pencil edits or deletes it, and the colored tag opens the item it is about.",
       placement: "top",
     },
   ],

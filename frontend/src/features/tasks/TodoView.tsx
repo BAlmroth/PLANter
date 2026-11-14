@@ -114,7 +114,8 @@ export function TodoView({ project, onTasksChanged }: Props) {
 
   return (
     <section className={styles.page}>
-      <div className={styles.header}>
+      {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
+      <div className={styles.header} data-tour="task-view">
         {/* aria-pressed tells screen readers which of the two views is on */}
         <div className={styles.viewToggle} role="group" aria-label="View">
           <button type="button" aria-pressed={view === "board"} onClick={() => setView("board")}>
@@ -214,15 +215,17 @@ export function TodoView({ project, onTasksChanged }: Props) {
       )}
 
       {view === "board" && (
-        <TaskBoard
-          projectId={project.id}
-          tasks={tasksForScope(tasks.tasks, scope)}
-          items={items.items}
-          sprints={sprints.sprints}
-          template={template.template}
-          setTasks={tasks.setTasks}
-          onChanged={onTasksChanged}
-        />
+        <div data-tour="task-board">
+          <TaskBoard
+            projectId={project.id}
+            tasks={tasksForScope(tasks.tasks, scope)}
+            items={items.items}
+            sprints={sprints.sprints}
+            template={template.template}
+            setTasks={tasks.setTasks}
+            onChanged={onTasksChanged}
+          />
+        </div>
       )}
 
       {view === "list" && groups.map((group) => (

@@ -86,6 +86,7 @@ export function ProjectOverview() {
 
       <OverviewCard
         label="Todo"
+        tourId="overview-todo"
         className={styles.full}
         aside={
           <span className={styles.todoAside}>

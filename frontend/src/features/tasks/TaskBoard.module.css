@@ -6,31 +6,38 @@
   gap: 16px;
 }
 
+/* A darker beige than the page (the grey area color mixed towards the border color, no green), so the
+   columns stand out from the cream page and the white overview card, and the white cards stand out on them. */
 .column {
   padding: 16px;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--border) 60%, var(--bg-dark));
+  border: 1px solid color-mix(in srgb, var(--borderDark) 45%, var(--border));
   border-radius: 12px;
 }
 
-/* Status icon and name on the left, the number of tasks on the right.
-   Big text and a thick line in the brand color, the same for all three columns:
-   the status is told apart by its icon shape and name, not by a color of its own. */
+/* A solid green bar across the top of the column, flush with its edges (negative margins undo the column
+   padding, so the column does not need overflow: hidden, which would cut off the menus of the cards).
+   All three bars have the same green: the status is told apart by the icon shape and the name. */
 .columnHeading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 12px;
-  padding-bottom: 8px;
+  margin: -16px -16px 12px;
+  padding: 10px 16px;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-h);
-  border-bottom: 3px solid var(--primary);
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 11px 11px 0 0;
 }
-/* StatusIcon is small by default, make it bigger here (it takes the text color) */
+/* StatusIcon is small by default, make it bigger here (it takes the text color, so white) */
 .columnHeading svg {
   width: 22px;
   height: 22px;
+}
+/* The check mark of "done" is white inside a filled circle. On the bar the circle is white too, so the check turns green. */
+.columnHeading svg path[stroke="white"] {
+  stroke: var(--primary);
 }
 .columnHeading > span:first-child {
   gap: 8px;
@@ -38,6 +45,7 @@
   font-size: inherit;
   color: inherit;
 }
+/* The count: a white pill on the green bar */
 .columnCount {
   min-width: 26px;
   padding: 1px 8px;
@@ -45,8 +53,8 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
-  color: var(--on-primary);
-  background: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
   border-radius: 999px;
 }
 
@@ -136,10 +144,9 @@
   padding: 10px;
 }
 .compact .columnHeading {
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin: -10px -10px 8px;
+  padding: 6px 10px;
   font-size: 0.95rem;
-  border-bottom-width: 2px;
 }
 .compact .columnHeading svg {
   width: 18px;
