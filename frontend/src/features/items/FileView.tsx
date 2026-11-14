@@ -16,7 +16,7 @@ import { getFileSections, type FileSection, type FileViewMode } from "./fileSect
 import { ItemForm } from "./ItemForm";
 import { ItemRow } from "./ItemRowCard";
 import { typeColorVar } from "./typeColor";
-import { useItems } from "./useItems";
+import type { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./FileView.module.css";
 import { Loader } from "../../components/Loader";
@@ -26,14 +26,14 @@ import { useGateLoading } from "../../components/useLoadGate";
 // Editing, deleting and connecting are done in the detail view of an item.
 type Props = {
   project: Project;
+  items: ReturnType<typeof useItems>; // loaded by PlanPage, which shows the item count in its title row
   warnings: WarningsByItem;
   progress: Progress | null; // null while loading: the headings are then shown without bars
   onItemAdded: () => void; // for example to load the progress again, since a new item changes the totals
 };
 
-export function FileView({ project, warnings, progress, onItemAdded }: Props) {
+export function FileView({ project, items, warnings, progress, onItemAdded }: Props) {
   const template = useTemplate(project.template);
-  const items = useItems(project.id);
   const relationships = useRelationships(project.id);
   const groups = useGroups(project.id);
   // true while the add form is open
@@ -102,12 +102,15 @@ export function FileView({ project, warnings, progress, onItemAdded }: Props) {
 
   return (
     <section className={styles.page}>
-      {/* One toolbar row: title and count, how the cards are divided, the filters, and the two actions on the right.
+      {/* One toolbar row: how the cards are divided, the filters, and the two actions on the right.
           It wraps onto more rows on a narrow screen. */}
       <div className={styles.toolbar}>
-        <span className={styles.count}>
-          {filtering ? `${shownItems.length} of ${items.items.length}` : items.items.length} items
-        </span>
+        {/* The total is in the title row of the page. Here only "3 of 12" while filtering. */}
+        {filtering && (
+          <span className={styles.count}>
+            {shownItems.length} of {items.items.length} shown
+          </span>
+        )}
         {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
         <div className={styles.modes} role="group" aria-label="Group items by" data-tour="file-modes">
           {(["category", "group"] as const).map((option) => (
