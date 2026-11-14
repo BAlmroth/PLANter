@@ -6,7 +6,7 @@ import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
 import { useGroups } from "../groups/useGroups";
-import { ItemForm } from "../items/ItemForm";
+import type { ItemFormValues } from "../items/ItemForm";
 import { createItem, updateItem } from "../items/itemsApi";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
@@ -15,9 +15,10 @@ import { createRelationship, deleteRelationship } from "../relationships/relatio
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
 import { ConnectionPrompt } from "./ConnectionPrompt";
-import { ItemFilterBar } from "../filters/ItemFilterBar";
 import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { ItemNode } from "./ItemNode";
+import { MapToolbar } from "./MapToolbar";
+import { useFullWindow } from "./useFullWindow";
 import { getCardSize } from "./cardSize";
 import { buildEdges, buildNodes, fadeNodes } from "./mapGraph";
 import { tidyLayout, type LayoutDirection } from "./tidyLayout";
@@ -46,16 +47,10 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const { confirm, modal } = useConfirm();
   // The React Flow instance, saved in onInit, to call fitView after "Tidy up"
   const flowRef = useRef<ReactFlowInstance<ItemNodeType, Edge> | null>(null);
+  // true: the map covers the whole window (CSS only, not the browser's fullscreen mode)
+  const { expanded, setExpanded } = useFullWindow(flowRef);
   // Which way the map flows. A view preference, kept in this browser only (lib/storage.ts).
   const [direction, setDirection] = useState<LayoutDirection>(() => (readFlag("map:vertical") ? "vertical" : "horizontal"));
-  // true: the map covers the whole window (CSS only, not the browser's fullscreen mode)
-  const [expanded, setExpanded] = useState(false);
-  // true while the add item form is open
-  const [adding, setAdding] = useState(false);
-  // true while the "Manage" panel (Tidy up and the map direction) is open
-  const [managing, setManaging] = useState(false);
-  // true while the filter panel is open
-  const [filtering, setFiltering] = useState(false);
   // The connection that was clicked, which offers a delete button
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
@@ -64,10 +59,6 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   // Items that do not match the filters fade, so the matching ones stand out
   const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
-
-  // How many filters are on, shown on the Filter button so you can see it with the panel closed
-  const activeFilterCount =
-    filters.types.length + filters.groupIds.length + filters.statuses.length + (filters.mvpOnly ? 1 : 0);
 
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
   useGateLoading(loading);
@@ -155,30 +146,6 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     }
   }
 
-  // Full window: the map is fixed over the page (styles.expanded). While it is open the page behind
-  // cannot scroll, and Esc closes it, unless a dialog or the tutorial is open (they use Esc themselves).
-  useEffect(() => {
-    if (!expanded) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      if (document.querySelector("dialog[open]") || document.getElementById("root")?.hasAttribute("inert")) return;
-      setExpanded(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [expanded]);
-
-  // The map changes size when it expands or shrinks, so zoom to fit it again
-  useEffect(() => {
-    const timer = setTimeout(() => flowRef.current?.fitView({ duration: 200 }), 50);
-    return () => clearTimeout(timer);
-  }, [expanded]);
-
   // React Flow needs its own copy of the nodes: while dragging it updates positions (and sizes it
   // measures) through onNodesChange. The copy is reset whenever the items are loaded again.
   const [nodes, setNodes, onNodesChange] = useNodesState<ItemNodeType>([]);
@@ -217,6 +184,22 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
       setSelectedEdgeId(null);
     } catch (err) {
       setSaveError(err instanceof ApiError ? err.message : "Something went wrong.");
+    }
+  }
+
+  // Creates an item from the toolbar's form. Returns an error message, or null when it worked.
+  async function addItem({ title, description, type }: ItemFormValues) {
+    try {
+      // The backend gives the new item a start position (services/itemLayout.ts)
+      const item = await createItem(project.id, {
+        title,
+        type,
+        ...(description !== "" && { description }),
+      });
+      items.setItems((current) => [...current, item]);
+      return null;
+    } catch (err) {
+      return err instanceof ApiError ? err.message : "Something went wrong.";
     }
   }
 
@@ -315,103 +298,17 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         <Controls />
         {template.template && (
           <>
-            {/* Top left: the filters and "Add item". The add form opens under them, in the same box. */}
-            {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
-            <Panel position="top-left" className={styles.box} data-tour="map-toolbar">
-              <div className={styles.toolbar}>
-                {/* The filters open in a panel under the toolbar. The button shows how many are on. */}
-                <button
-                  type="button"
-                  className={styles.small}
-                  aria-expanded={filtering}
-                  onClick={() => setFiltering((open) => !open)}
-                >
-                  Filter{activeFilterCount > 0 && ` (${activeFilterCount})`} {filtering ? "▴" : "▾"}
-                </button>
-                {!adding && (
-                  <button type="button" className={styles.small} onClick={() => setAdding(true)}>
-                    + Add item
-                  </button>
-                )}
-                {!adding && items.items.length > 1 && (
-                  <button
-                    type="button"
-                    className={styles.small}
-                    aria-expanded={managing}
-                    onClick={() => setManaging((open) => !open)}
-                  >
-                    Manage {managing ? "▴" : "▾"}
-                  </button>
-                )}
-              </div>
-              {filtering && (
-                <div className={styles.manage}>
-                  <ItemFilterBar
-                    filters={filters}
-                    onChange={setFilters}
-                    template={template.template}
-                    groups={groups.groups}
-                  />
-                </div>
-              )}
-              {managing && !adding && items.items.length > 1 && (
-                <div className={styles.manage}>
-                  <button
-                    type="button"
-                    className={styles.small}
-                    onClick={() => {
-                      setManaging(false);
-                      handleTidy();
-                    }}
-                  >
-                    Tidy up
-                  </button>
-                  {/* Picking the other direction tidies the map in that direction (after a confirm) */}
-                  <span className={styles.direction} role="group" aria-label="Map direction">
-                    <button
-                      type="button"
-                      className={styles.small}
-                      aria-pressed={direction === "horizontal"}
-                      onClick={() => direction !== "horizontal" && handleTidy("horizontal")}
-                    >
-                      Left → right
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.small}
-                      aria-pressed={direction === "vertical"}
-                      onClick={() => direction !== "vertical" && handleTidy("vertical")}
-                    >
-                      Top ↓ bottom
-                    </button>
-                  </span>
-                </div>
-              )}
-              {adding && (
-                <div className={styles.addForm}>
-                  <ItemForm
-                    types={template.template.itemTypes}
-                    submitLabel="Add item"
-                    onCancel={() => setAdding(false)}
-                    onSubmit={async ({ title, description, type }) => {
-                      try {
-                        // The backend gives the new item a start position (services/itemLayout.ts)
-                        const item = await createItem(project.id, {
-                          title,
-                          type,
-                          ...(description !== "" && { description }),
-                        });
-                        items.setItems((current) => [...current, item]);
-                        setAdding(false);
-                        return null;
-                      } catch (err) {
-                        return err instanceof ApiError ? err.message : "Something went wrong.";
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </Panel>
+            {/* Top left: the filters, "Add item" and Manage */}
+            <MapToolbar
+              template={template.template}
+              groups={groups.groups}
+              itemCount={items.items.length}
+              filters={filters}
+              onFiltersChange={setFilters}
+              direction={direction}
+              onTidy={handleTidy}
+              onAddItem={addItem}
+            />
             {/* Top right: the full window button and the legend side by side. data-tour is on the
                 legend only, so the tutorial does not light up the button too. */}
             <Panel position="top-right" className={styles.topRight}>
