@@ -4,6 +4,16 @@ export type Placement = "top" | "bottom" | "left" | "right";
 export type Box = { top: number; left: number; width: number; height: number };
 type Size = { width: number; height: number };
 
+// The smallest box around several boxes, for a tour step that points at more than one element
+// (for example two links next to each other). Needs at least one box.
+export function unionBox(boxes: Box[]): Box {
+  const top = Math.min(...boxes.map((b) => b.top));
+  const left = Math.min(...boxes.map((b) => b.left));
+  const bottom = Math.max(...boxes.map((b) => b.top + b.height));
+  const right = Math.max(...boxes.map((b) => b.left + b.width));
+  return { top, left, width: right - left, height: bottom - top };
+}
+
 export type CardPlacement = {
   top: number;
   left: number;

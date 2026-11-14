@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { placeCard } from "./placeCard";
+import { placeCard, unionBox } from "./placeCard";
 
 const viewport = { width: 1200, height: 800 };
 const card = { width: 300, height: 150 };
@@ -35,5 +35,23 @@ describe("placeCard", () => {
     const result = placeCard(target, card, viewport);
     expect(result.placement).toBe("bottom");
     expect(result.top).toBe(800 - 150 - 12);
+  });
+});
+
+describe("unionBox", () => {
+  it("returns the same box for one box", () => {
+    expect(unionBox([{ top: 10, left: 20, width: 30, height: 40 }])).toEqual({ top: 10, left: 20, width: 30, height: 40 });
+  });
+
+  it("covers two links side by side", () => {
+    const items = { top: 100, left: 200, width: 60, height: 32 };
+    const tasks = { top: 100, left: 268, width: 130, height: 32 };
+    expect(unionBox([items, tasks])).toEqual({ top: 100, left: 200, width: 198, height: 32 });
+  });
+
+  it("covers boxes of different heights in any order", () => {
+    expect(unionBox([{ top: 50, left: 0, width: 10, height: 10 }, { top: 40, left: 30, width: 10, height: 30 }])).toEqual({
+      top: 40, left: 0, width: 40, height: 30,
+    });
   });
 });
