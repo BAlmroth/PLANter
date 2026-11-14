@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
-import { GroupChips } from "../groups/GroupChip";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { getConnectOptions, getConnections, type ConnectOption, type Connection, } from "../relationships/connections";
@@ -17,14 +16,14 @@ import type { Warning } from "../warnings/types";
 import { useSprints } from "../sprints/useSprints";
 import { useTasks } from "../tasks/useTasks";
 import { ItemConnections } from "./ItemConnections";
+import { ItemDetailsTiles } from "./ItemDetailsTiles";
 import { ItemForm } from "./ItemForm";
+import { ItemHeader } from "./ItemHeader";
 import { ItemPhoto } from "./ItemPhoto";
 import { ItemWarnings } from "./ItemWarnings";
 import { createItem, deleteItem, updateItem } from "./itemsApi";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
 import { getInvalidRelationshipCount } from "./typeChange";
-import { StatusIcon } from "./StatusIcon";
-import { TypeBadge } from "./TypeBadge";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
@@ -296,53 +295,16 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   return (
     <div className={styles.page}>
       {modal}
-      {/* --- Header: badges on the left, status and actions on the right --- */}
-      <header className={styles.header}>
-        <div className={styles.heading}>
-          <div className={styles.titleRow}>
-            <h1 className={styles.title}>{item.title}</h1>
-            <TypeBadge typeKey={item.type} template={loadedTemplate} />
-            {item.isMvp && <span className={styles.mvp}>MVP</span>}
-            <GroupChips groups={itemGroups} />
-          </div>
-        </div>
-
-        <div className={styles.headerActions}>
-          {/* Two checkboxes cover three statuses: neither checked means "planned" */}
-          {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
-          <div className={styles.status} data-tour="item-status">
-            <label className={styles.toggle}>
-              <input
-                type="checkbox"
-                checked={item.status === "in_progress"}
-                disabled={busy}
-                onChange={(e) => setStatus("in_progress", e.target.checked)}
-              />
-              In progress
-            </label>
-            <label className={styles.toggle}>
-              <input
-                type="checkbox"
-                checked={item.status === "done"}
-                disabled={busy}
-                onChange={(e) => setStatus("done", e.target.checked)}
-              />
-              Done
-            </label>
-          </div>
-          <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
-            Delete
-          </button>
-          <button type="button" onClick={() => setEditing(true)} disabled={busy} data-tour="item-edit">
-            Edit item
-          </button>
-        </div>
-        {error && (
-          <p role="alert" className={styles.error}>
-            {error}
-          </p>
-        )}
-      </header>
+      <ItemHeader
+        item={item}
+        template={loadedTemplate}
+        groups={itemGroups}
+        busy={busy}
+        error={error}
+        onSetStatus={setStatus}
+        onDelete={handleDelete}
+        onEdit={() => setEditing(true)}
+      />
 
       <div className={styles.columns}>
         {/* --- Main column --- */}
@@ -355,31 +317,13 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
             </div>
           </section>
 
-          <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Details</h2>
-            <dl className={styles.tiles}>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Status</dt>
-                <dd>
-                  <StatusIcon status={item.status} showLabel />
-                </dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Type</dt>
-                <dd>{typeInfo?.label ?? "Unknown"}</dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Connections</dt>
-                <dd>{connections.length}</dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Tasks done</dt>
-                <dd>
-                  {doneTasks} / {itemTasks.length}
-                </dd>
-              </div>
-            </dl>
-          </section>
+          <ItemDetailsTiles
+            item={item}
+            typeLabel={typeInfo?.label ?? "Unknown"}
+            connectionCount={connections.length}
+            doneTasks={doneTasks}
+            totalTasks={itemTasks.length}
+          />
 
           <ItemConnections
             item={item}
