@@ -4,9 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import type { Project } from "../projects/types";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
-import { getConnectOptions, getConnections, type ConnectOption, type Connection, } from "../relationships/connections";
+import { getConnectOptions, getConnections, type Connection } from "../relationships/connections";
 import { useProjectContext } from "../projects/useProjectContext";
-import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
+import { deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
 import { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemMoodboard } from "../moodboard/ItemMoodboard";
@@ -20,9 +20,10 @@ import { ItemEditForm } from "./ItemEditForm";
 import { ItemHeader } from "./ItemHeader";
 import { ItemPhoto } from "./ItemPhoto";
 import { ItemWarnings } from "./ItemWarnings";
-import { createItem, deleteItem, updateItem } from "./itemsApi";
+import { deleteItem, updateItem } from "./itemsApi";
 import { messageFrom } from "./messageFrom";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
+import { useItemConnections } from "./useItemConnections";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
@@ -55,6 +56,14 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const groups = useGroups(project.id);
   const details = useItemDetails(itemId);
   const { setItemCrumb } = useProjectContext();
+  const { addConnectedItem, connectExisting } = useItemConnections({
+    projectId: project.id,
+    itemId,
+    setItems: items.setItems,
+    setRelationships: relationships.setRelationships,
+    refreshWarnings,
+    refreshProgress,
+  });
 
   // The sub header shows this item's title and type in its trail. Runs again when either changes.
   const crumbItem = items.items.find((i) => i.id === itemId);
@@ -176,57 +185,6 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
       setError(messageFrom(err));
     } finally {
       setBusy(false);
-    }
-  }
-
-  // Creates a new item and connects it to this one. Two requests: if the connection is refused
-  // (for example it would make a loop), the new item is deleted again so nothing is left behind.
-  // Returns an error message, or null when it worked.
-  async function addConnectedItem(option: ConnectOption, title: string) {
-    let newItem: Item;
-    try {
-      newItem = await createItem(project.id, { title, type: option.newItemType });
-    } catch (err) {
-      return messageFrom(err);
-    }
-
-    try {
-      const relationship = await createRelationship({
-        sourceItemId: option.newItemIsSource ? newItem.id : item!.id,
-        targetItemId: option.newItemIsSource ? item!.id : newItem.id,
-        type: option.relationshipType,
-      });
-      items.setItems((current) => [...current, newItem]);
-      relationships.setRelationships((current) => [...current, relationship]);
-      refreshWarnings();
-      refreshProgress(); // the new item counts as planned
-      return null;
-    } catch (err) {
-      // Undo: remove the item we just created
-      const undone = await deleteItem(newItem.id).then(
-        () => true,
-        () => false,
-      );
-      return undone
-        ? messageFrom(err)
-        : `${messageFrom(err)} The new item was created but not connected. Reload to see it.`;
-    }
-  }
-
-  // Connects this item to an item that already exists. Returns an error message, or null when it worked.
-  // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
-  async function connectExisting(option: ConnectOption, otherItemId: string) {
-    try {
-      const relationship = await createRelationship({
-        sourceItemId: option.newItemIsSource ? otherItemId : item!.id,
-        targetItemId: option.newItemIsSource ? item!.id : otherItemId,
-        type: option.relationshipType,
-      });
-      relationships.setRelationships((current) => [...current, relationship]);
-      refreshWarnings();
-      return null;
-    } catch (err) {
-      return messageFrom(err);
     }
   }
 
