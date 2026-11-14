@@ -1,8 +1,19 @@
 # PLANter
 
-A visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
+A visual planning tool for code projects for websites and apps. A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
 
-Thesis project (examensarbete). The full plan is in `docs/project-plan.md`, and the rules for the code are in `CLAUDE.md`.
+
+## Features
+
+- Register, log in and log out (Supabase Auth). Every user only sees their own projects.
+- Projects with a template (currently the web template), a description and a color palette.
+- Items in categories (pages, components, functions, data, design, assets, security, testing, tech stack) with a status (planned, in progress, done), an MVP flag, a main photo and a moodboard of links, images and colors.
+- Typed connections between items ("belongs to", "triggers", "uses", "reads from", "protects", "tests"), checked against rules in the template. Circular connections are rejected where they make no sense.
+- Three ways to look at a project: the File view (items grouped by category), the relationship map (React Flow, create items and connections and save positions) and an overview.
+- Groups of items, project inspiration (links, text, images), search and filters.
+- Tasks and sprints, with a board (planned, in progress, done).
+- Progress per category and in total, warnings for things that are easy to forget, and a project checklist.
+- Help for beginners: a short tutorial on every page and a `/help` page.
 
 ## Tech stack
 
