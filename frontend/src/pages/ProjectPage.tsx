@@ -126,6 +126,7 @@ function ProjectFrame({ project, setProject }: FrameProps) {
           project={project}
           progress={progress.progress}
           itemCrumb={itemCrumb}
+          helpPage={helpPage}
         />
 
         <div className={styles.body}>

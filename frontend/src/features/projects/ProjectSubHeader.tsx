@@ -1,5 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { Breadcrumb, type Crumb } from "../../components/Breadcrumb";
+import { InfoBubble } from "../../components/InfoBubble";
+import { PAGE_HELP, type PageKey } from "../help/pageHelp";
 import { ProgressBar } from "../progress/ProgressBar";
 import type { Progress } from "../progress/types";
 import { ProjectSettings } from "./ProjectSettings";
@@ -11,6 +13,7 @@ type Props = {
   project: Project;
   progress: Progress | null; // null while loading
   itemCrumb: ItemCrumb | null; // set by the item page, null on every other page
+  helpPage: PageKey | null; // which page's help the "i" next to the title shows, null = no "i"
 };
 
 // The title of each page under /projects/:projectId, by the first part of the address after the project id
@@ -23,7 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 // The bar under the header on every project page: the trail and title of the page we are on, and the progress.
-export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
+export function ProjectSubHeader({ project, progress, itemCrumb, helpPage }: Props) {
   // "/projects/<id>/tasks" -> ["", "projects", "<id>", "tasks"]
   const section = useLocation().pathname.split("/")[3] ?? "";
   const base = `/projects/${project.id}`;
@@ -60,7 +63,10 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
       <div className={styles.heading}>
         {/* Every trail starts at the projects list */}
         <Breadcrumb crumbs={[{ label: "Projects", to: "/" }, ...crumbs]} />
-        <h1 className={styles.title}>{title}</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>{title}</h1>
+          {helpPage && <InfoBubble text={PAGE_HELP[helpPage].intro} label="About this page" />}
+        </div>
       </div>
 
       <div className={styles.right}>
