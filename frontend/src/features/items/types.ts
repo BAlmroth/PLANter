@@ -75,6 +75,8 @@ export type Template = {
     allowCycles: boolean;
     // true: the map's layout puts the target on the left ("component belongs_to page": page first)
     readsBackward?: boolean;
+    // true: a connection of this type can have an amount ("made from 20 Wood"). Missing = no amount.
+    hasQuantity?: boolean;
     // Help text: what the connection means
     description: string;
   }[];

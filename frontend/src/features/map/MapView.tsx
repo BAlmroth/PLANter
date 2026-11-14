@@ -28,6 +28,7 @@ import type { ItemNodeType } from "./types";
 import styles from "./MapView.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
+import { connectionText } from "../relationships/quantity";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
@@ -159,13 +160,16 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
 
   // Creates the connection that was dragged. Returns an error message, or null when it worked.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
-  async function connect(relationshipType: string) {
+  // quantity: the amount from the prompt ("made from 20 Wood"), undefined when there is none
+  async function connect(relationshipType: string, quantity: number | undefined) {
     if (!pending) return null;
     try {
       const relationship = await createRelationship({
         sourceItemId: pending.sourceId,
         targetItemId: pending.targetId,
         type: relationshipType,
+        // Only sent when there is an amount, so other requests look exactly as before
+        ...(quantity !== undefined && { quantity }),
       });
       relationships.setRelationships((current) => [...current, relationship]);
       setPending(null);
@@ -348,7 +352,12 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
                 {selectedEdge && edgeSource && edgeTarget && (
                   <>
                     <p>
-                      {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}
+                      {edgeSource.title} {edgeLabel ?? "Unknown"}{" "}
+                      {/* "20 × Wood" when the connection has an amount */}
+                      {connectionText({
+                        otherTitle: edgeTarget.title,
+                        ...(selectedEdge.quantity != null && { amount: { value: selectedEdge.quantity, isSource: true } }),
+                      })}
                     </p>
                     <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
                       Delete connection

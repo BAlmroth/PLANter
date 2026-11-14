@@ -1,13 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
 import { getTypeChoices, type ConnectOption } from "./connections";
+import { parseQuantity } from "./quantity";
+import { QuantityField } from "./QuantityField";
 
 type Props = {
   // The title of the item the form is opened on, used in the labels and the preview
   thisTitle: string;
   options: ConnectOption[];
   // Returns an error message, or null when it worked (the parent then closes the form)
-  onSubmit: (option: ConnectOption, title: string) => Promise<string | null>;
+  // quantity: only for an option with hasQuantity, undefined when the field is empty
+  onSubmit: (option: ConnectOption, title: string, quantity: number | undefined) => Promise<string | null>;
   onCancel: () => void;
 };
 
@@ -18,6 +21,7 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
   // The parent only shows this form when there is at least one option
   const [newItemType, setNewItemType] = useState(options[0]?.newItemType ?? "");
   const [optionKey, setOptionKey] = useState("");
+  const [quantityText, setQuantityText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,8 +41,15 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
       return;
     }
 
+    // The amount only counts when the chosen connection can have one
+    const quantity = selected.hasQuantity ? parseQuantity(quantityText) : { value: undefined };
+    if ("error" in quantity) {
+      setError(quantity.error);
+      return;
+    }
+
     setSubmitting(true);
-    const message = await onSubmit(selected, title.trim());
+    const message = await onSubmit(selected, title.trim(), quantity.value);
     if (message !== null) {
       setError(message);
       setSubmitting(false);
@@ -80,6 +91,7 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
           block
         />
       </label>
+      {selected?.hasQuantity && <QuantityField value={quantityText} onChange={setQuantityText} />}
       {selected && (
         <p>
           {title.trim() || "New item"} ({selected.newItemTypeLabel}) <strong>{selected.verb}</strong>{" "}

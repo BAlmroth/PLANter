@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
 import type { Item } from "../items/types";
 import { getTypeChoices, type ConnectOption } from "./connections";
+import { parseQuantity } from "./quantity";
+import { QuantityField } from "./QuantityField";
 
 type Props = {
   // The title of the item the form is opened on
@@ -10,7 +12,8 @@ type Props = {
   // The other items in the project (not this one)
   items: Item[];
   // Returns an error message, or null when it worked (the parent then closes the form)
-  onSubmit: (option: ConnectOption, otherItemId: string) => Promise<string | null>;
+  // quantity: only for an option with hasQuantity, undefined when the field is empty
+  onSubmit: (option: ConnectOption, otherItemId: string, quantity: number | undefined) => Promise<string | null>;
   onCancel: () => void;
 };
 
@@ -22,6 +25,7 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
   // "" means "not chosen yet", the first choice is used (same idea as in ConnectedItemForm)
   const [itemId, setItemId] = useState("");
   const [optionKey, setOptionKey] = useState("");
+  const [quantityText, setQuantityText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,8 +39,15 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
     setError(null);
     if (!selected || !selectedItem) return;
 
+    // The amount only counts when the chosen connection can have one
+    const quantity = selected.hasQuantity ? parseQuantity(quantityText) : { value: undefined };
+    if ("error" in quantity) {
+      setError(quantity.error);
+      return;
+    }
+
     setSubmitting(true);
-    const message = await onSubmit(selected, selectedItem.id);
+    const message = await onSubmit(selected, selectedItem.id, quantity.value);
     if (message !== null) {
       setError(message);
       setSubmitting(false);
@@ -83,6 +94,7 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
           block
         />
       </label>
+      {selected?.hasQuantity && <QuantityField value={quantityText} onChange={setQuantityText} />}
       {selected && selectedItem && (
         <p>
           {selectedItem.title} ({selected.newItemTypeLabel}) <strong>{selected.verb}</strong>{" "}

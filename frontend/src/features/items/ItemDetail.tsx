@@ -5,6 +5,7 @@ import type { Project } from "../projects/types";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
 import { getConnectOptions, getConnections, type Connection } from "../relationships/connections";
+import { connectionText } from "../relationships/quantity";
 import { useProjectContext } from "../projects/useProjectContext";
 import { deleteRelationship } from "../relationships/relationshipsApi";
 import { useRelationships } from "../relationships/useRelationships";
@@ -174,7 +175,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   async function handleRemoveConnection(connection: Connection) {
-    if (!(await confirm({ title: "Remove connection?", message: `"${connection.label}: ${connection.otherTitle}" will be removed.`, confirmLabel: "Remove" }))) return;
+    if (!(await confirm({ title: "Remove connection?", message: `"${connection.label}: ${connectionText(connection)}" will be removed.`, confirmLabel: "Remove" }))) return;
     setError(null);
     setBusy(true);
     try {

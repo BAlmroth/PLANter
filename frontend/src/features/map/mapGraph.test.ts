@@ -72,6 +72,12 @@ describe("buildEdges", () => {
     expect(e).toMatchObject({ source: "page", target: "comp", label: "contains" });
   });
 
+  it("adds the amount to the label, also when the line is turned around", () => {
+    const withAmount = { ...relationship("r1", "comp", "page", "belongs_to"), quantity: 20 };
+    const [e] = buildEdges([withAmount], [item("comp", "component"), item("page")], template, null, null);
+    expect(e).toMatchObject({ source: "page", target: "comp", label: "contains (20)" });
+  });
+
   it("lights up the connections of the selected item in the color of the source type", () => {
     const edges = buildEdges(
       [relationship("r1", "a", "b"), relationship("r2", "c", "d")],

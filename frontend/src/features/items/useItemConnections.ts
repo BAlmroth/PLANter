@@ -28,7 +28,8 @@ export function useItemConnections({
 }: Options) {
   // Creates a new item and connects it to this one. Two requests: if the connection is refused
   // (for example it would make a loop), the new item is deleted again so nothing is left behind.
-  async function addConnectedItem(option: ConnectOption, title: string) {
+  // quantity: the amount from the form ("made from 20 Wood"), undefined when there is none
+  async function addConnectedItem(option: ConnectOption, title: string, quantity: number | undefined) {
     let newItem: Item;
     try {
       newItem = await createItem(projectId, { title, type: option.newItemType });
@@ -41,6 +42,8 @@ export function useItemConnections({
         sourceItemId: option.newItemIsSource ? newItem.id : itemId,
         targetItemId: option.newItemIsSource ? itemId : newItem.id,
         type: option.relationshipType,
+        // Only sent when there is an amount, so other requests look exactly as before
+        ...(quantity !== undefined && { quantity }),
       });
       setItems((current) => [...current, newItem]);
       setRelationships((current) => [...current, relationship]);
@@ -61,12 +64,13 @@ export function useItemConnections({
 
   // Connects this item to an item that already exists.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
-  async function connectExisting(option: ConnectOption, otherItemId: string) {
+  async function connectExisting(option: ConnectOption, otherItemId: string, quantity: number | undefined) {
     try {
       const relationship = await createRelationship({
         sourceItemId: option.newItemIsSource ? otherItemId : itemId,
         targetItemId: option.newItemIsSource ? itemId : otherItemId,
         type: option.relationshipType,
+        ...(quantity !== undefined && { quantity }),
       });
       setRelationships((current) => [...current, relationship]);
       refreshWarnings();

@@ -54,6 +54,42 @@ describe("getConnections", () => {
   it("skips a connection whose other item is missing", () => {
     expect(getConnections("1", [relationship], [page], template)).toEqual([]);
   });
+
+  it("adds no amount for a null quantity", () => {
+    const none = { ...relationship, quantity: null };
+    expect(getConnections("1", [none], [page, button], template)[0]).not.toHaveProperty("amount");
+  });
+
+  it("adds the amount, and which side needs it", () => {
+    const twenty = { ...relationship, quantity: 20 };
+    expect(getConnections("1", [twenty], [page, button], template)[0]?.amount).toEqual({ value: 20, isSource: true });
+    expect(getConnections("2", [twenty], [page, button], template)[0]?.amount).toEqual({ value: 20, isSource: false });
+  });
+});
+
+describe("getConnectOptions with amounts", () => {
+  const game: Template = {
+    ...template,
+    key: "game",
+    itemTypes: [
+      { key: "location", label: "Location", pluralLabel: "Locations", countsTowardProgress: true, color: "#1A6E44", description: "", example: "" },
+      { key: "inventory", label: "Inventory", pluralLabel: "Inventory", countsTowardProgress: true, color: "#A8380A", description: "", example: "" },
+    ],
+    relationshipTypes: [
+      { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, hasQuantity: true, description: "" },
+      { key: "appears_in", label: "appears in", inverseLabel: "features", allowCycles: true, description: "" },
+    ],
+    allowedCombinations: [
+      { source: "location", relationship: "made_from", target: "inventory" },
+      { source: "inventory", relationship: "appears_in", target: "location" },
+    ],
+  };
+
+  it("marks only the options whose type allows an amount", () => {
+    const options = getConnectOptions("location", game);
+    expect(options.find((o) => o.relationshipType === "made_from")?.hasQuantity).toBe(true);
+    expect(options.find((o) => o.relationshipType === "appears_in")).not.toHaveProperty("hasQuantity");
+  });
 });
 
 describe("getConnectOptions", () => {

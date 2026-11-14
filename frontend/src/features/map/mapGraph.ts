@@ -8,6 +8,7 @@ import type { WarningsByItem } from "../warnings/types";
 import { getCardSize } from "./cardSize";
 import type { LayoutDirection } from "./tidyLayout";
 import type { ItemNodeType } from "./types";
+import { edgeLabel } from "../relationships/quantity";
 
 // How faded the items and connections are that are not in focus (filtered out, or not connected to the selection)
 export const FADED = 0.2;
@@ -88,7 +89,8 @@ export function buildEdges(
       // An arrowhead at the target end, so you can see which way the connection goes
       markerEnd: { type: MarkerType.ArrowClosed },
       // The item the line starts at shows its wording: "uses" from the source's side, "contains" from the target's
-      label: relType ? (drawnBackward ? relType.inverseLabel : relType.label) : "Unknown",
+      // With an amount: "ingredient in (20)"
+      label: edgeLabel(relType ? (drawnBackward ? relType.inverseLabel : relType.label) : "Unknown", relationship.quantity),
       animated: touchesSelected,
       // A lit-up connection takes the color of its source item's type ("page uses design": page blue).
       // Unknown types fall back to the brand color.

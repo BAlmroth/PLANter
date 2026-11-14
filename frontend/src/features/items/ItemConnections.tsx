@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
 import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import { groupConnectionsByLabel, type ConnectOption, type Connection } from "../relationships/connections";
+import { connectionText } from "../relationships/quantity";
 import type { Item, Template } from "./types";
 import { typeColorStyle } from "./typeColor";
 import styles from "./ItemDetail.module.css";
@@ -17,8 +18,8 @@ type Props = {
   busy: boolean;
   onRemove: (connection: Connection) => void;
   // Both return an error message, or null when it worked
-  onAddConnectedItem: (option: ConnectOption, title: string) => Promise<string | null>;
-  onConnectExisting: (option: ConnectOption, otherItemId: string) => Promise<string | null>;
+  onAddConnectedItem: (option: ConnectOption, title: string, quantity: number | undefined) => Promise<string | null>;
+  onConnectExisting: (option: ConnectOption, otherItemId: string, quantity: number | undefined) => Promise<string | null>;
 };
 
 // The "Connections" card on the item page: the connections as pills, and the two forms to add one.
@@ -51,7 +52,8 @@ export function ItemConnections({
               <ul className={styles.pills}>
                 {group.connections.map((connection) => (
                   <li key={connection.id} className={styles.pill} style={typeColorStyle(template, connection.otherType)}>
-                    {connection.otherTitle}
+                    {/* "20 × Wood" when the connection has an amount, otherwise just the title */}
+                    {connectionText(connection)}
                     {/* The type label is shown next to the colored dot, so color never stands alone */}
                     <span className={styles.pillType}>
                       {template.itemTypes.find((t) => t.key === connection.otherType)?.label ?? "Unknown"}
@@ -61,7 +63,7 @@ export function ItemConnections({
                       className={styles.remove}
                       onClick={() => onRemove(connection)}
                       disabled={busy}
-                      aria-label={`Remove the connection ${connection.label}: ${connection.otherTitle}`}
+                      aria-label={`Remove the connection ${connection.label}: ${connectionText(connection)}`}
                     >
                       ×
                     </button>
@@ -79,8 +81,8 @@ export function ItemConnections({
             thisTitle={item.title}
             options={connectOptions}
             onCancel={() => setConnecting(null)}
-            onSubmit={async (option, title) => {
-              const message = await onAddConnectedItem(option, title);
+            onSubmit={async (option, title, quantity) => {
+              const message = await onAddConnectedItem(option, title, quantity);
               if (message === null) setConnecting(null);
               return message;
             }}
@@ -91,8 +93,8 @@ export function ItemConnections({
             options={connectOptions}
             items={allItems.filter((other) => other.id !== item.id)}
             onCancel={() => setConnecting(null)}
-            onSubmit={async (option, otherItemId) => {
-              const message = await onConnectExisting(option, otherItemId);
+            onSubmit={async (option, otherItemId, quantity) => {
+              const message = await onConnectExisting(option, otherItemId, quantity);
               if (message === null) setConnecting(null);
               return message;
             }}
