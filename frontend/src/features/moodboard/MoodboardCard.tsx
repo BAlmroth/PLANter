@@ -242,8 +242,7 @@ export function MoodboardCard({
           <h3 className={styles.label}>Visual references</h3>
           <ul className={styles.references}>
             {references.map((entry) => (
-              // title: the whole text as a tooltip, since the square card cuts it after two lines
-              <li key={entry.id} className={styles.reference} title={entry.text ? `${entry.title}: ${entry.text}` : entry.title}>
+              <li key={entry.id} className={styles.reference}>
                 {/* imageUrl is a link made by our backend, and is still only used when it is http(s) */}
                 {entry.imageUrl && isHttpUrl(entry.imageUrl) && <img src={entry.imageUrl} alt={entry.title} className={styles.image} />}
                 <div className={styles.caption}>
