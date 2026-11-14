@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageKeyFromPath } from "./pageHelp";
+import { helpPath, pageKeyFromPath } from "./pageHelp";
 
 describe("pageKeyFromPath", () => {
   it("finds the overview with and without a trailing slash", () => {
@@ -27,5 +27,15 @@ describe("pageKeyFromPath", () => {
 
   it("returns null for a page without help", () => {
     expect(pageKeyFromPath("/projects/abc/nope", null)).toBeNull();
+  });
+});
+
+describe("helpPath", () => {
+  it("puts the template key in the query", () => {
+    expect(helpPath("game")).toBe("/help?template=game");
+  });
+
+  it("encodes characters that would break the URL", () => {
+    expect(helpPath("a&b")).toBe("/help?template=a%26b");
   });
 });

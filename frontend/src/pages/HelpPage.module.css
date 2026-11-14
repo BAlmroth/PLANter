@@ -15,6 +15,14 @@
   gap: 8px;
 }
 
+/* "Categories and connections for: [Web Project | Game]", wraps on a narrow screen */
+.templateSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
 .card {
   padding: 24px;
   background: var(--surface);

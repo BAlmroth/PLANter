@@ -26,7 +26,7 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
   list: {
     title: "Items",
-    intro: "Everything you plan to build, sorted by category. TIP: Start with the pages, then add what each page needs. Click an item to open it.",
+    intro: "Everything you plan to build, sorted by category. TIP: Start with the big parts (the pages of a website, the mechanics of a game), then add what each one needs. Click an item to open it.",
   },
   map: {
     title: "Map",
@@ -58,4 +58,10 @@ export function pageKeyFromPath(pathname: string, view: string | null): PageKey 
   if (page === "items") return "item";
   if (page === "description" || page === "moodboard" || page === "tasks" || page === "checklist") return page;
   return null;
+}
+
+// The Help page for a template: it shows that template's categories and connections.
+// Links from inside a project pass the project's template, the footer link has none (web is shown).
+export function helpPath(templateKey: string): string {
+  return `/help?template=${encodeURIComponent(templateKey)}`;
 }

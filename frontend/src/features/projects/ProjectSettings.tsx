@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/api";
+import { helpPath } from "../help/pageHelp";
 import { deleteProject } from "./projectsApi";
 import type { Project } from "./types";
 import styles from "./ProjectSettings.module.css";
@@ -51,7 +52,7 @@ export function ProjectSettings({ project }: Props) {
         <div className={styles.panel} role="dialog" aria-label="Project settings">
           {step === "menu" && (
             <>
-              <Link to="/help" className={styles.helpLink}>
+              <Link to={helpPath(project.template)} className={styles.helpLink}>
                 Help and guides
               </Link>
               <button type="button" className={styles.danger} onClick={() => setStep("confirm")}>

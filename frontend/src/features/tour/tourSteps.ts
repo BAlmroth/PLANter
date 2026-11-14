@@ -56,7 +56,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "nav-items",
       title: "Next: add your items or start with tasks",
-      body: "Two good places to start: add the pages of your site, or write down the concrete to-dos in Tasks & progress.",
+      body: "Two good places to start: add the big parts of your project (pages for a website, mechanics for a game), or write down the concrete to-dos in Tasks & progress.",
     },
   ],
   // A simple page with one card: the intro is enough
@@ -79,7 +79,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "add-item",
       title: "Add an item",
-      body: "Pick a category and give it a name. Start with the pages of your site, then add what each page needs.",
+      body: "Pick a category and give it a name. Start with the big parts, then add what each one needs.",
     },
     {
       target: "plan-view-toggle",
@@ -162,7 +162,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "item-warnings",
       title: "Warnings",
-      body: "Items that are probably missing something, like a page with no components. Click one to fix it.",
+      body: "Items that are probably missing something, like a page with no components or a character who appears nowhere. Click one to fix it.",
     },
     {
       target: "tasks-section",

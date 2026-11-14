@@ -1,23 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { BackLink } from "../components/BackLink";
 import { Breadcrumb } from "../components/Breadcrumb";
+import { ViewToggle } from "../components/ViewToggle";
 import { PAGE_HELP } from "../features/help/pageHelp";
 import { TypeBadge } from "../features/items/TypeBadge";
 import { useTemplate } from "../features/items/useTemplate";
+import { useTemplateList } from "../features/items/useTemplateList";
 import { resetTours } from "../features/tour/tourSteps";
 import styles from "./HelpPage.module.css";
 import { Loader } from "../components/Loader";
 
-// The help page outside any project. "web" is the only template; when the game template
-// exists, this page can take the template from the project it was opened from.
-const TEMPLATE_KEY = "web";
+// Shown when the URL has no ?template= (the footer link is outside any project)
+const DEFAULT_TEMPLATE = "web";
 
-// The help and docs page (/help), reachable from the footer, project settings and every intro box.
+// The help and docs page (/help), reachable from the footer, project settings and the ? button.
 // Page texts come from pageHelp.ts, everything about categories and connections from the template.
+// The template is in the URL (/help?template=game, see helpPath), so links from a project open its own
+// categories, and a switch lets the user look at the other templates.
 export function HelpPage() {
-  const { template, error, loading, refetch } = useTemplate(TEMPLATE_KEY);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const templateKey = searchParams.get("template") ?? DEFAULT_TEMPLATE;
+  const { template, error, loading, refetch } = useTemplate(templateKey);
+  const templateChoices = useTemplateList();
   const [toursReset, setToursReset] = useState(false);
+
+  // replace: switching templates should not fill the browser's Back history
+  function chooseTemplate(key: string) {
+    setSearchParams({ template: key }, { replace: true });
+  }
 
   const typeLabel = (key: string) => template?.itemTypes.find((t) => t.key === key)?.label ?? "Unknown";
 
@@ -37,11 +48,12 @@ export function HelpPage() {
             <strong>Describe the idea</strong> in a few sentences: what are you building, and for whom?
           </li>
           <li>
-            <strong>Add items:</strong> everything you plan to build, sorted into categories. Start with the pages.
+            <strong>Add items:</strong> everything you plan to build, sorted into categories. The categories come
+            from the project's template (for example a website or a game) and are listed below.
           </li>
           <li>
-            <strong>Connect them:</strong> which components are part of which page, what a button triggers, what
-            data a function reads. This is how you spot what is missing.
+            <strong>Connect them:</strong> what is part of what, what uses what, what leads where. This is how you
+            spot what is missing.
           </li>
           <li>
             <strong>Plan the work:</strong> turn items into tasks, sort them into sprints, and follow the progress.
@@ -60,6 +72,19 @@ export function HelpPage() {
           ))}
         </dl>
       </section>
+
+      {/* Only when there is a real choice. The chosen template stays in the URL */}
+      {templateChoices.length > 1 && (
+        <div className={styles.templateSwitch}>
+          <span>Categories and connections for:</span>
+          <ViewToggle
+            label="Template"
+            options={templateChoices.map((t) => ({ value: t.key, label: t.label }))}
+            value={templateKey}
+            onChange={chooseTemplate}
+          />
+        </div>
+      )}
 
       {loading && <Loader label="Loading categories and connections…" size="section" />}
       {error && (
@@ -93,8 +118,8 @@ export function HelpPage() {
           <section className={styles.card} aria-labelledby="connections">
             <h2 id="connections">Connections</h2>
             <p>
-              A connection has a direction and reads as a sentence, like “LoginForm part of Login”. The other item
-              shows it the other way around: “Login contains LoginForm”.
+              A connection has a direction and reads as a sentence, like “Kitchen part of Castle”. The other item
+              shows it the other way around: “Castle contains Kitchen”.
             </p>
             <dl className={styles.list}>
               {template.relationshipTypes.map((rel) => {

@@ -1,10 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { ApiError } from "../lib/api";
-import { listTemplates } from "../features/items/itemsApi";
-import type { TemplateSummary } from "../features/items/types";
 import { useTemplate } from "../features/items/useTemplate";
+import { useTemplateList } from "../features/items/useTemplateList";
 import { createProject } from "../features/projects/projectsApi";
 import { StarterForm } from "../features/projects/StarterForm";
 import { EMPTY_STARTER, starterSummary, toCreateInput, type Starter } from "../features/projects/starter";
@@ -26,21 +25,9 @@ const CRUMBS = [{ label: "Projects", to: "/" }, { label: "New project" }];
 export function NewProjectPage() {
   const navigate = useNavigate();
   const [templateKey, setTemplateKey] = useState(DEFAULT_TEMPLATE);
-  const [templateChoices, setTemplateChoices] = useState<TemplateSummary[]>([]);
+  // If the list fails to load, there is no choice and the default is used
+  const templateChoices = useTemplateList();
   const { template, error: templateError, refetch } = useTemplate(templateKey);
-
-  // The list of templates for the choice below. If it fails, there is no choice and the default is used.
-  useEffect(() => {
-    let cancelled = false;
-    listTemplates()
-      .then((list) => {
-        if (!cancelled) setTemplateChoices(list);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Starter items are stored per item type, and the types belong to the template.
   // Groups and tasks are plain names, so they are kept.
