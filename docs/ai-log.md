@@ -1745,3 +1745,25 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The round ? help button (bottom right) may be covered by the map in full window. Its z-index was not checked.
 - The tutorial has no step for Manage, Filter or Full window. The "Add and filter" step still reads correctly, but the filters are now one click away.
 - The "delete connection" message still uses the stored wording ("Button part of Home"), while the line on the map now says "contains".
+
+## 2026-11-14: Task board (Planned, In progress, Done)
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** If I could add a real todo function like Trello, with Planned, In progress and Done. I wanted an option to show all tasks or one sprint, buttons instead of a new library, and an easy-to-read look that fits the rest of the app.
+
+**What was generated:**
+- Step 1, backend: `Task.done` (boolean) is replaced by `Task.status`, using the same `Status` enum as items. Migration `20261113100000_task_status` adds the column, sets `done` for rows that were ticked, and drops the old column. `updateTaskSchema` takes `status` (Zod, 3 values), the service sorts planned, in progress, done (enum order), and the demo seed maps its old `done` flags. Tests: sorting by status, a status update, and a 400 for an unknown status.
+- Step 2, frontend: `features/tasks/boardColumns.ts` (+ test): pure functions for the column order, the previous and next status, and which tasks a sprint choice shows. `TaskBoard.tsx` and its CSS: three columns, each card has the title, a link to its item in the item type's color (from the template), the sprint name, and "← Planned" / "In progress →" buttons that save through `PATCH /api/tasks/:id`. `TodoView.tsx` got a Board / List switch (the board is the default) and a "Show" dropdown (all tasks, one sprint, or no sprint). The list view is unchanged apart from the checkbox, which now sets `done` or `planned`.
+
+**What I changed or corrected:**
+- I chose buttons instead of drag and drop, so no library was added (CLAUDE.md asks me to approve libraries first).
+- The AI proposed building it in steps (data first, then the board), and I agreed.
+
+**What went wrong:**
+- One existing test still sent `{ done: true }` to check that user B gets a 404. The new Zod schema rejected it with 400 before the ownership check, so the test failed until it sent `{ status: "done" }`.
+- The first full test run hung and had to be stopped, and the second run passed. I did not find out why.
+- The migration is applied only to the local test database. It must also be applied to Supabase when the backend is deployed.
+- The board was not checked in a browser. Typecheck, lint and all 141 frontend tests pass, but no test covers how it looks.
+- Cards cannot be edited or deleted on the board, only moved. That is still done in the list view.
+- There is no tutorial step for the board yet.
