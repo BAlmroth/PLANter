@@ -23,12 +23,12 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: null,
       title: "Welcome to PLANter!",
-      body: "This is your project's overview: the whole plan at a glance. Let's look around. It takes about a minute, and you can skip it any time.",
+      body: "This is your project's overview: the whole plan at a glance. Let's look around!",
     },
     {
       target: "project-nav",
       title: "The parts of your plan",
-      body: "Switch between the pages of your project here. Each page shows a short tour the first time you open it.",
+      body: "Switch between the pages of your project here.",
     },
     {
       target: "sidebar",
@@ -55,8 +55,8 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     },
     {
       target: "nav-items",
-      title: "Next: add your items",
-      body: "Open Items to add pages, components and everything else you plan to build.",
+      title: "Next: add your items or start with tasks",
+      body: "Two good places to start: add the pages of your site, or write down the concrete to-dos in Tasks & progress.",
     },
   ],
   // A simple page with one card: the intro is enough
@@ -173,7 +173,7 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "task-view",
       title: "Board or list",
-      body: "Switch between the board and the list. On the board, choose to show all tasks or just one sprint. Add tasks and manage sprints from the buttons on the right.",
+      body: "Switch between the board and the list view. Add tasks and manage sprints from the buttons on the right.",
     },
     {
       target: "task-board",

@@ -18,7 +18,7 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
   description: {
     title: "Description",
-    intro: "Describe the idea in a few sentences: what you are building, and for whom. The rest of the plan grows from this.",
+    intro: "Describe the idea in a few sentences: what you are building and for whom. The rest of the plan grows from this.",
   },
   moodboard: {
     title: "Moodboard",
@@ -26,7 +26,7 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
   list: {
     title: "Items",
-    intro: "Everything you plan to build, sorted by category. Start with the pages, then add what each page needs. Click an item to open it.",
+    intro: "Everything you plan to build, sorted by category. TIP: Start with the pages, then add what each page needs. Click an item to open it.",
   },
   map: {
     title: "Map",
@@ -38,7 +38,7 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
   tasks: {
     title: "Tasks & progress",
-    intro: "At the top: how far the plan has come and what might be missing. Below: the concrete to-dos on a board (Planned, In progress, Done), which you can sort into sprints.",
+    intro: "A shared space to keep track of your todo list and progress.",
   },
   checklist: {
     title: "Checklist",
