@@ -10,9 +10,9 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px 20px;
-  margin-bottom: 8px;
-  padding-bottom: 16px;
+  gap: 16px 28px;
+  margin-bottom: 16px;
+  padding: 12px 0 24px;
   border-bottom: 1.5px solid var(--border);
 }
 /* The title with the count under it */
@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
 }
 .viewTitle {
   margin: 0;
@@ -28,7 +28,7 @@
 
 /* The number of items, the same small grey chip as before ("12 items") */
 .count {
-  padding: 2px 8px;
+  padding: 4px 10px;
   font-family: var(--mono);
   font-size: 0.75rem;
   background: var(--bg-dark);
