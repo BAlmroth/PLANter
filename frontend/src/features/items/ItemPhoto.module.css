@@ -1,24 +1,51 @@
-/* Centered in the grey area on the item page, the button under the photo */
-.photo {
+/* Card header: the title on the left, the photo button on the right,
+   with the same line under it as the other card titles */
+.header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  max-width: 100%;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg-dark);
 }
 
+.title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+/* The grey area the photo sits in, centered like a preview */
+.stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  min-height: 240px;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+}
+
+/* The photo takes 80% of the stage width (a small photo is scaled up).
+   A tall photo stops at 480px, and "contain" keeps its shape */
 .image {
   display: block;
-  max-width: 100%;
-  max-height: 360px;
+  width: 80%;
+  height: auto;
+  max-height: 480px;
   object-fit: contain;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+.empty {
+  margin: 24px 0;
+  color: var(--text);
 }
 
 /* The file input is hidden, the label works as the button */
 .upload {
+  flex-shrink: 0;
   padding: 6px 12px;
   font-size: 0.9rem;
   color: var(--text-h);
@@ -36,6 +63,6 @@
 }
 
 .error {
-  margin: 0;
+  margin: 0 0 12px;
   color: var(--danger);
 }

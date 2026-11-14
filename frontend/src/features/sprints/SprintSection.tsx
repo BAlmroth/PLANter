@@ -5,6 +5,7 @@ import type { Task } from "../tasks/types";
 import { createSprint, deleteSprint, updateSprint } from "./sprintsApi";
 import type { Sprint } from "./types";
 import styles from "./SprintSection.module.css";
+import { sortSprints } from "./sortSprints";
 
 type Props = {
   projectId: string;
@@ -37,7 +38,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
     setBusy(true);
     try {
       const sprint = await createSprint(projectId, name);
-      setSprints((current) => [...current, sprint]);
+      setSprints((current) => sortSprints([...current, sprint]));
       setName("");
     } catch (err) {
       setError(messageFrom(err));
@@ -56,7 +57,7 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
     setBusy(true);
     try {
       const updated = await updateSprint(editingId!, editName);
-      setSprints((current) => current.map((s) => (s.id === updated.id ? updated : s)));
+      setSprints((current) => sortSprints(current.map((s) => (s.id === updated.id ? updated : s))));
       setEditingId(null);
     } catch (err) {
       setError(messageFrom(err));
@@ -88,7 +89,9 @@ export function SprintSection({ projectId, sprints, setSprints, tasks, setTasks 
       {modal}
       <h2 className={styles.label}>Sprints</h2>
       {sprints.length === 0 ? (
-        <p className={styles.empty}>No sprints yet.</p>
+        <p className={styles.empty}>
+          No sprints yet. A sprint is a short stretch of work, like one week. Add one below, then put tasks in it.
+        </p>
       ) : (
         <ul className={styles.list}>
           {sprints.map((sprint) => (

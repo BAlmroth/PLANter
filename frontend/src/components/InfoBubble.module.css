@@ -1,0 +1,80 @@
+/* position: relative, so the bubble is placed under the button */
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1.5px solid var(--primary);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary);
+  font: italic 700 0.8rem/1 Georgia, serif; /* the classic "i" for info */
+  cursor: help;
+}
+
+/* Next to a section heading: smaller and lighter, so it does not clutter the page */
+.small {
+  width: 16px;
+  height: 16px;
+  border-width: 1px;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.small:hover,
+.small:focus-visible {
+  opacity: 1;
+}
+
+/* Hidden until the button is hovered or focused. visibility (not display) so screen readers
+   can still read it through aria-describedby. */
+.bubble {
+  position: absolute;
+  top: 100%;
+  left: -8px; /* opens to the right: the "i" is next to the title at the left of the page */
+  z-index: 20;
+  /* An invisible margin between the button and the bubble, so the mouse can move onto the
+     bubble without leaving the wrapper (the bubble would close otherwise) */
+  margin-top: 8px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 10px 12px;
+  background: var(--bar-bg);
+  color: var(--on-bar);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+/* Fills the 8px gap above the bubble, so hovering from the button to the bubble keeps it open */
+.bubble::before {
+  content: "";
+  position: absolute;
+  inset: -8px 0 auto 0;
+  height: 8px;
+}
+
+.wrapper:hover .bubble,
+.wrapper:focus-within .bubble {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    transition: none;
+  }
+}

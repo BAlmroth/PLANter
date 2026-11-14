@@ -22,6 +22,13 @@
   align-items: flex-start;
   gap: 8px;
 }
+/* The heading with a small "i" (InfoBubble) next to it */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .viewTitle {
   margin: 0;
 }

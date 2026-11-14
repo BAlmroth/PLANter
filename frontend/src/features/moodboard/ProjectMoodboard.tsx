@@ -9,6 +9,7 @@ import { MoodboardCard, type NewEntry } from "./MoodboardCard";
 import styles from "./MoodboardCard.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
+import { SECTION_HELP } from "../help/sectionHelp";
 
 const messageFrom = (err: unknown) => (err instanceof Error ? err.message : "Something went wrong.");
 
@@ -82,6 +83,7 @@ export function ProjectMoodboard({ projectId, entries, setInspirations }: Props)
       <MoodboardCard
         heading="Moodboard"
         tourId="moodboard-card"
+        help={SECTION_HELP.moodboard}
         entries={entries}
         colors={colors}
         onAddEntry={addEntry}

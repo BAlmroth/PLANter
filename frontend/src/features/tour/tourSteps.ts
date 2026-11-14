@@ -139,6 +139,12 @@ export const TOURS: Record<PageKey, TourStep[]> = {
       body: "Change the name, category or description. Mark the item as MVP if it belongs in the first version you build.",
     },
     {
+      // Only game items have this card. On a web item the step is skipped (no element).
+      target: "item-requirements",
+      title: "Requirements",
+      body: "What it takes to get this item: what it is made from, what it costs, what unlocks it, and conditions like “only in summer”.",
+    },
+    {
       target: "item-connections",
       title: "Connections",
       body: "What this item is connected to, read as a sentence. Add a new connected item here, or connect one you already have.",

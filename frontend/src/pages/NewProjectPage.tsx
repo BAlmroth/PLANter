@@ -9,6 +9,8 @@ import { StarterForm } from "../features/projects/StarterForm";
 import { EMPTY_STARTER, starterSummary, toCreateInput, type Starter } from "../features/projects/starter";
 import styles from "./NewProjectPage.module.css";
 import { Loader } from "../components/Loader";
+import { InfoBubble } from "../components/InfoBubble";
+import { APP_PAGE_HELP } from "../features/help/pageHelp";
 
 // Chosen until the user picks another one. Also used if the list of templates cannot be loaded,
 // so creating a project never depends on that list.
@@ -78,7 +80,10 @@ export function NewProjectPage() {
       <main className={styles.page}>
         <Breadcrumb crumbs={CRUMBS} />
         <p className={styles.stepLabel}>Step 1 of 2</p>
-        <h1 className={styles.title}>New project</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>New project</h1>
+          <InfoBubble text={APP_PAGE_HELP.newProject} label="About this page" />
+        </div>
         <p className={styles.lead}>What are you building? A name is enough to start.</p>
 
         <form onSubmit={goToStarter} className={styles.form}>
@@ -141,7 +146,10 @@ export function NewProjectPage() {
     <main className={styles.page}>
       <Breadcrumb crumbs={CRUMBS} />
       <p className={styles.stepLabel}>Step 2 of 2</p>
-      <h1 className={styles.title}>Already got a good idea?</h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>Already got a good idea?</h1>
+        <InfoBubble text={APP_PAGE_HELP.newProjectStarter} label="About this step" />
+      </div>
       <p className={styles.lead}>
         Add the things you already know about <strong>{name}</strong>. Everything here is optional, and you can
         add, change or remove it later.

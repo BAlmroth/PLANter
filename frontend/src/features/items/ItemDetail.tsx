@@ -1,6 +1,6 @@
 import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { Project } from "../projects/types";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
@@ -31,6 +31,7 @@ import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
 import { Loader } from "../../components/Loader";
+import { ErrorPage } from "../../components/ErrorPage";
 import { useGateLoading } from "../../components/useLoadGate";
 
 type Props = {
@@ -113,12 +114,11 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const item = items.items.find((i) => i.id === itemId);
   if (!item) {
     return (
-      <>
-        <h2>Item not found</h2>
-        <p>
-          <Link to={`/projects/${project.id}`}>Back to {project.name}</Link>
-        </p>
-      </>
+      <ErrorPage
+        kind="notFound"
+        inFrame
+        backTo={{ to: `/projects/${project.id}`, label: `Back to ${project.name}` }}
+      />
     );
   }
 
@@ -263,11 +263,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
         {/* --- Main column --- */}
         <div className={styles.column}>
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Main photo</h2>
-            {/* The grey "stage" behind the photo, like a preview area */}
-            <div className={styles.stage}>
-              <ItemPhoto item={item} onChange={replaceItem} />
-            </div>
+            <ItemPhoto item={item} onChange={replaceItem} />
           </section>
 
           <ItemDetailsTiles

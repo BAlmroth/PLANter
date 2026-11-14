@@ -75,7 +75,8 @@ export function ProjectPalette({ projectId, editable }: { projectId: string; edi
       {!loading && !error && (
         <>
           {colors.length === 0 ? (
-            <p>No colors yet.</p>
+            // Only shown on the Moodboard page (editable): the read-only palette hides itself when empty
+            <p>No colors yet. Pick a color below and add it to build the project's palette.</p>
           ) : (
             <ul className={styles.swatches}>
               {colors.map((color) => (

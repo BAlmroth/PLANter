@@ -46,6 +46,16 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
 };
 
+// Help for the pages outside a project, shown only in the "i" bubble next to their title.
+// Kept apart from PAGE_HELP because these pages have no tour and are not listed on the Help page.
+export const APP_PAGE_HELP = {
+  projects: "All your projects. Click a project to open it, or start a new one with + New project.",
+  newProject:
+    "Choose what you are planning and give the project a name. Create an empty project, or go to the next step to add what you already know.",
+  newProjectStarter:
+    "Write down the parts you already have in mind, sorted by category, plus groups and first tasks. Everything is optional and can be changed later. Connections are made on the map afterwards.",
+} satisfies Record<string, string>;
+
 // Which page a URL inside a project is, or null for a URL that has no help (for example a typo).
 // `pathname` is the part after /projects/:projectId, `view` is the ?view= value on the items page.
 export function pageKeyFromPath(pathname: string, view: string | null): PageKey | null {

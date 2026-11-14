@@ -25,6 +25,13 @@
   scroll-margin-top: 76px;
 }
 
+/* A section heading with a small "i" (InfoBubble) next to it */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 1.6rem;

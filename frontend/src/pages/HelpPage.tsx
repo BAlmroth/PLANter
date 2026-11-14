@@ -4,6 +4,7 @@ import { BackLink } from "../components/BackLink";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { ViewToggle } from "../components/ViewToggle";
 import { PAGE_HELP } from "../features/help/pageHelp";
+import { GLOSSARY } from "../features/help/glossary";
 import { TypeBadge } from "../features/items/TypeBadge";
 import { useTemplate } from "../features/items/useTemplate";
 import { useTemplateList } from "../features/items/useTemplateList";
@@ -68,6 +69,18 @@ export function HelpPage() {
             <div key={key}>
               <dt>{help.title}</dt>
               <dd>{help.intro}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className={styles.card} aria-labelledby="words">
+        <h2 id="words">Words</h2>
+        <dl className={styles.list}>
+          {GLOSSARY.map((entry) => (
+            <div key={entry.word}>
+              <dt>{entry.word}</dt>
+              <dd>{entry.meaning}</dd>
             </div>
           ))}
         </dl>

@@ -30,15 +30,26 @@ export function ItemPhoto({ item, onChange }: { item: Item; onChange: (updated: 
     }
   }
 
+  // The button sits in the card header, so the photo gets the whole grey area below
   return (
-    <div className={styles.photo}>
-      {/* imageUrl is a link made by our backend, and is still only used when it is http(s) */}
-      {item.imageUrl && isHttpUrl(item.imageUrl) && <img src={item.imageUrl} alt={item.title} className={styles.image} />}
-      <label className={styles.upload}>
-        {busy ? "Uploading…" : item.imageUrl ? "Replace photo" : "Add photo"}
-        <input type="file" accept={IMAGE_TYPES.join(",")} disabled={busy} onChange={(e) => void handleFile(e.target.files?.[0])} />
-      </label>
+    <>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Main photo</h2>
+        <label className={styles.upload}>
+          {busy ? "Uploading…" : item.imageUrl ? "Replace photo" : "Add photo"}
+          <input type="file" accept={IMAGE_TYPES.join(",")} disabled={busy} onChange={(e) => void handleFile(e.target.files?.[0])} />
+        </label>
+      </div>
       {error && <p role="alert" className={styles.error}>{error}</p>}
-    </div>
+      {/* The grey "stage" behind the photo, like a preview area */}
+      <div className={styles.stage}>
+        {/* imageUrl is a link made by our backend, and is still only used when it is http(s) */}
+        {item.imageUrl && isHttpUrl(item.imageUrl) ? (
+          <img src={item.imageUrl} alt={item.title} className={styles.image} />
+        ) : (
+          <p className={styles.empty}>No photo yet.</p>
+        )}
+      </div>
+    </>
   );
 }
