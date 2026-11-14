@@ -10,7 +10,7 @@
    columns stand out from the cream page and the white overview card, and the white cards stand out on them. */
 .column {
   padding: 16px;
-  background: color-mix(in srgb, var(--border) 60%, var(--bg-dark));
+  background: var(--bg);
   border: 1px solid color-mix(in srgb, var(--borderDark) 45%, var(--border));
   border-radius: 12px;
 }
