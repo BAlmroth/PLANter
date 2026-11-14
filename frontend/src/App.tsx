@@ -14,6 +14,7 @@ import { Register } from "./auth/Register";
 import { ForgotPassword } from "./auth/ForgotPassword";
 import { ResetPassword } from "./auth/ResetPassword";
 import { AppLayout } from "./components/AppLayout";
+import { ErrorPage } from "./components/ErrorPage";
 
 export function App() {
   return (
@@ -46,7 +47,11 @@ export function App() {
             <Route path="progress" element={<Navigate to="../tasks" replace />} />
             <Route path="checklist" element={<ChecklistPage />} />
             <Route path="items/:itemId" element={<ItemPage />} />
+            {/* An unknown page inside a project: 404 inside the project frame */}
+            <Route path="*" element={<ErrorPage kind="notFound" inFrame />} />
           </Route>
+          {/* Any other address that matches no route above: 404 */}
+          <Route path="*" element={<ErrorPage kind="notFound" />} />
           </Route>
         </Route>
       </Routes>

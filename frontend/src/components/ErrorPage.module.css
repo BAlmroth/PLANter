@@ -1,0 +1,65 @@
+/* Centered in the space between the header and the footer */
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  padding: 32px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* The big "404" / "500" */
+.code {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.title {
+  margin: 12px 0 8px;
+  font-size: 1.5rem;
+  color: var(--text-h);
+}
+
+/* The API's own message, smaller and in a box so it reads as a detail */
+.detail {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* A link that looks like a light button, next to the dark "Try again" */
+.back {
+  padding: 8px 14px;
+  color: var(--text-h);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--borderDark);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.back:hover {
+  background: var(--bg-dark);
+}

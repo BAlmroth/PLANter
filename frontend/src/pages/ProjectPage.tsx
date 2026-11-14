@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Link,
   Outlet,
   useLocation,
   useParams,
@@ -25,6 +24,8 @@ import { LoadGate } from "../components/LoadGate";
 import { useGateLoading, useLoadGate } from "../components/useLoadGate";
 import styles from "./ProjectPage.module.css";
 import { Loader } from "../components/Loader";
+import { ErrorPage } from "../components/ErrorPage";
+import { errorKindFromStatus } from "../components/errorContent";
 
 // Everything under /projects/:projectId. Loads the project, then shows the frame around the pages.
 export function ProjectPage() {
@@ -41,23 +42,15 @@ export function ProjectPage() {
   }
 
   if (error) {
-    // 404: not found or not yours. 400: the id in the URL is not a valid uuid. Same message for both.
-    const notFound = error.status === 404 || error.status === 400;
+    // 404: not found or not yours. 400: the id in the URL is not a valid uuid. Both are a 404 page.
+    const kind = errorKindFromStatus(error.status);
     return (
-      <main className={styles.message}>
-        <h1>{notFound ? "Project not found" : "Could not load the project"}</h1>
-        {!notFound && (
-          <div role="alert">
-            <p>{error.message}</p>
-            <button type="button" onClick={refetch}>
-              Try again
-            </button>
-          </div>
-        )}
-        <p>
-          <Link to="/">Back to projects</Link>
-        </p>
-      </main>
+      <ErrorPage
+        kind={kind}
+        detail={error.message}
+        // Trying again does not help when the project does not exist
+        onRetry={kind === "notFound" ? undefined : refetch}
+      />
     );
   }
 
