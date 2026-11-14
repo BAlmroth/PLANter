@@ -78,6 +78,11 @@ describe("web template data", () => {
     }
   });
 
+  it("marks at most one item type as the overview card", () => {
+    const cards = webTemplate.itemTypes.filter((t) => t.overviewCard);
+    expect(cards.length).toBeLessThanOrEqual(1);
+  });
+
   it("has a different color for every item type", () => {
     const colors = webTemplate.itemTypes.map((t) => t.color);
     expect(new Set(colors).size).toBe(colors.length);

@@ -37,7 +37,7 @@ itemTypes: [
   { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true, color: "#436C0D", size: "small",
     description: "A test that checks that something works as planned.",
     example: "Login form test, Checkout test" },
-  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563", size: "small",
+  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563", size: "small", overviewCard: true,
     description: "A language, tool or service the project is built with.",
     example: "React, Express, Supabase" },
 ],

@@ -53,6 +53,8 @@ export type Template = {
     color: string;
     // How big the card is on the map. Missing = "medium".
     size?: "small" | "medium" | "large";
+    // true = the project overview shows a card for this type. Missing = no card.
+    overviewCard?: boolean;
     // Help text: what the category is, and typical names ("Home, Login, Profile")
     description: string;
     example: string;

@@ -16,6 +16,9 @@ export type Template = {
     // How big the card is on the map: pages large, small things (assets, tests) small.
     // Presentation only, like color and label. Missing = "medium".
     size?: "small" | "medium" | "large";
+    // true = the project overview shows a card listing the items of this type.
+    // Presentation only, like the label. At most one type has it. Missing = no card.
+    overviewCard?: boolean;
     // Help text for beginners: what this category is, in one plain sentence,
     // and a few typical names. Presentation only, like the label.
     description: string;
