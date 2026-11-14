@@ -12,8 +12,16 @@
   color: var(--text);
 }
 
+/* The title with the "i" (InfoBubble) next to it */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .title {
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .lead {

@@ -3,6 +3,8 @@ import { ProjectCard } from "../features/projects/ProjectCard";
 import { useProjects } from "../features/projects/useProjects";
 import styles from "./ProjectsPage.module.css";
 import { Loader } from "../components/Loader";
+import { InfoBubble } from "../components/InfoBubble";
+import { APP_PAGE_HELP } from "../features/help/pageHelp";
 
 // The list of the logged-in user's projects
 export function ProjectsPage() {
@@ -11,7 +13,10 @@ export function ProjectsPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Your projects</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>Your projects</h1>
+          <InfoBubble text={APP_PAGE_HELP.projects} label="About this page" />
+        </div>
         <div className={styles.actions}>
           <Link to="/projects/new" className={styles.newButton}>
             + New project

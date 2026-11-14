@@ -14,8 +14,16 @@
   margin-bottom: 32px;
 }
 
+/* The title with the "i" (InfoBubble) next to it */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
 .title {
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 2.5rem;
 }
 
