@@ -23,10 +23,12 @@ type Props = {
   setTasks: (next: (current: Task[]) => Task[]) => void;
   // Called after a task was moved, for example to load the warnings again
   onMoved?: () => void;
+  // Smaller headings and cards, and a column that scrolls when it gets long. Used on the overview.
+  compact?: boolean;
 };
 
 // A Trello-style board: one column per status. A card moves with the buttons, one column at a time.
-export function TaskBoard({ projectId, tasks, items, sprints, template, setTasks, onMoved }: Props) {
+export function TaskBoard({ projectId, tasks, items, sprints, template, setTasks, onMoved, compact = false }: Props) {
   // Which task is being saved, and the error of the last move (shown on that card)
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<{ taskId: string; message: string } | null>(null);
@@ -46,7 +48,7 @@ export function TaskBoard({ projectId, tasks, items, sprints, template, setTasks
   }
 
   return (
-    <div className={styles.board}>
+    <div className={`${styles.board} ${compact ? styles.compact : ""}`}>
       {BOARD_COLUMNS.map((status) => {
         const column = tasks.filter((task) => task.status === status);
         return (
@@ -81,8 +83,9 @@ export function TaskBoard({ projectId, tasks, items, sprints, template, setTasks
                             disabled={busyId === task.id}
                             onClick={() => move(task, back)}
                             aria-label={`Move "${task.title}" back to ${STATUS_LABELS[back]}`}
+                            title={`Back to ${STATUS_LABELS[back]}`}
                           >
-                            ← {STATUS_LABELS[back]}
+                            ←<span className={styles.moveText}> {STATUS_LABELS[back]}</span>
                           </button>
                         )}
                         {forward && (
@@ -92,8 +95,9 @@ export function TaskBoard({ projectId, tasks, items, sprints, template, setTasks
                             disabled={busyId === task.id}
                             onClick={() => move(task, forward)}
                             aria-label={`Move "${task.title}" to ${STATUS_LABELS[forward]}`}
+                            title={`Move to ${STATUS_LABELS[forward]}`}
                           >
-                            {STATUS_LABELS[forward]} →
+                            <span className={styles.moveText}>{STATUS_LABELS[forward]} </span>→
                           </button>
                         )}
                       </div>

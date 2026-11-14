@@ -125,3 +125,50 @@
   margin: 0;
   opacity: 0.7;
 }
+
+/* Compact (the overview): smaller everything, and a long column scrolls instead of growing */
+.compact {
+  gap: 12px;
+}
+.compact .column {
+  padding: 10px;
+}
+.compact .columnHeading {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  font-size: 0.95rem;
+  border-bottom-width: 2px;
+}
+.compact .columnHeading svg {
+  width: 18px;
+  height: 18px;
+}
+.compact .columnCount {
+  min-width: 22px;
+  font-size: 0.75rem;
+}
+.compact .cards {
+  gap: 6px;
+  max-height: 260px;
+  padding-right: 2px;
+  overflow-y: auto;
+}
+.compact .card {
+  padding: 6px 8px;
+}
+.compact .title {
+  font-size: 0.85rem;
+}
+.compact .meta {
+  margin-top: 4px;
+}
+/* The buttons are only arrows here. The label stays in the tooltip and for screen readers (aria-label). */
+.compact .moves {
+  margin-top: 2px;
+}
+.compact .moveText {
+  display: none;
+}
+.compact .move {
+  padding: 0 6px;
+}

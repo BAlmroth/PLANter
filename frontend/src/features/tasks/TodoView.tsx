@@ -12,6 +12,7 @@ import { TaskBoard } from "./TaskBoard";
 import { TaskRow } from "./TaskRow";
 import { useTasks } from "./useTasks";
 import styles from "./TodoView.module.css";
+import { Dropdown } from "../../components/Dropdown";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
 
@@ -94,6 +95,13 @@ export function TodoView({ project, onTasksChanged }: Props) {
     );
   }
 
+  // What the board can show: everything, one sprint, or the tasks without a sprint
+  const scopeOptions = [
+    { value: "all", label: "All tasks" },
+    ...sprints.sprints.map((sprint) => ({ value: sprint.id, label: sprint.name })),
+    { value: "none", label: "No sprint" },
+  ];
+
   // One group per sprint, and the tasks without a sprint last
   const groups = [
     ...sprints.sprints.map((sprint) => ({
@@ -117,18 +125,10 @@ export function TodoView({ project, onTasksChanged }: Props) {
           </button>
         </div>
         {view === "board" && (
-          <label className={styles.scope}>
+          <div className={styles.scope}>
             Show
-            <select value={scope} onChange={(e) => setScope(e.target.value)}>
-              <option value="all">All tasks</option>
-              {sprints.sprints.map((sprint) => (
-                <option key={sprint.id} value={sprint.id}>
-                  {sprint.name}
-                </option>
-              ))}
-              <option value="none">No sprint</option>
-            </select>
-          </label>
+            <Dropdown label="Show tasks of" value={scope} options={scopeOptions} onChange={setScope} />
+          </div>
         )}
         <span className={styles.count}>{tasks.tasks.filter((task) => task.status !== "done").length} pending</span>
         {/* The forms are closed by default, so the page starts with the tasks.

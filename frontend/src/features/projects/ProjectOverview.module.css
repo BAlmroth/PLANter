@@ -1,5 +1,5 @@
 /* Six columns on a wide screen: a card spans two of them, so the top row has three cards
-   (description, inspiration, tech stack). A .half card spans three, so the bottom row has two (todo, sprint). */
+   (description, inspiration, tech stack). A .full card (the todo board) spans all six. */
 .grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -8,8 +8,8 @@
 .grid > * {
   grid-column: span 2;
 }
-.grid > .half {
-  grid-column: span 3;
+.grid > .full {
+  grid-column: 1 / -1;
 }
 
 .card {
@@ -138,7 +138,23 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .grid > *,
-  .grid > .half {
+  .grid > .full {
     grid-column: auto;
   }
+}
+
+/* "3 pending" and the link to the Tasks page, on the right of the Todo label */
+.todoAside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* "Show: All tasks", above the board */
+.scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
