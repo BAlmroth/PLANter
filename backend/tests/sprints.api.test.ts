@@ -66,6 +66,15 @@ describe("sprints API", () => {
     expect((await request(app).delete(`/api/sprints/${created.body.id}`).set(asA)).status).toBe(204);
   });
 
+  it("lists sprints with numbers in order (Sprint 2 before Sprint 10)", async () => {
+    const { projectId } = await setup(); // creates "Sprint 1"
+    for (const name of ["Sprint 10", "sprint 2", "Backlog"]) {
+      await request(app).post(`/api/projects/${projectId}/sprints`).set(asA).send({ name });
+    }
+    const list = await request(app).get(`/api/projects/${projectId}/sprints`).set(asA);
+    expect(list.body.map((s: { name: string }) => s.name)).toEqual(["Backlog", "Sprint 1", "sprint 2", "Sprint 10"]);
+  });
+
   it("rejects an empty name and an empty update", async () => {
     const { projectId, sprintId } = await setup();
     expect((await request(app).post(`/api/projects/${projectId}/sprints`).set(asA).send({ name: " " })).status).toBe(400);

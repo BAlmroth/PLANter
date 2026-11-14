@@ -12,11 +12,20 @@ async function getOwnedSprint(sprintId: string, userId: string) {
   return sprint;
 }
 
+// Compares names the way a person would: numbers count as numbers ("Sprint 2" before "Sprint 10"),
+// and upper or lower case does not matter. Postgres sorts text letter by letter, so this runs in JS.
+// The frontend sorts with the same rule (features/sprints/sortSprints.ts) after a create or rename.
+const nameCollator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+
+export function sortByName<T extends { name: string }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => nameCollator.compare(a.name, b.name));
+}
+
 // LIST SPRINTS IN A PROJECT
 // Sprints have no creation time, so they are sorted by name
 export async function listSprints(projectId: string, userId: string) {
   await getOwnedProject(projectId, userId);
-  return prisma.sprint.findMany({ where: { projectId }, orderBy: { name: "asc" } });
+  return sortByName(await prisma.sprint.findMany({ where: { projectId } }));
 }
 
 // CREATE SPRINT
