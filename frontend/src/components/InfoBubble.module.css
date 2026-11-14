@@ -20,6 +20,20 @@
   cursor: help;
 }
 
+/* Next to a section heading: smaller and lighter, so it does not clutter the page */
+.small {
+  width: 16px;
+  height: 16px;
+  border-width: 1px;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.small:hover,
+.small:focus-visible {
+  opacity: 1;
+}
+
 /* Hidden until the button is hovered or focused. visibility (not display) so screen readers
    can still read it through aria-describedby. */
 .bubble {

@@ -7,6 +7,8 @@ import { usePlanView } from "../features/projects/usePlanView";
 import { ProjectDescriptionCard } from "../features/projects/ProjectDescriptionCard";
 import { useProjectContext } from "../features/projects/useProjectContext";
 import styles from "./PlanPage.module.css";
+import { InfoBubble } from "../components/InfoBubble";
+import { SECTION_HELP } from "../features/help/sectionHelp";
 
 // The pages under /projects/:projectId. Each one picks the project (and shared data) out of the
 // Outlet context that ProjectPage provides, and shows one view.
@@ -33,7 +35,14 @@ export function PlanPage() {
     <div className={styles.page}>
       <div className={styles.viewRow}>
         <div className={styles.viewHeading}>
-          <h2 className={styles.viewTitle}>Project items</h2>
+          <div className={styles.titleRow}>
+            <h2 className={styles.viewTitle}>Project items</h2>
+            <InfoBubble
+              text={view === "map" ? SECTION_HELP.map : SECTION_HELP.list}
+              label={view === "map" ? "About the map" : "About the items"}
+              size="small"
+            />
+          </div>
           {loaded && <span className={styles.count}>{items.items.length} items</span>}
         </div>
         <div data-tour="plan-view-toggle">

@@ -4,6 +4,7 @@ import { MoodboardCard, type NewEntry } from "../moodboard/MoodboardCard";
 import { ProjectMoodboard } from "../moodboard/ProjectMoodboard";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
+import { SECTION_HELP } from "../help/sectionHelp";
 
 // The Moodboard page: the moodboard (colors, texts and images) on top, and the inspiration (links, texts and images) below.
 // Both are rows in project_inspirations, told apart by their section.
@@ -55,6 +56,7 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
       <MoodboardCard
         heading="Inspiration"
         tourId="inspiration-card"
+        help={SECTION_HELP.inspiration}
         entries={inspirations.filter((entry) => entry.section === "inspiration")}
         colors={[]}
         onAddEntry={addEntry}

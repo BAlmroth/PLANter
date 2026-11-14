@@ -9,6 +9,8 @@ import { ItemWarningsList } from "../features/warnings/ItemWarningsList";
 import styles from "./TasksPage.module.css";
 import { Loader } from "../components/Loader";
 import { useGateLoading } from "../components/useLoadGate";
+import { InfoBubble } from "../components/InfoBubble";
+import { SECTION_HELP } from "../features/help/sectionHelp";
 
 // How many item warnings are listed. The rest are on the checklist page.
 const WARNING_LIMIT = 5;
@@ -52,9 +54,12 @@ export function TasksPage() {
       </div>
 
       <section id="progress-section" className={styles.section} aria-labelledby="progress-heading">
-        <h2 id="progress-heading" className={styles.sectionTitle}>
-          Progress & warnings
-        </h2>
+        <div className={styles.titleRow}>
+          <h2 id="progress-heading" className={styles.sectionTitle}>
+            Progress & warnings
+          </h2>
+          <InfoBubble text={SECTION_HELP.progress} label="About progress and warnings" size="small" />
+        </div>
 
         <div className={styles.grid}>
           {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
@@ -113,9 +118,12 @@ export function TasksPage() {
         aria-labelledby="tasks-heading"
         data-tour="tasks-section"
       >
-        <h2 id="tasks-heading" className={styles.sectionTitle}>
-          Tasks & sprints
-        </h2>
+        <div className={styles.titleRow}>
+          <h2 id="tasks-heading" className={styles.sectionTitle}>
+            Tasks & sprints
+          </h2>
+          <InfoBubble text={SECTION_HELP.tasks} label="About tasks and sprints" size="small" />
+        </div>
         <TodoView project={project} onTasksChanged={reloadWarnings} />
       </section>
     </div>

@@ -4,6 +4,7 @@ import { IMAGE_TYPES, imageProblem } from "../../lib/imageFile";
 import { isHexColor } from "../colors/isHexColor";
 import { isHttpUrl } from "../projects/isHttpUrl";
 import styles from "./MoodboardCard.module.css";
+import { InfoBubble } from "../../components/InfoBubble";
 
 // What the card needs to show. Item details and project inspirations both fit these shapes.
 export type MoodboardEntry = { id: string; title: string; url: string | null; text: string | null; imageUrl: string | null };
@@ -26,6 +27,8 @@ type Props = {
   allowImage?: boolean;
   // data-tour name, when the tutorial points at this card (features/tour/tourSteps.ts)
   tourId?: string;
+  // Short how-to text, shown in a small "i" next to the heading (none on the item page)
+  help?: string;
   // Wider image cards, for the roomy Moodboard page. The item page's narrow side column keeps the small ones.
   wideReferences?: boolean;
 };
@@ -66,6 +69,7 @@ export function MoodboardCard({
   allowUrl = true,
   allowImage = true,
   tourId,
+  help,
   wideReferences = false,
 }: Props) {
   const [mode, setMode] = useState<Mode>(null);
@@ -141,7 +145,10 @@ export function MoodboardCard({
   return (
     <section className={styles.card} data-tour={tourId}>
       <div className={styles.header}>
-        <h2 className={styles.heading}>{heading}</h2>
+        <div className={styles.headingRow}>
+          <h2 className={styles.heading}>{heading}</h2>
+          {help && <InfoBubble text={help} label={`About ${heading}`} size="small" />}
+        </div>
         <button
           type="button"
           className={editing ? `${styles.editButton} ${styles.active}` : styles.editButton}

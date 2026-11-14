@@ -20,6 +20,14 @@
   padding-bottom: 10px;
   border-bottom: 1px solid var(--bg-dark);
 }
+/* The heading with a small "i" (InfoBubble) next to it, at the left of the header */
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .heading {
   margin: 0;
   font-weight: 600;
