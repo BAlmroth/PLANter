@@ -263,11 +263,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
         {/* --- Main column --- */}
         <div className={styles.column}>
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Main photo</h2>
-            {/* The grey "stage" behind the photo, like a preview area */}
-            <div className={styles.stage}>
-              <ItemPhoto item={item} onChange={replaceItem} />
-            </div>
+            <ItemPhoto item={item} onChange={replaceItem} />
           </section>
 
           <ItemDetailsTiles

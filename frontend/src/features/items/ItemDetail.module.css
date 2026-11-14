@@ -173,17 +173,6 @@
   opacity: 0.7;
 }
 
-/* --- Main photo --- */
-
-/* The grey area the photo sits in, centered like a preview */
-.stage {
-  display: flex;
-  justify-content: center;
-  padding: 24px;
-  background: var(--bg-dark);
-  border-radius: var(--radius);
-}
-
 /* --- Details: four small tiles in a row (two on a narrow screen) --- */
 
 .tiles {
