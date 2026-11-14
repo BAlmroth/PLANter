@@ -34,7 +34,7 @@ export const gameDemo: DemoData = {
     // GAMEPLAY AND SCREENS
     { ref: "mixing", col: 1, row: 3, type: "mechanic", title: "Mixing", description: "Put two or three ingredients in the pot and get something new.", status: "done", isMvp: true },
     { ref: "mixScreen", col: 2, row: 3, type: "ui", title: "Mixing screen", description: "The pot, the ingredient slots and the result.", status: "in_progress", isMvp: true,
-      details: [{ title: "Napkin sketch", text: "Ingredients drop into the pot and the result pops out on the right. It needs to feel a bit bouncy.", image: "mixing-screen-sketch.png" }] },
+      details: [{ title: "First sketch", text: "Ingredients go into the pot and the result shows up on the right.", image: "mixing-screen-sketch.png" }] },
     { ref: "hud", col: 2, row: 5, type: "ui", title: "HUD", description: "Gold and the current quest.", status: "planned" },
     { ref: "mixTest", col: 2, row: 4, type: "testing", title: "Mixing playtest", description: "Do players find the recipes without a guide?", status: "planned" },
     { ref: "godot", col: 1, row: 5, type: "tech_stack", title: "Godot", status: "done" },
@@ -43,9 +43,9 @@ export const gameDemo: DemoData = {
 
     // PLACES
     { ref: "meadow", col: 3, row: 0, type: "location", title: "Meadow", description: "Flowers, a well and Bo's stall.", status: "in_progress", image: "meadow-at-dusk.png",
-      details: [{ title: "Flower colors", text: "Pinks, creams and a little yellow. Nothing too bright, it's always early evening here.", image: "flower-colors.png" }] },
+      details: [{ title: "Flower colors", text: "Pinks, creams and a little yellow. Nothing too bright.", image: "flower-colors.png" }] },
     { ref: "cottage", col: 3, row: 2, type: "location", title: "Cottage", description: "Where the player lives and mixes.", status: "done", isMvp: true, image: "cottage.png",
-      details: [{ title: "At night", text: "I love the lit window. Coming back here after the mine should feel like coming home.", image: "cottage-night.png" }] },
+      details: [{ title: "At night", text: "The cottage at night with the window lit. It should feel safe to come back to after the mine.", image: "cottage-night.png" }] },
     { ref: "cottage2", col: 4, row: 2, type: "location", title: "Cottage, level 2", description: "A bigger cottage with a second mixing pot.", status: "planned",
       conditions: "Can only be built in summer." },
     { ref: "mine", col: 3, row: 4, type: "location", title: "Emerald mine", description: "Dark, with slimes.", status: "planned", image: "mine.png" },
@@ -54,7 +54,7 @@ export const gameDemo: DemoData = {
     { ref: "ivy", col: 4, row: 3, type: "character", title: "Grandma Ivy", description: "Teaches the player to mix.", status: "done", image: "grandma-ivy.png" },
     { ref: "bo", col: 4, row: 0, type: "character", title: "Bo the trader", description: "Sells coffee from a stall in the meadow.", status: "in_progress" },
     { ref: "slime", col: 4, row: 4, type: "character", title: "Mine slime", description: "Slow and harmless, but blocks the tunnels.", status: "planned", image: "slime.png",
-      details: [{ title: "Color tests", text: "Teal won. Green was too close to the emeralds and purple felt a bit too scary.", image: "slime-colors.png" }] },
+      details: [{ title: "Color tests", text: "Going with teal. Green was too close to the emeralds and purple looked too scary.", image: "slime-colors.png" }] },
     { ref: "fixQuest", col: 5, row: 2, type: "quest", title: "Fix up the cottage", description: "Grandma's first task. Teaches mixing and building.", status: "in_progress", isMvp: true },
     { ref: "prologue", col: 6, row: 2, type: "story", title: "Prologue: Grandma's cottage", status: "done" },
     { ref: "chapter1", col: 6, row: 4, type: "story", title: "Chapter 1: The emerald mine", status: "planned" },
@@ -131,11 +131,11 @@ export const gameDemo: DemoData = {
 
   // Moodboard: the feeling and the look. Inspiration: games to learn from (links).
   inspirations: [
-    { title: "Golden hour", text: "This is the feeling I want the whole game to have. Warm, slow and a little bit magical, like the hour before dinner.", image: "meadow-at-dusk.png" },
-    { title: "Cozy", text: "You should never be able to lose. You potter around, mix things, and get a small win every few minutes." },
-    { title: "Soft pixels", text: "Chunky pixels and soft colors. I use dark blue instead of black for outlines so nothing feels harsh." },
-    { title: "Stardew Valley", url: "https://www.stardewvalley.net", text: "Where I fell in love with seasons. It's why the bigger cottage can only be built in summer." },
-    { title: "Little Alchemy 2", url: "https://littlealchemy2.com", text: "That little rush when two things turn into something new. Mixing has to feel exactly like this." },
+    { title: "Golden hour", text: "This is the feeling I want the whole game to have. Warm, slow and a little bit magical.", image: "meadow-at-dusk.png" },
+    { title: "Cozy", text: "You should never be able to lose. You mix things and get a small win every few minutes." },
+    { title: "Soft pixels", text: "Chunky pixels and soft colors. Dark blue outlines instead of black." },
+    { title: "Stardew Valley", url: "https://www.stardewvalley.net", text: "Good use of seasons. It's why the bigger cottage can only be built in summer." },
+    { title: "Little Alchemy 2", url: "https://littlealchemy2.com", text: "Finding new recipes by combining things. Mixing should work like this." },
   ],
 
   // The palette, and the items that use each color (shown on the item's moodboard)

@@ -31,10 +31,10 @@ export const demoItems: SeedItem[] = [
   { ref: "compNavbar", col: 1, row: 0, type: "component", title: "Navbar", description: "Logo, page links and the theme toggle.", status: "done", isMvp: true, image: "navbar-sketch.png" },
   { ref: "compFooter", col: 1, row: 2, type: "component", title: "Footer", description: "Social links and copyright.", status: "done" },
   { ref: "compHero", col: 1, row: 1, type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true,
-    details: [{ title: "Left or centered?", text: "Tried both. Going with left, centered felt too much like a template.", image: "hero-layouts.png" }] },
+    details: [{ title: "Left or centered?", text: "Tried both. Going with left aligned, centered looked too much like a template.", image: "hero-layouts.png" }] },
   { ref: "compButton", col: 1, row: 3, type: "component", title: "Button", description: "Shared button used all over the site.", status: "done" },
   { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true, image: "project-card-sketch.png",
-    details: [{ title: "Hover", text: "The card lifts a tiny bit on hover. Subtle, just enough to feel clickable.", image: "card-hover.png" }] },
+    details: [{ title: "Hover", text: "The card lifts slightly on hover so it looks clickable.", image: "card-hover.png" }] },
   { ref: "compProjectGrid", col: 1, row: 6, type: "component", title: "Project grid", description: "Responsive grid of project cards with filter chips.", status: "in_progress", isMvp: true },
   { ref: "compImageGallery", col: 1, row: 8, type: "component", title: "Image gallery", description: "Screenshots with a lightbox.", status: "planned" },
   { ref: "compSkillsList", col: 1, row: 5, type: "component", title: "Skills list", description: "Skills grouped by area with a level indicator.", status: "planned" },
@@ -64,7 +64,7 @@ export const demoItems: SeedItem[] = [
   { ref: "designPalette", col: 1, row: 15, type: "design", title: "Colour palette", description: "Light and dark palettes with accessible contrast.", status: "done", isMvp: true,
     details: [{ title: "Side by side", text: "Checking the colors next to each other. The yellow is only for small highlights, never big areas.", image: "web-palette-test.png" }] },
   { ref: "designTypography", col: 2, row: 15, type: "design", title: "Typography", description: "One heading font, one body font, a type scale.", status: "done",
-    details: [{ title: "Sizes", text: "Big, confident headings and calm body text. Three sizes is plenty.", image: "type-scale.png" }] },
+    details: [{ title: "Sizes", text: "Large headings and plain body text. Three sizes is enough.", image: "type-scale.png" }] },
   { ref: "designLayout", col: 3, row: 15, type: "design", title: "Layout and spacing", description: "12 column grid, spacing scale and breakpoints.", status: "in_progress" },
 
   // ASSETS
@@ -85,7 +85,7 @@ export const demoItems: SeedItem[] = [
     description: "UI library for the whole site.",
     details: [
       { title: "Official docs", url: "https://react.dev" },
-      { title: "Why React?", text: "It's what I know best, and thinking in components just clicks for me." },
+      { title: "Why React?", text: "It's what I know best, and components fit how I build pages." },
     ],
   },
   {
@@ -101,7 +101,7 @@ export const demoItems: SeedItem[] = [
   {
     ref: "techPostgres", col: 4, row: 17, type: "tech_stack", title: "PostgreSQL", status: "in_progress",
     description: "Database for projects, skills and messages.",
-    details: [{ title: "Note to self", text: "Lives on Supabase. I only reach it through Prisma, never straight from the frontend." }],
+    details: [{ title: "Note to self", text: "Hosted on Supabase. Only reached through Prisma, never from the frontend." }],
   },
   {
     ref: "techVercel", col: 5, row: 17, type: "tech_stack", title: "Vercel", status: "planned",
@@ -250,10 +250,10 @@ export const demoBacklogTasks: { title: string; item?: string; done: boolean }[]
 ];
 
 export const demoInspirations: DemoData["inspirations"] = [
-  { title: "Brittany Chiang", url: "https://brittanychiang.com", text: "So clean. The projects are front and center and nothing fights for attention." },
-  { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Way too ambitious for me right now, but I love how playful it is. Maybe one day." },
-  { title: "Minimalistic", text: "Lots of white space, one accent color, no clutter. Someone should find my projects within five seconds." },
-  { title: "First sketch", text: "Quick sketch of the start page: a short hello, one button, then straight to my best projects.", image: "web-home-wireframe.png" },
+  { title: "Brittany Chiang", url: "https://brittanychiang.com", text: "Clean layout. The projects come first and nothing competes with them." },
+  { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Too big for this project, but I like how playful it is." },
+  { title: "Minimalistic", text: "Lots of white space, one accent color, no clutter. The projects should be easy to find right away." },
+  { title: "First sketch", text: "Start page: a short intro, one button, then my best projects.", image: "web-home-wireframe.png" },
 ];
 
 // The color palette on the Moodboard page, and the items that use each color
