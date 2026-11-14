@@ -1767,3 +1767,14 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 - The board was not checked in a browser. Typecheck, lint and all 141 frontend tests pass, but no test covers how it looks.
 - Cards cannot be edited or deleted on the board, only moved. That is still done in the list view.
 - There is no tutorial step for the board yet.
+
+**Later the same day (board follow-ups):**
+- I asked for the column headings to stand out with another color. CLAUDE.md says status is a shape, never a color, so the AI said so and used the brand green on all three headings (bigger text, bigger icons, a green count pill) instead of one color per status. The cards were made smaller.
+- I noticed the linked item looked different in the list and on the board. The AI made one shared component, `features/tasks/LinkedItem.tsx` (type colored pill with a chain icon, tooltip and screen reader text), used by both views.
+- The overview page now has one full width Todo card with the board, instead of the Todo and Sprint cards. The sprint choice and its progress ("Sprint 1 (3 / 8 done)") are in a "Show" dropdown above the board. The cards on the overview can be moved too. The whole card is no longer a link (the buttons are inside it), so there is a link "Open Tasks & sprints" in its header.
+- I asked for the board on the overview to be smaller. `TaskBoard` got a `compact` prop (smaller headings and cards, arrow-only move buttons with a tooltip and `aria-label`, and a column that scrolls after about 260 px).
+- I asked for green columns. The AI made all three columns the same soft green (a tint, a green top edge, dark green headings). I did not like it, so the AI undid the green and kept the compact size.
+- I said the sprint dropdown was not styled. The AI first styled the native `<select>` (width, border, custom chevron), which was not what I meant: I wanted it to look like the other dropdowns. Only after I said so did the AI find `ProjectSwitcher`, which is a button and a menu because a native select's open list cannot be styled. The AI made `components/Dropdown.tsx` in the same style (outlined button, floating menu, chosen option in green, closes on Esc or an outside click) and used it for the "Show" dropdown on the Tasks page and on the overview.
+- Not checked in a browser. The overview tutorial text was not changed.
+- The other dropdowns in forms (New task, task edit, item type and so on) are still native selects and look different from `Dropdown`.
+- `Dropdown` has no arrow key navigation: the options are buttons you reach with Tab. The AI also did not look for an existing dropdown before styling the native select, which cost one round.
