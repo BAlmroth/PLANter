@@ -7,6 +7,7 @@
 export const webTemplate: Template = {
   key: "web",
   label: "Web Project",
+  description: "Pages, components, functionality, data and security.",
 
   // The order here is the order of the categories in the File view.
   // Colors: related types share a color family (page/component blue-teal, design/asset

@@ -93,6 +93,45 @@ describe("POST /api/relationships", () => {
   });
 });
 
+describe("POST /api/relationships in a game project", () => {
+  // Same route and service as web: the rules come from the game template
+  async function gameSetup() {
+    const project = await prisma.project.create({ data: { userId: USER_A, name: "G", template: "game" } });
+    const create = (type: string, title: string) =>
+      prisma.item.create({ data: { projectId: project.id, type, title } });
+    return { key: await create("inventory", "Castle key"), quest: await create("quest", "Find the key"), next: await create("quest", "Storm the castle") };
+  }
+  const connect = (sourceItemId: string, targetItemId: string, type: string) =>
+    request(app).post("/api/relationships").set(asA).send({ sourceItemId, targetItemId, type });
+
+  it("allows a combination from the game template", async () => {
+    const { key, quest } = await gameSetup();
+    expect((await connect(key.id, quest.id, "unlocks")).status).toBe(201);
+  });
+
+  it("rejects a web relationship type in a game project", async () => {
+    const { quest, next } = await gameSetup();
+    expect((await connect(quest.id, next.id, "belongs_to")).status).toBe(400);
+  });
+
+  it("rejects a progression loop (soft-lock) with 400", async () => {
+    const { quest, next } = await gameSetup();
+    expect((await connect(quest.id, next.id, "unlocks")).status).toBe(201);
+    // "Storm the castle" unlocks "Find the key", which already unlocks "Storm the castle"
+    expect((await connect(next.id, quest.id, "unlocks")).status).toBe(400);
+  });
+
+  it("rejects a recipe loop with 400", async () => {
+    const project = await prisma.project.create({ data: { userId: USER_A, name: "G", template: "game" } });
+    const create = (title: string) => prisma.item.create({ data: { projectId: project.id, type: "inventory", title } });
+    const [water, coffee, tea] = [await create("Water"), await create("Coffee"), await create("Tea")];
+    expect((await connect(coffee.id, water.id, "made_from")).status).toBe(201);
+    expect((await connect(tea.id, coffee.id, "made_from")).status).toBe(201);
+    // Water made from Tea: Tea needs Coffee, Coffee needs Water, so Water would need itself
+    expect((await connect(water.id, tea.id, "made_from")).status).toBe(400);
+  });
+});
+
 describe("GET /api/projects/:projectId/relationships", () => {
   it("lists the relationships of the project", async () => {
     const { projectId, componentId, pageId } = await setup();

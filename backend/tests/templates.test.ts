@@ -15,7 +15,27 @@ vi.mock("../src/lib/supabase.js", () => ({
   },
 }));
 
+describe("GET /api/templates", () => {
+  it("returns key, label and description of every template, and no rules", async () => {
+    const res = await request(app).get("/api/templates").set("Authorization", "Bearer token-a");
+    expect(res.status).toBe(200);
+    expect(res.body.map((t: { key: string }) => t.key)).toEqual(["web", "game"]);
+    expect(Object.keys(res.body[0]).sort()).toEqual(["description", "key", "label"]);
+  });
+
+  it("returns 401 without a token", async () => {
+    const res = await request(app).get("/api/templates");
+    expect(res.status).toBe(401);
+  });
+});
+
 describe("GET /api/templates/:key", () => {
+  it("returns the game template", async () => {
+    const res = await request(app).get("/api/templates/game").set("Authorization", "Bearer token-a");
+    expect(res.status).toBe(200);
+    expect(res.body.key).toBe("game");
+  });
+
   it("returns 200 and the template with a valid token", async () => {
     const res = await request(app)
       .get("/api/templates/web")

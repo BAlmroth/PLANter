@@ -1,3 +1,4 @@
+import { gameTemplate } from "./game.js";
 import { webTemplate } from "./web.js";
 
 //Defines and distributes templates though project
@@ -5,6 +6,8 @@ import { webTemplate } from "./web.js";
 export type Template = {
   key: string;
   label: string;
+  // One short line shown when choosing a template for a new project. Presentation only.
+  description: string;
   itemTypes: {
     key: string;
     label: string;
@@ -61,9 +64,23 @@ export type Template = {
   }[];
 };
 
-const templates = new Map<string, Template>([["web", webTemplate]]);
+// The order here is the order of the choices on the new-project page (the first one is the default)
+const templates = new Map<string, Template>([
+  ["web", webTemplate],
+  ["game", gameTemplate],
+]);
 
 // Returns the template for a key, or undefined if it doesn't exist
 export function getTemplate(key: string): Template | undefined {
   return templates.get(key);
+}
+
+// Every template, for tests and for the list below
+export function allTemplates(): Template[] {
+  return [...templates.values()];
+}
+
+// What the new-project page needs to offer a choice: no item types or rules
+export function listTemplates(): { key: string; label: string; description: string }[] {
+  return allTemplates().map(({ key, label, description }) => ({ key, label, description }));
 }
