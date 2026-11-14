@@ -1,76 +1,71 @@
-import { useState, type FormEvent } from "react";
-import { ApiError } from "../../lib/api";
-import { createTask } from "./tasksApi";
+import { useState } from "react";
+import type { Sprint } from "../sprints/types";
+import { NewTaskForm } from "./NewTaskForm";
 import { TaskRow } from "./TaskRow";
 import type { Task } from "./types";
+import styles from "./ItemTasks.module.css";
 
 type Props = {
   projectId: string;
   itemId: string;
   // Only the tasks linked to this item
   tasks: Task[];
+  // For the sprint choice in the form. The list may still be empty while the sprints load.
+  sprints: Sprint[];
   // From useTasks in the parent, which also needs the tasks (for the delete message)
   setTasks: (next: (current: Task[]) => Task[]) => void;
   // Called after a task was added or deleted, for example to load the warnings again
   onTasksChanged?: () => void;
 };
 
-const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
-
 // The tasks of one item, shown on its detail view. New tasks here are linked to the item.
-export function ItemTasks({ projectId, itemId, tasks, setTasks, onTasksChanged }: Props) {
-  const [title, setTitle] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function handleAdd(e: FormEvent) {
-    e.preventDefault();
-    if (title.trim() === "") {
-      setError("Title is required.");
-      return;
-    }
-    setError(null);
-    setBusy(true);
-    try {
-      const task = await createTask(projectId, { title, itemId });
-      setTasks((current) => [...current, task]);
-      setTitle("");
-      onTasksChanged?.();
-    } catch (err) {
-      setError(messageFrom(err));
-    } finally {
-      setBusy(false);
-    }
-  }
+// The form is closed until "+ New task" is clicked, like the other cards of the page.
+export function ItemTasks({ projectId, itemId, tasks, sprints, setTasks, onTasksChanged }: Props) {
+  const [adding, setAdding] = useState(false);
 
   return (
     <>
-      <h2>Tasks</h2>
+      <div className={styles.header}>
+        <h2 className={styles.title}>
+          Tasks
+          {tasks.length > 0 && <span className={styles.count}>{tasks.length}</span>}
+        </h2>
+        <button
+          type="button"
+          className={styles.secondary}
+          aria-expanded={adding}
+          aria-controls="item-new-task"
+          onClick={() => setAdding((open) => !open)}
+        >
+          {adding ? "Close new task" : "+ New task"}
+        </button>
+      </div>
+
+      {adding && (
+        <div id="item-new-task" className={styles.newTask}>
+          <NewTaskForm
+            projectId={projectId}
+            // No item list needed: the item is fixed
+            items={[]}
+            sprints={sprints}
+            fixedItemId={itemId}
+            onCreated={(task) => {
+              setTasks((current) => [...current, task]);
+              onTasksChanged?.();
+            }}
+          />
+        </div>
+      )}
+
       {tasks.length === 0 ? (
-        <p>No tasks yet.</p>
+        <p className={styles.empty}>No tasks yet.</p>
       ) : (
-        <ul>
+        <ul className={styles.list}>
           {tasks.map((task) => (
             <TaskRow key={task.id} task={task} setTasks={setTasks} onDeleted={onTasksChanged} />
           ))}
         </ul>
       )}
-      <form onSubmit={handleAdd}>
-        <label>
-          New task
-          <input
-            type="text"
-            required
-            maxLength={100}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        <button type="submit" disabled={busy}>
-          {busy ? "Adding…" : "Add task"}
-        </button>
-      </form>
-      {error && <p role="alert">{error}</p>}
     </>
   );
 }

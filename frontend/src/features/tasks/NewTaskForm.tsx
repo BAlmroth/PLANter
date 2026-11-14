@@ -13,6 +13,8 @@ type Props = {
   projectId: string;
   items: Item[];
   sprints: Sprint[];
+  // When given, every new task is about this item and the form has no Item dropdown (the item page)
+  fixedItemId?: string;
   // The sprint that is selected when the form opens, for example the sprint the board is showing. "" means none.
   defaultSprintId?: string;
   // Called with the new task, so the parent can add it to its list
@@ -21,7 +23,7 @@ type Props = {
 
 // The form that adds a task: a title, and optionally the item it is about and a sprint.
 // Used on the Tasks page and on the overview. It stays open after adding, so several tasks can be added in a row.
-export function NewTaskForm({ projectId, items, sprints, defaultSprintId = "", onCreated }: Props) {
+export function NewTaskForm({ projectId, items, sprints, fixedItemId, defaultSprintId = "", onCreated }: Props) {
   const [title, setTitle] = useState("");
   // "" means no item / no sprint
   const [itemId, setItemId] = useState("");
@@ -40,7 +42,7 @@ export function NewTaskForm({ projectId, items, sprints, defaultSprintId = "", o
     try {
       const task = await createTask(projectId, {
         title,
-        ...(itemId !== "" && { itemId }),
+        ...(fixedItemId ? { itemId: fixedItemId } : itemId !== "" && { itemId }),
         ...(sprintId !== "" && { sprintId }),
       });
       onCreated(task);
@@ -61,16 +63,18 @@ export function NewTaskForm({ projectId, items, sprints, defaultSprintId = "", o
           Title
           <input type="text" required maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
         </label>
-        <div className={styles.field}>
-          <span>Item (optional)</span>
-          <Dropdown
-            label="Item"
-            value={itemId}
-            options={[{ value: "", label: "No item" }, ...items.map((i) => ({ value: i.id, label: i.title }))]}
-            onChange={setItemId}
-            fullWidth
-          />
-        </div>
+        {fixedItemId === undefined && (
+          <div className={styles.field}>
+            <span>Item (optional)</span>
+            <Dropdown
+              label="Item"
+              value={itemId}
+              options={[{ value: "", label: "No item" }, ...items.map((i) => ({ value: i.id, label: i.title }))]}
+              onChange={setItemId}
+              fullWidth
+            />
+          </div>
+        )}
         <div className={styles.field}>
           <span>Sprint (optional)</span>
           <Dropdown

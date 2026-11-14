@@ -22,6 +22,7 @@ import { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemMoodboard } from "../moodboard/ItemMoodboard";
 import { ItemTasks } from "../tasks/ItemTasks";
 import type { Warning } from "../warnings/types";
+import { useSprints } from "../sprints/useSprints";
 import { useTasks } from "../tasks/useTasks";
 import { ItemForm } from "./ItemForm";
 import { ItemPhoto } from "./ItemPhoto";
@@ -60,6 +61,8 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const items = useItems(project.id);
   const relationships = useRelationships(project.id);
   const tasks = useTasks(project.id);
+  // Only for the sprint choice in the New task form, so it does not hold up the page
+  const sprints = useSprints(project.id);
   const groups = useGroups(project.id);
   const details = useItemDetails(itemId);
   const { setItemCrumb } = useProjectContext();
@@ -467,13 +470,13 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
               ))}
           </section>
 
-          {/* ItemTasks is shared, so its heading, list and form are styled from here (.tasks) */}
-          <section className={`${styles.card} ${styles.tasks}`} data-tour="item-tasks">
+          <section className={styles.card} data-tour="item-tasks">
             {/* Adding or deleting a task can add or remove a warning ("is part of the MVP but has no tasks"), so ask again */}
             <ItemTasks
               projectId={project.id}
               itemId={item.id}
               tasks={itemTasks}
+              sprints={sprints.sprints}
               setTasks={tasks.setTasks}
               onTasksChanged={refreshWarnings}
             />
