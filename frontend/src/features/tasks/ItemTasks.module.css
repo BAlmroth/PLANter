@@ -1,0 +1,60 @@
+/* The Tasks card of an item: a title with the count, and the New task button on the right */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg-dark);
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.35rem;
+}
+.count {
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  background: var(--bg-dark);
+  border-radius: 999px;
+}
+
+/* An outline button, like the other secondary buttons */
+.secondary {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
+  border: 1px solid var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
+}
+
+/* The form in its own box, like the one on the overview */
+.newTask {
+  margin-bottom: 16px;
+  padding: 4px 16px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}

@@ -27,12 +27,12 @@ async function checkSprintInProject(sprintId: string, projectId: string) {
 }
 
 // LIST TASKS IN A PROJECT
-// Open tasks first, then by title (tasks have no creation time)
+// Planned first, then in progress, then done (the order of the enum), then by title
 export async function listTasks(projectId: string, userId: string) {
   await getOwnedProject(projectId, userId);
   return prisma.task.findMany({
     where: { projectId },
-    orderBy: [{ done: "asc" }, { title: "asc" }],
+    orderBy: [{ status: "asc" }, { title: "asc" }],
   });
 }
 
@@ -56,15 +56,15 @@ export async function createTask(projectId: string, userId: string, input: Creat
 // UPDATE TASK
 export async function updateTask(taskId: string, userId: string, input: UpdateTaskInput) {
   const task = await getOwnedTask(taskId, userId);
-  const { title, done, itemId, sprintId } = input;
-  if (itemId) await checkItemInProject(itemId, task.projectId);
+  const { title, status, itemId, sprintId } = input;
+  if (itemId)await checkItemInProject(itemId, task.projectId);
   if (sprintId) await checkSprintInProject(sprintId, task.projectId);
 
   return prisma.task.update({
     where: { id: taskId },
     data: {
       ...(title !== undefined && { title }),
-      ...(done !== undefined && { done }),
+      ...(status !== undefined && { status }),
       ...(itemId !== undefined && { itemId }),
       ...(sprintId !== undefined && { sprintId }),
     },

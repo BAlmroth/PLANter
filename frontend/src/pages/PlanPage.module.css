@@ -3,3 +3,34 @@
   flex-direction: column;
   gap: 16px;
 }
+
+/* "Project items" with the List / Map toggle right next to it, and a line under the row to set it
+   apart from the options below */
+.viewRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin-bottom: 16px;
+  padding: 12px 0 24px;
+  border-bottom: 1.5px solid var(--border);
+}
+/* The title with the count under it */
+.viewHeading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.viewTitle {
+  margin: 0;
+}
+
+/* The number of items, the same small grey chip as before ("12 items") */
+.count {
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}

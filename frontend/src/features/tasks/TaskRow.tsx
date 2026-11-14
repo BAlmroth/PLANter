@@ -1,8 +1,12 @@
+import { Dropdown } from "../../components/Dropdown";
 import { useConfirm } from "../../components/useConfirm";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
 import type { Sprint } from "../sprints/types";
+import { STATUS_LABELS } from "../items/types";
+import { StatusIcon } from "../items/StatusIcon";
+import { BOARD_COLUMNS } from "./boardColumns";
 import { deleteTask, updateTask } from "./tasksApi";
 import type { Task, UpdateTaskInput } from "./types";
 import styles from "./TaskRow.module.css";
@@ -25,7 +29,7 @@ type Props = {
 
 const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
-// One task in a list: tick done, edit the title, delete. Errors are shown on the row.
+// One task in a list: change its status, edit the title, delete. Errors are shown on the row.
 export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSaved }: Props) {
   const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
@@ -82,6 +86,9 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSa
     }
   }
 
+  // The status a click on the status button gives: planned, in progress, done, and back to planned
+  const nextStatus = BOARD_COLUMNS[(BOARD_COLUMNS.indexOf(task.status) + 1) % BOARD_COLUMNS.length];
+
   return (
     <li className={styles.row}>
       {modal}
@@ -96,24 +103,24 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSa
             onChange={(e) => setTitle(e.target.value)}
           />{" "}
           {items && (
-            <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)}>
-              <option value="">No item</option>
-              {items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              label="Item"
+              value={itemId}
+              options={[{ value: "", label: "No item" }, ...items.map((i) => ({ value: i.id, label: i.title }))]}
+              onChange={setItemId}
+              block
+              className={styles.editField}
+            />
           )}{" "}
           {sprints && (
-            <select aria-label="Sprint" value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-              <option value="">No sprint</option>
-              {sprints.map((sprint) => (
-                <option key={sprint.id} value={sprint.id}>
-                  {sprint.name}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              label="Sprint"
+              value={sprintId}
+              options={[{ value: "", label: "No sprint" }, ...sprints.map((s) => ({ value: s.id, label: s.name }))]}
+              onChange={setSprintId}
+              block
+              className={styles.editField}
+            />
           )}{" "}
           <button type="submit" disabled={busy}>
             Save
@@ -134,11 +141,21 @@ export function TaskRow({ task, setTasks, extra, items, sprints, onDeleted, onSa
         </form>
       ) : (
         <>
-          <label className={styles.check}>
-            <input type="checkbox" checked={task.done} disabled={busy} onChange={() => save({ done: !task.done })} />
-            <span className={task.done ? styles.done : undefined}>{task.title}</span>
+          <div className={styles.check}>
+            {/* One click moves the task to the next status. The icon and the name show the current one. */}
+            <button
+              type="button"
+              className={styles.statusButton}
+              disabled={busy}
+              onClick={() => save({ status: nextStatus })}
+              title={`Click to change to ${STATUS_LABELS[nextStatus]}`}
+              aria-label={`Status of "${task.title}": ${STATUS_LABELS[task.status]}. Change to ${STATUS_LABELS[nextStatus]}`}
+            >
+              <StatusIcon status={task.status} showLabel />
+            </button>
+            <span className={task.status === "done" ? styles.done : undefined}>{task.title}</span>
             {extra}
-          </label>
+          </div>
           <span className={styles.actions}>
             <button type="button" className={styles.textButton} onClick={() => setEditing(true)} disabled={busy}>
               Edit

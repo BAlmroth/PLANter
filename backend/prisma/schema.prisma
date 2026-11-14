@@ -118,7 +118,8 @@ model Task {
   // Optional. a task can be linked to an item, or stand on its own
   itemId    String? @map("item_id") @db.Uuid
   title     String
-  done      Boolean @default(false)
+  // The column on the task board. Same values as an item's status.
+  status    Status  @default(planned)
   // Optional. a task may not be in a sprint yet
   sprintId  String? @map("sprint_id") @db.Uuid
 

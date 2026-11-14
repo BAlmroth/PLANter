@@ -1622,3 +1622,211 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
 **What went wrong:**
 - The AI's first attempt to prove the new rollback test can fail (a Perl one-liner that rewrote the service) did not change the file, so that run proved nothing. The AI noticed, said so, and redid it with a realistic mistake: inserting the project and items with `prisma` instead of `tx`. The test then failed (one project was left), and passed again after the file was restored.
 - Backend typecheck and all 303 tests pass.
+
+## 2026-11-12: Login page with a split layout
+
+**What I asked:**
+1. Fix the login page so it has a nicer style.
+2. A nice start page before login: the form on the right and something fitting on the left, using the whole color palette.
+3. Try a different gradient for the left side, several times. First "another type of gradient", then "I don't like it", then "the orange background looks bad", then "more of an overlapping effect where the top that isn't overlapping has a different color", then "no, redo".
+4. How to make the darker layer stand out more through the lighter ones.
+5. Remove the unused style and fix the forgot password page.
+
+**What was generated:**
+- `auth/AuthForm.module.css`: a centered card with bold labels, a green focus ring, an error box, a full-width button and a footer with a divider.
+- `auth/AuthHero.tsx` and `AuthHero.module.css`: the left side, with the PLANter name, a headline, a short text, a small map sketch (decorative, `aria-hidden`) and three points. It uses only the CSS color variables, not the item type colors from the template. On narrow screens it stacks above the form and shrinks.
+- Background of the left side: five versions were tried (diagonal gradient, dot grid with glows, two overlapping circles, and finally stacked layers with rounded corners and a visible strip at the top).
+- `auth/AuthLayout.tsx`: the shared page shell (hero + card with a title). `AuthForm`, `ForgotPassword` and `ResetPassword` all use it, so the layout lives in one place. Login, Register, Forgot password and Reset password now look the same.
+
+**What I changed or corrected:**
+- I did not like the first three backgrounds, and said the orange looked bad. I asked for an overlapping effect with a different color at the top.
+- I edited the CSS myself between the AI's versions, and changed the border and box-shadow at the end. I will keep working on the look later.
+- I asked how to make the darker layer stand out more and fixed it myself from the suggestions (lighter top layers, a darker front layer, a shadow).
+
+**What went wrong:**
+- One of my own edits had left a radial gradient without color stops, so it was probably invalid CSS. The AI found it and replaced it.
+- The AI guessed the layer offsets (110px and 210px) and the circle sizes for a normal laptop screen. They are fixed values and were not checked on other screen sizes.
+- Running Prettier on `src/auth/*.tsx` also reformatted `AuthProvider.tsx` and `ProtectedRoute.tsx`, which were not part of the task. The AI restored both with `git checkout`.
+- The AI could not see the page, so none of the visual work was checked in a browser by the AI. Typecheck and all 127 frontend tests pass.
+
+## 2026-11-13: Loading animation and one loading state per page
+
+**What I asked:**
+1. The small "Loading…" text in the top left corner looks odd, then everything pops up. Make a nice loading animation that fits PLANter.
+2. It should be simpler and look good when loading is fast. Also I don't like the jumping (for example the overview boxes loading one by one). Show loading until everything is in place.
+3. Make the animation something with nodes. Then: show the nodes all the time and cycle through them. Then: go back to the version I liked (nodes pop in and lines draw) and just speed it up.
+
+**What was generated:**
+- `components/Loader.tsx` and `Loader.module.css`: a loader with three sizes (`page`, `section`, `inline`) and a label. Pure CSS, fades in after 0.15 s so a very fast load shows nothing instead of a flash, and shows the finished graph without motion under reduced motion. Four versions were tried: a sprout in a pot, three bouncing dots, three nodes with a moving highlight, and (final) three nodes that pop in with lines drawing between them, in a 1.2 s loop.
+- `components/useLoadGate.ts` and `LoadGate.tsx`: a "gate". Components that fetch call `useGateLoading(loading)`. The gate keeps the page mounted but invisible (`visibility: hidden` and `inert`) with one loader on top, until all of them have loaded the first time. Then everything shows at once. Only the first load holds the gate, so "Try again" and refetches after edits do not hide the page again.
+- `ProjectPage.tsx`: two gates. An outer one holds the whole project frame on first load (sub header, sidebar, page, progress). An inner one holds the middle area each time the user changes page, so the sidebar stays. The tutorial does not start while a gate is pending.
+- All 21 plain `<p>Loading…</p>` lines were replaced by `<Loader>`, and 14 components report to the gate.
+
+**What I changed or corrected:** I asked for a simpler animation, for nodes instead of the sprout and dots, and for the earlier node version back, only faster.
+
+**What went wrong:**
+- The first file name `loadGate.ts` clashed with `LoadGate.tsx` on a case-insensitive file system (TypeScript error). It was renamed to `useLoadGate.ts`.
+- ESLint rejected setting state inside an effect (`react-hooks/set-state-in-effect`). It was changed to set the state during render, which React allows when it only depends on the props.
+- The first Loader (the sprout) was replaced after one round, because it did not solve the real problem: the jumping came from many separate loading states, not from the look of one of them.
+- The old inline "Loading…" lines in the cards are still in the code, but they are never visible now because they sit inside the hidden content.
+- The AI could not see the page, so the animation and the gate were not checked in a browser by the AI. Typecheck, lint, build and all 127 frontend tests pass.
+
+## 2026-11-13: Authentication becomes Security, and more allowed connections
+
+**What I asked:**
+1. What would go under the authentication category, and which category error handling belongs to.
+2. Whether to turn authentication into a broader security category (auth, error handling, XSS and so on).
+3. Do the label and description change first, then extend the relationships, add a test, update the tour and update everything else so it is correct.
+
+**What was generated:**
+- `templates/web.ts`: the `authentication` item type now has the label "Security", a broader description and example, and the checklist entry reads "Plan security". The key is still `authentication`, so there is no migration (labels are free, keys are permanent).
+- Nine new allowed combinations: security protects component and data, function navigates to page, design uses asset, function/data/security/test use tech stack, and test tests data. The descriptions of `uses` and `protects` were widened to match.
+- `tests/relationshipRules.test.ts`: 9 tests for the new combinations and 6 for combinations that are left out on purpose (page/component using tech stack, component reading data, and three reversed directions).
+- Tour and comment text changed from "authentication" to "security". README, CLAUDE.md and a comment in `web.ts` were updated to match.
+
+**What I changed or corrected:** I decided to rename only the label first and keep the key. I asked for more relationships, a test, and for everything to be made consistent.
+
+**What went wrong:**
+- Nothing broke, but the AI could not see the app, so the new label and connection menus were not checked in a browser.
+- The key `authentication` and the label "Security" now differ. A full key rename (with a data migration) was offered and postponed.
+- `docs/project-plan.md` still says "authentication" because it is the approved plan. It was left unchanged on purpose.
+
+## 2026-11-13: Connecting map nodes from either dot
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** On the map, dragging from the right dot of one card to the left dot of another worked, but not the other way around. I wanted a connection to work even when I start on the "wrong" dot.
+
+**What was generated:**
+- `MapView.tsx`: `connectionMode={ConnectionMode.Loose}` on `<ReactFlow>`. The dots are typed (left = `target`, right = `source`), and by default React Flow only accepts a drag from a source dot to a target dot. In loose mode any dot can start and end a connection.
+- `MapView.tsx`: a new `handleConnect` function. The template decides the direction of a relationship (a page uses a component, not the other way around). If the dragged direction has no allowed relationship type but the opposite direction has, source and target are swapped before the connection prompt is shown. If both directions are allowed, the drag direction is kept. If neither is allowed, the "cannot be connected" message still appears.
+- Committed as `7bcd397`.
+
+**What I changed or corrected:** The first fix (loose mode) was not enough. I reported that it snapped to the right dot on the second card, but starting on the wrong dot on the first card still said "cannot be connected". The AI then found that the message came from the template's direction rule and not from the handles, and added the swap.
+
+**What went wrong:**
+- The AI first assumed the problem was only the handle types and did not check where the "cannot be connected" message came from. That cost one round.
+- Nothing was checked in a browser. Typecheck, build and all 127 frontend tests pass, but no test covers dragging on the map, so the behaviour has to be tested by hand.
+- The backend was not changed. It still checks the combination against the template and ownership, so the swap only affects which direction the prompt suggests.
+
+## 2026-11-13: Tidy up and map direction
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** The map was ugly and hard to read unless I moved the cards myself. I asked if connected items could be placed next to each other. I chose a left-to-right layout and said I wanted to write it myself, with no library. I then said the map was still hard to read: too many cards and lines, and I could not see the flow. I asked if top to bottom would be better, asked for a switch to compare both, asked to put the controls under one "Manage" button, noticed that "part of" connections started on the wrong side, asked if cards could have different sizes (for example bigger pages), and asked for a full window option for the map. I then asked for a clearer full window button (it looked like React Flow's fit view button), for the filters to sit behind a Filter button, and for the full window button to have its own color and sit next to the legend.
+
+**What was generated:**
+- `features/map/tidyLayout.ts` (+ `tidyLayout.test.ts`, 9 tests): a pure function that lays the items out in levels. An item is one level after the items that point at it. Cycles are handled by skipping "back edges" in a depth-first search. Within a level, items are sorted by the average row of their neighbours, so connected items sit close together. Items with no connections get their own last level. Levels and rows are spaced by the real size of each card (see card sizes below), so big cards never overlap. A `direction` argument (`horizontal` or `vertical`) only changes the last step, where level and index become x and y.
+- `MapView.tsx`: a "Manage" button that opens a panel with "Tidy up" and a Left → right / Top ↓ bottom switch. Tidy up asks for confirmation, saves only the items that moved with `updateItem`, and then calls `fitView`. The chosen direction is kept in `localStorage` (`planter:map:vertical`).
+- `ItemNode.tsx` / `types.ts`: the connection dots are on the left and right, or on the top and bottom, depending on the direction.
+- Arrowheads on every connection (`markerEnd`). They were missing, so the direction of a line could not be seen.
+- `readsBackward?: boolean` on relationship types (backend `templates/index.ts`, `web.ts`, frontend `items/types.ts`). It is set on `belongs_to`, `protects` and `tests`, which are stored pointing towards the thing they relate to. The layout flips those connections so the flow reads page → component → function → data. It is presentation only: the stored direction, the labels, the warnings and the cycle check are unchanged, so no migration was needed.
+- Reversed drawing of backward connections (`MapView.tsx`, `edges`). I noticed that a component inside a page was drawn as "part of" starting at the component. For types with `readsBackward` the line is now drawn from the other item: it starts at the page and points to the component, with the reverse wording (`inverseLabel`: "contains", "protected by", "tested by"). Only the drawing is turned. The saved connection, the File view, the delete message and the impact view still use the stored direction.
+- Card sizes. A new optional `size` (`small` | `medium` | `large`) on item types in the template (`templates/index.ts`, `web.ts`, frontend `Template` type): pages large; components, functionality, data, security and design medium; assets, tests and tech stack small. The pixel sizes are in one new file, `features/map/cardSize.ts` (widths 150, 190 and 250 px), used by both `ItemNode` (fixed width through the CSS variable `--card-width`, font size per size class) and `tidyLayout`. The size is presentation only, like the color, so no migration was needed.
+- Full window (`MapView.tsx`, `MapView.module.css`). The map can fill the whole window. This is done with CSS (`position: fixed`, class `expanded`) and not with the browser's Fullscreen API, so it also works on iPhones and needs no permission. While it is open the page behind cannot scroll, the map zooms to fit again, and Esc closes it, unless a confirm dialog or the tutorial is open (they use Esc themselves). The first version was an extra icon button in React Flow's zoom controls, but it looked exactly like the "fit view" button next to it. It is now a text button ("Full window" / "Exit full window") in the top right, next to the legend, in a dark color of its own (not amber, which is reserved for the MVP badge). `data-tour="map-legend"` moved to a wrapper around the legend, so the tutorial does not highlight the button too.
+- Toolbar panels. The top-left toolbar is now three buttons: **Filter ▾** (shows the number of active filters, for example "Filter (2)"), **+ Add item** and **Manage ▾**. Filter opens `ItemFilterBar` in a panel under the toolbar, Manage opens Tidy up and the direction switch. `ItemFilterBar` itself is unchanged, so the File view still works as before.
+
+**What I changed or corrected:**
+- I chose to write the layout myself instead of adding Dagre or ELK, because I need to understand every line.
+- I rejected the AI's first suggestion of moving items automatically when they are connected, because it would move things I had placed. Tidy up only runs when I click it, after a confirmation.
+- I decided to keep the line labels when the AI suggested making the lines quieter, and said the real problem was that I could not see the flow.
+
+**What went wrong:**
+- The first version followed the stored direction of each connection. The AI warned about this before building it, but it was still not enough: some relationship types point towards the parent, so the flow was scattered. This was fixed with `readsBackward`.
+- The AI first suggested the layout was the problem and that one column per type might be better. Looking at the code afterwards showed that the arrows had no arrowheads and that the stored directions were inconsistent, which were the real causes.
+- Nothing was checked in a browser. Typecheck and all 135 frontend tests pass, but no test covers the map, so the look of the layout, the spacing (`LEVEL_HEIGHT`, `ITEM_WIDTH`) and the zoom after Tidy up have to be judged by hand.
+- `fitView` is called after a 50 ms `setTimeout` to wait for the nodes to move, which is a workaround and may need to change.
+- New items still start in the old type-column positions until Tidy up is used.
+- There is no tutorial step for the Manage button.
+- The first version of the card-size change put a JSX comment directly after `return (` in `ItemNode.tsx`, which is invalid. `tsc` caught it and it was fixed straight away.
+- Card heights in `cardSize.ts` are estimates (one line of title). A title that wraps to three or more lines is taller than the layout assumes, so cards can end up close together.
+- New items still get the backend's fixed start positions (220 px columns, `services/itemLayout.ts`). A large page card is 250 px wide, so a new page can overlap the next column until Tidy up is used.
+- The first full window button was an icon next to the zoom controls and was mistaken for "fit view". I only noticed after the user pointed it out, because the AI had not seen the page.
+- The round ? help button (bottom right) may be covered by the map in full window. Its z-index was not checked.
+- The tutorial has no step for Manage, Filter or Full window. The "Add and filter" step still reads correctly, but the filters are now one click away.
+- The "delete connection" message still uses the stored wording ("Button part of Home"), while the line on the map now says "contains".
+
+## 2026-11-14: Task board (Planned, In progress, Done)
+
+**Tool:** Claude Code (Claude Sonnet 5.5)
+
+**What I asked:** If I could add a real todo function like Trello, with Planned, In progress and Done. I wanted an option to show all tasks or one sprint, buttons instead of a new library, and an easy-to-read look that fits the rest of the app.
+
+**What was generated:**
+- Step 1, backend: `Task.done` (boolean) is replaced by `Task.status`, using the same `Status` enum as items. Migration `20261113100000_task_status` adds the column, sets `done` for rows that were ticked, and drops the old column. `updateTaskSchema` takes `status` (Zod, 3 values), the service sorts planned, in progress, done (enum order), and the demo seed maps its old `done` flags. Tests: sorting by status, a status update, and a 400 for an unknown status.
+- Step 2, frontend: `features/tasks/boardColumns.ts` (+ test): pure functions for the column order, the previous and next status, and which tasks a sprint choice shows. `TaskBoard.tsx` and its CSS: three columns, each card has the title, a link to its item in the item type's color (from the template), the sprint name, and "← Planned" / "In progress →" buttons that save through `PATCH /api/tasks/:id`. `TodoView.tsx` got a Board / List switch (the board is the default) and a "Show" dropdown (all tasks, one sprint, or no sprint). The list view is unchanged apart from the checkbox, which now sets `done` or `planned`.
+
+**What I changed or corrected:**
+- I chose buttons instead of drag and drop, so no library was added (CLAUDE.md asks me to approve libraries first).
+- The AI proposed building it in steps (data first, then the board), and I agreed.
+
+**What went wrong:**
+- One existing test still sent `{ done: true }` to check that user B gets a 404. The new Zod schema rejected it with 400 before the ownership check, so the test failed until it sent `{ status: "done" }`.
+- The first full test run hung and had to be stopped, and the second run passed. I did not find out why.
+- The migration is applied only to the local test database. It must also be applied to Supabase when the backend is deployed.
+- The board was not checked in a browser. Typecheck, lint and all 141 frontend tests pass, but no test covers how it looks.
+- Cards cannot be edited or deleted on the board, only moved. That is still done in the list view.
+- There is no tutorial step for the board yet.
+
+**Later the same day (board follow-ups):**
+- I asked for the column headings to stand out with another color. CLAUDE.md says status is a shape, never a color, so the AI said so and used the brand green on all three headings (bigger text, bigger icons, a green count pill) instead of one color per status. The cards were made smaller.
+- I noticed the linked item looked different in the list and on the board. The AI made one shared component, `features/tasks/LinkedItem.tsx` (type colored pill with a chain icon, tooltip and screen reader text), used by both views.
+- The overview page now has one full width Todo card with the board, instead of the Todo and Sprint cards. The sprint choice and its progress ("Sprint 1 (3 / 8 done)") are in a "Show" dropdown above the board. The cards on the overview can be moved too. The whole card is no longer a link (the buttons are inside it), so there is a link "Open Tasks & sprints" in its header.
+- I asked for the board on the overview to be smaller. `TaskBoard` got a `compact` prop (smaller headings and cards, arrow-only move buttons with a tooltip and `aria-label`, and a column that scrolls after about 260 px).
+- I asked for green columns. The AI made all three columns the same soft green (a tint, a green top edge, dark green headings). I did not like it, so the AI undid the green and kept the compact size.
+- I said the sprint dropdown was not styled. The AI first styled the native `<select>` (width, border, custom chevron), which was not what I meant: I wanted it to look like the other dropdowns. Only after I said so did the AI find `ProjectSwitcher`, which is a button and a menu because a native select's open list cannot be styled. The AI made `components/Dropdown.tsx` in the same style (outlined button, floating menu, chosen option in green, closes on Esc or an outside click) and used it for the "Show" dropdown on the Tasks page and on the overview.
+- Not checked in a browser. The overview tutorial text was not changed.
+- The other dropdowns in forms (New task, task edit, item type and so on) are still native selects and look different from `Dropdown`.
+- `Dropdown` has no arrow key navigation: the options are buttons you reach with Tab. The AI also did not look for an existing dropdown before styling the native select, which cost one round.
+
+**Edit and delete on the board:**
+- I asked for edit and delete on the board cards. The card became its own component, `features/tasks/TaskCard.tsx` (`TaskBoard` now only makes the columns). It has Edit and Delete next to the arrows. Edit opens a small form in the card with the title and the new `Dropdown` for item and sprint, and Save and Cancel. Delete asks for confirmation like the list does. Errors show on the card that caused them. A card can now also change sprint, which it could not before.
+- The prop `onMoved` on `TaskBoard` was renamed `onChanged`, because it is now also called after an edit and a delete.
+- Not checked in a browser, and there is no test for the card (the logic is the same as in `TaskRow`, which has none either). One thing to look at: on the compact overview board the columns scroll, so an open dropdown inside a card may be cut off by the column.
+- I then asked for a small pencil instead of the two text buttons, with Edit and Delete in a menu under it. The AI made `components/ActionMenu.tsx` (pencil button in the top right corner of the card, a menu with the two actions, Delete turns red on hover). The code that closes a menu on Esc or an outside click was in `Dropdown` and would have been copied, so it became the shared hook `components/useDismiss.ts` and `Dropdown` now uses it. The cards only have the arrows in their bottom row now.
+- Same caveat as before: not checked in a browser, and on the compact overview board a menu on the last card may be cut off by the scrolling column.
+- I said the Item dropdown in the edit form was crammed and the text could not be read. The cause was that `Dropdown` was made for the page (a button with a floating list), and in a narrow card the button was squeezed and the floating list was cut off by the card and the scrolling column. `Dropdown` got a `fullWidth` option: the button fills the card, the list opens in the flow under it (not floating), and long names wrap. Used for the Item and Sprint dropdowns on the card. Not checked in a browser.
+- The crammed dropdown was still there, so I added a screenshot. It showed the real cause: the rows of the list were squashed to a few pixels high. A row is a flex item with `overflow: hidden` (for the "…"), and when the list is taller than its `max-height` such an item shrinks instead of the list scrolling. The fix is `flex-shrink: 0` on the rows (`Dropdown` and `ActionMenu`). The first fix (`fullWidth`) was a guess about width and did not touch this. The AI should have asked for a screenshot first. The normal "Show" dropdown had the same bug whenever the list was long.
+
+**Tutorial steps for the board:**
+- I asked for a tutorial step for the board. Three steps were added in `tour/tourSteps.ts`: "Your to-dos" on the overview (the Todo card, `data-tour="overview-todo"` through a new `tourId` prop on `OverviewCard`), and "Board or list" (`task-view`, the header row) and "The board" (`task-board`, a wrapper div around the board) on Tasks & progress. The intro text of the Tasks page in `pageHelp.ts` now mentions the board. `tourTargets.test.ts` checks that every target exists in the code, and it passes.
+- A tour that was already seen in a browser does not start again by itself, so the new steps only show for new users, or after "Show the tour again" in the ? button. The "Board" step is skipped in List view because its element is not on the page. Not checked in a browser.
+
+**Board headings that stand out:**
+- I asked for the Planned, In progress and Done sections to stand out more, "like before". That could mean two earlier looks, so the AI asked, and I chose a solid green heading bar. The bar is flush with the top of the column (negative margins, not `overflow: hidden`, which would cut off the card menus), with white text, a bigger status icon and a white count pill. The check mark of the "done" icon is white by default, so it would have disappeared on the bar. A CSS rule (`path[stroke="white"]`) makes it green inside the heading. All three bars share the same green, so color still does not mean a status. Not checked in a browser.
+- I then said the column background should be different from the page so it sticks out. It was `--bg-dark`, almost the same as the page color. It is now `--bg-dark` with 12% of the brand green mixed in (a muted sage grey, not the bright green tint I rejected earlier) and a border with a little green too. Not checked in a browser, so the exact strength (12%) may need adjusting by eye.
+- I said it should not be green, still beige. The AI had misread "different from the page" as "tinted with the brand color". The column is now a darker beige: `--bg-dark` mixed 60% towards `--border`, with a border between `--border` and `--borderDark`. No green. Not checked in a browser, so the 60% may need adjusting by eye.
+
+**New task button on the overview:**
+- I asked for a task button on the overview board. The New task form was inside `TodoView`, so the AI moved it to its own component, `features/tasks/NewTaskForm.tsx` (+ CSS), instead of copying it. Both `TodoView` and `ProjectOverview` use it now, and its item and sprint choices use the styled `Dropdown` (`fullWidth`) instead of native selects. The overview has a "+ New task" button in the Todo card header that opens the form above the board. When the board shows one sprint, the form starts with that sprint selected, and after adding it keeps the sprint, so tasks added in a row go to the same sprint.
+- The overview tutorial text was not changed. Not checked in a browser, and the form has no test (the same logic as before, only moved).
+
+**Status on the item's task list:**
+- I asked for the item tasks list to be done next. It uses `TaskRow`, which still had the old checkbox (done or planned), so "in progress" could not be set or seen there, or in the list view on Tasks & progress. The checkbox is now a status button in `TaskRow`: the same icon and name as on the board (`StatusIcon`), and each click moves the task to the next status (planned, in progress, done, and back to planned). The tooltip and `aria-label` say what the click does. The cycling order comes from `BOARD_COLUMNS`, so the board and the list agree.
+- A click cycles, so going from done back to in progress takes two clicks. A dropdown would allow any status directly, but the AI chose the button because it is one click for the common case. Not checked in a browser, and `TaskRow` still has no test. The "New task" form and heading on the item page are still the old unstyled ones (`ItemTasks`).
+
+**New task form on the item page:**
+- I asked for the new task form on the item page to be styled. It was a bare input and button. `ItemTasks` now has a header like the other cards (the title with a count, and an outline "+ New task" button), and the form opens in a box under it. The form is the shared `NewTaskForm`, with a new `fixedItemId` option: every task is about this item, so it has no Item dropdown, only the title and a sprint choice. `ItemDetail` loads the sprints (`useSprints`) for that, without holding up the page. The styles moved from `.tasks > ...` rules in `ItemDetail.module.css` to `ItemTasks.module.css`, so `ItemTasks` styles itself.
+- The edit form of a task row on the item page still has no sprint or item choice (`TaskRow` only shows them when given the lists). Not checked in a browser, and there is no test for the form.
+- I said the add task button sat weirdly on the item page. The AI had no screenshot and guessed the cause: with the Item dropdown gone the form grid has only a title and a sprint, so "Add task" was placed in the empty second column next to the Sprint dropdown. It now always gets its own row (`grid-column: 1 / -1`). If the guess was wrong, a screenshot is needed (see the dropdown bug, where a guess also missed).
+
+**All dropdowns use `Dropdown`:**
+- I asked to fix all the dropdowns. All 10 native `<select>`s in 7 files now use the styled `Dropdown`: the item and sprint choice when editing a task (`TaskRow`), "+ Add item…" on a group (`GroupSection`), the connection type on the map (`ConnectionPrompt`), the type in `ItemForm`, the palette color (`ItemColorForm`), and the choices in `ConnectExistingForm` and `ConnectedItemForm`.
+- `Dropdown` got what these places need: `block` (fills a form field), `inline` (a small one inside a sentence), `openUp` (the connection prompt floats at the bottom of the map, and the map has `overflow: hidden`, so a list opening downward would be cut off), `placeholder` (for "+ Add item…" and "Add from the palette…", where nothing stays chosen), `disabled` and `className`. It also got arrow key navigation, which was an open item: arrow up or down on the button opens the list, arrow keys and Home/End move in it, Enter picks, Esc closes and puts the focus back on the button.
+- A `<label>` around a button can click that button again. A click on an option is a click on a button inside the label, which browsers do not forward, but a click on the empty padding of the list would close it. So in the three forms whose parents style their `<label>`s (no CSS module of their own) I kept the label, and in the ones I styled myself I used a `<div>`. `required` on the palette select is gone: the Add button is already disabled until a color is chosen. The global `select` rules in `index.css` are now unused and were not removed.
+- Not checked in a browser, and nothing tests `Dropdown` (no test library for the DOM is set up, only pure functions are tested). The list of the type dropdown in the map's add form (280 px wide, inside the map) might be cut off by the map edge.
+
+## 2026-11-14: More prominent headings
+
+- I said some headers were too small and blended in with the clutter, and asked for all headers and section titles to be more prominent.
+- The AI found every heading style (global `h1`–`h3` in `index.css` plus about 20 `.title`/`.heading` classes in CSS modules) and raised sizes and weights: global headings are bold (700) and larger (h1 2.4rem, h2 1.7rem, h3 1.3rem), card and section titles went up 0.2–0.4rem, and the small mono uppercase labels (progress, checklist, sidebar) went from 0.75–0.8rem to 0.85–1rem, bold. The sidebar category names now use the dark title color instead of the body color.
+- A script made the edits. It matched `h3` inside the shared `h1, h2, h3` rule by mistake, which put a stray `font-size` there. Found by reading the diff and fixed by hand.
+- Not checked in a browser, so long titles wrapping or the narrower layouts (sidebar, task board columns) may need a second look. The tour card title and the confirm modal title were only partly changed.
+- Follow-up: I asked for the sub headings (categories in the File view, overview card titles and so on) to stand out too. The small mono uppercase `.label` headings (File view categories, overview cards, Todo, Sprints, Groups) went from 0.75–0.8rem to 1.05rem, bold, in the dark title color. The smaller labels inside an item or moodboard card went to 0.9rem, bold. Not checked in a browser.
+- Follow-up: I asked for the Map | List toggle to be more prominent. `components/ViewToggle.module.css` now has bigger, bolder buttons, a darker border and shadow on the group, and the chosen view filled with the brand green (before: a white chip on beige). This changes every `ViewToggle` (also Progress / Tasks and the board / list switch). Not checked in a browser.
+- Follow-up: I asked for the List | Map toggle to move below the sub header, with "Project items" to the left of it. The toggle is removed from `ProjectSubHeader` and now sits in a row at the top of `PlanPage` (in `pages/ProjectViews.tsx`) with an `h2` "Project items". The `data-tour="plan-view-toggle"` attribute moved with it, so the tutorial step still finds it (`tourTargets.test.ts` checks that). Not checked in a browser.
+- Follow-up: I asked for the toggle to sit right next to "Project items" and for a cut-off from the options. `.viewRow` in `PlanPage.module.css` now left-aligns the title and toggle with a 20px gap, and has a line and extra space under it. Not checked in a browser.
+- Follow-up: I asked for the item count to move to the upper part, to declutter. `PlanPage` now loads the items (`useItems`) and passes them to `FileView` as a prop (before, `FileView` fetched them itself), and shows the count as a small badge after "Project items". The toolbar in `FileView` only shows "3 of 12 shown" while a filter is on. The map still fetches its own items. After the lift, a new item changes the count at once, because `FileView` updates the shared list. Typecheck and tests pass. Not checked in a browser.
+- Follow-up: I asked for the old look of the item count back. The count in the title row is the small grey chip again ("12 items", mono 0.75rem, 4px corners) instead of the round bold badge. Not checked in a browser.
+- Follow-up: I asked for the count to sit below the "Project items" title, still in the upper part. The title and the chip are now stacked in `.viewHeading` (`PlanPage.module.css`), with the toggle next to them. Not checked in a browser.
+- Follow-up: I asked for more padding so the title row is airier. `.viewRow` got more space above and below (12px top, 24px under before the line, 16px to the options), a wider gap between the title and the toggle (28px), and the count chip got a bit more padding. Not checked in a browser.

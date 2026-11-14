@@ -29,7 +29,7 @@ projectTasksRouter.post(
 export const tasksRouter = Router();
 tasksRouter.use(requireAuth);
 
-// Update title, done and/or the linked item
+// Update title, status and/or the linked item
 tasksRouter.patch(
   "/:id",
   validate(taskIdSchema, "params"),

@@ -4,6 +4,8 @@ import { createItemDetail, deleteItemDetail, uploadItemDetailImage } from "../it
 import type { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemColorForm } from "./ItemColorForm";
 import { MoodboardCard, type NewEntry } from "./MoodboardCard";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 type Props = {
   projectId: string;
@@ -18,8 +20,9 @@ const messageFrom = (err: unknown) => (err instanceof Error ? err.message : "Som
 // The colors of the item come from the project's palette (an item only links to them).
 export function ItemMoodboard({ projectId, itemId, details }: Props) {
   const palette = useColors(projectId);
+  useGateLoading(palette.loading);
 
-  if (palette.loading) return <p>Loading moodboard…</p>;
+  if (palette.loading) return <Loader label="Loading moodboard…" size="section" />;
   if (palette.error) {
     return (
       <div role="alert">

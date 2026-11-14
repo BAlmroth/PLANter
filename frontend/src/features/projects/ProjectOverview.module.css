@@ -1,5 +1,5 @@
 /* Six columns on a wide screen: a card spans two of them, so the top row has three cards
-   (description, inspiration, tech stack). A .half card spans three, so the bottom row has two (todo, sprint). */
+   (description, inspiration, tech stack). A .full card (the todo board) spans all six. */
 .grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -8,8 +8,8 @@
 .grid > * {
   grid-column: span 2;
 }
-.grid > .half {
-  grid-column: span 3;
+.grid > .full {
+  grid-column: 1 / -1;
 }
 
 .card {
@@ -17,6 +17,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Cards with a link: the label link covers the whole card */
@@ -25,6 +26,8 @@
 }
 .clickable:hover {
   border-color: var(--borderDark);
+  translate: -1px -1px;
+  box-shadow: 5px 5px var(--borderDark);
 }
 .cardLink {
   color: inherit;
@@ -64,7 +67,7 @@
 .label {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -135,7 +138,32 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .grid > *,
-  .grid > .half {
+  .grid > .full {
     grid-column: auto;
   }
+}
+
+/* "3 pending" and the link to the Tasks page, on the right of the Todo label */
+.todoAside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* "Show: All tasks", above the board */
+.scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+/* The New task form, in its own box above the board */
+.newTask {
+  margin-bottom: 16px;
+  padding: 12px 16px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }

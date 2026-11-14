@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Dropdown } from "../../components/Dropdown";
 
 export type ItemFormValues = { title: string; description: string; type: string; isMvp: boolean };
 
@@ -56,13 +57,13 @@ export function ItemForm({
       {types && (
         <label>
           Type
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            {types.map((t) => (
-              <option key={t.key} value={t.key}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+          <Dropdown
+            label="Type"
+            value={type}
+            options={types.map((t) => ({ value: t.key, label: t.label }))}
+            onChange={setType}
+            block
+          />
         </label>
       )}
       {/* Changes with the dropdown, so the user sees what the category means before choosing it */}

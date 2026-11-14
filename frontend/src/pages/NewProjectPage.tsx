@@ -1,17 +1,21 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Breadcrumb } from "../components/Breadcrumb";
 import { ApiError } from "../lib/api";
 import { useTemplate } from "../features/items/useTemplate";
 import { createProject } from "../features/projects/projectsApi";
 import { StarterForm } from "../features/projects/StarterForm";
 import { EMPTY_STARTER, starterSummary, toCreateInput, type Starter } from "../features/projects/starter";
 import styles from "./NewProjectPage.module.css";
+import { Loader } from "../components/Loader";
 
 // There is only one template for now (the game template is a Could) so there is no dropdown.
 // When a second template exists: add GET /api/templates (a list) and a select
 const DEFAULT_TEMPLATE = "web";
 
 type Step = "basics" | "starter";
+
+const CRUMBS = [{ label: "Projects", to: "/" }, { label: "New project" }];
 
 // Creating a project in two steps:
 // 1. name and description, with "Create empty project" for a quick start
@@ -61,6 +65,7 @@ export function NewProjectPage() {
   if (step === "basics") {
     return (
       <main className={styles.page}>
+        <Breadcrumb crumbs={CRUMBS} />
         <p className={styles.stepLabel}>Step 1 of 2</p>
         <h1 className={styles.title}>New project</h1>
         <p className={styles.lead}>What are you building? A name is enough to start.</p>
@@ -102,6 +107,7 @@ export function NewProjectPage() {
 
   return (
     <main className={styles.page}>
+      <Breadcrumb crumbs={CRUMBS} />
       <p className={styles.stepLabel}>Step 2 of 2</p>
       <h1 className={styles.title}>Already got a good idea?</h1>
       <p className={styles.lead}>
@@ -119,7 +125,7 @@ export function NewProjectPage() {
       ) : template ? (
         <StarterForm template={template} starter={starter} setStarter={setStarter} />
       ) : (
-        <p>Loading categories…</p>
+        <Loader label="Loading categories…" size="section" />
       )}
 
       {/* Stays at the bottom of the screen, so "Create project" is always in reach in a long list */}

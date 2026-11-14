@@ -1,6 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./authContext";
+import styles from "./AuthForm.module.css";
+import { AuthLayout } from "./AuthLayout";
 
 type Props = {
   title: string;
@@ -41,9 +43,8 @@ export function AuthForm({
   }
 
   return (
-    <main>
-      <h1>{title}</h1>
-      <form onSubmit={handleSubmit}>
+    <AuthLayout title={title}>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <label>
           Email
           <input
@@ -65,12 +66,16 @@ export function AuthForm({
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={submitting}>
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        <button type="submit" className={styles.submit} disabled={submitting}>
           {submitting ? "Please wait…" : submitLabel}
         </button>
       </form>
-      <p>{footer}</p>
-    </main>
+      <p className={styles.footer}>{footer}</p>
+    </AuthLayout>
   );
 }

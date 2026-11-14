@@ -2,6 +2,8 @@ import { useInspirations } from "../inspirations/useInspirations";
 import { ProjectPalette } from "../moodboard/ProjectPalette";
 import { OverviewCard } from "./OverviewCard";
 import styles from "./ProjectOverview.module.css";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
 // How many entries the overview card lists, the rest is on the inspiration page
 const INSPIRATION_LIMIT = 3;
@@ -10,6 +12,7 @@ const INSPIRATION_LIMIT = 3;
 // Not items, so they never count toward progress.
 export function InspirationCard({ projectId }: { projectId: string }) {
   const { inspirations, loading, error, refetch } = useInspirations(projectId);
+  useGateLoading(loading);
   // Only the moodboard's text entries: inspiration and images are left out of the overview
   const texts = inspirations.filter((entry) => entry.section === "moodboard" && !entry.imageUrl);
 
@@ -19,7 +22,7 @@ export function InspirationCard({ projectId }: { projectId: string }) {
       to="moodboard"
       aside={!loading && !error && <span className={styles.meta}>{texts.length}</span>}
     >
-      {loading && <p>Loading…</p>}
+      {loading && <Loader label="Loading…" size="inline" />}
       {error && (
         <div role="alert">
           <p>{error}</p>

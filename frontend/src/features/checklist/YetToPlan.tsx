@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { useChecklist } from "./useChecklist";
 import { getYetToPlan } from "./missingCategories";
 import styles from "./YetToPlan.module.css";
+import { Loader } from "../../components/Loader";
 
 // At most this many lines, so the bulletin stays small. The rest is on the checklist page.
 const LIMIT = 4;
@@ -12,7 +13,7 @@ type Props = {
   checklistPath: string;
 };
 
-// A short "Yet to plan" list: the categories the project has no item of yet, like tests or authentication.
+// A short "Yet to plan" list: the categories the project has no item of yet, like tests or security.
 // The page loads the checklist and passes it in, so the page decides when it is loaded again.
 export function YetToPlan({ checklist, checklistPath }: Props) {
   const missing = getYetToPlan(checklist.checks);
@@ -23,7 +24,7 @@ export function YetToPlan({ checklist, checklistPath }: Props) {
         Yet to plan
       </h3>
 
-      {checklist.loading && <p className={styles.note}>Checking…</p>}
+      {checklist.loading && <Loader label="Checking…" size="inline" />}
 
       {checklist.error && (
         <div role="alert">

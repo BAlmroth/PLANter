@@ -2,27 +2,33 @@
 .toggle {
   display: flex;
   gap: 4px;
-  padding: 4px;
+  padding: 5px;
   background: var(--bg-dark);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--borderDark);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .option {
-  padding: 6px 16px;
-  font-size: 0.9rem;
-  color: var(--text);
+  padding: 9px 24px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-h);
   background: none;
+  box-shadow: none;
+  translate: none;
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
 .option:hover {
-  color: var(--text-h);
+  background: var(--surface);
 }
 
-.active {
-  color: var(--text-h);
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+/* The chosen view is filled with the brand color, like a primary button */
+.active,
+.active:hover {
+  color: var(--on-primary);
+  background: var(--primary);
+  box-shadow: var(--shadow-btn);
 }

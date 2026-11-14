@@ -24,7 +24,12 @@
 .secondary {
   color: var(--text-h);
   background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
   border: 1px solid var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 
 .count {
@@ -48,6 +53,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Small caps card label, with the "done" count on the right */
@@ -57,11 +63,11 @@
   margin: 0 0 4px;
   padding-bottom: 8px;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--text-h);
   border-bottom: 1px solid var(--border);
 }
 
@@ -71,44 +77,45 @@
   text-transform: none;
 }
 
-/* New task: the title on its own row, the two dropdowns side by side, then the button */
-.addForm {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 8px;
-}
-.addForm label {
-  font-size: 0.9rem;
-}
-.titleField {
-  grid-column: 1 / -1;
-}
-.addForm button {
-  justify-self: start;
-}
-
 .list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* The item a task is about, as a small tag after its title */
-.itemLink {
-  padding: 2px 8px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--primary);
-  text-decoration: none;
-  background: var(--bg-dark);
-  border-radius: 4px;
-}
-.itemLink:hover {
-  text-decoration: underline;
-}
-
 .empty {
   margin: 8px 0 0;
   opacity: 0.7;
+}
+
+/* Board / List: two buttons joined into one control. The pressed one is filled. */
+.viewToggle {
+  display: flex;
+}
+.viewToggle button {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+  box-shadow: none;
+  translate: none;
+}
+.viewToggle button:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.viewToggle button:last-child {
+  margin-left: -1px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.viewToggle button[aria-pressed="true"] {
+  color: var(--on-primary);
+  background: var(--button-bg);
+  border-color: var(--button-bg);
+}
+
+/* "Show: All tasks" on the board */
+.scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
 }

@@ -78,6 +78,32 @@ describe("relationshipRuleSchema (web template)", () => {
     expect(result.success).toBe(false);
   });
 
+  it.each([
+    ["authentication", "protects", "component"],
+    ["authentication", "protects", "data"],
+    ["authentication", "uses", "tech_stack"],
+    ["function", "navigates_to", "page"],
+    ["function", "uses", "tech_stack"],
+    ["data", "uses", "tech_stack"],
+    ["design", "uses", "asset"],
+    ["testing", "tests", "data"],
+    ["testing", "uses", "tech_stack"],
+  ])("allows %s %s %s", (sourceType, type, targetType) => {
+    expect(schema.safeParse({ sourceType, type, targetType }).success).toBe(true);
+  });
+
+  // These are left out on purpose, see the comments in templates/web.ts
+  it.each([
+    ["page", "uses", "tech_stack"], // would clutter the map: everything would point at "React"
+    ["component", "uses", "tech_stack"],
+    ["component", "reads_from", "data"], // the frontend never reads the database directly
+    ["tech_stack", "uses", "function"], // wrong direction
+    ["asset", "uses", "design"], // wrong direction
+    ["data", "protects", "authentication"], // wrong direction
+  ])("rejects %s %s %s", (sourceType, type, targetType) => {
+    expect(schema.safeParse({ sourceType, type, targetType }).success).toBe(false);
+  });
+
   it("allows every combination listed in the template", () => {
     for (const c of webTemplate.allowedCombinations) {
       const result = schema.safeParse({ sourceType: c.source, type: c.relationship, targetType: c.target });

@@ -1,6 +1,7 @@
 import { Link, useMatch } from "react-router-dom";
 import { LogoutButton } from "../auth/LogoutButton";
 import { ProjectNav } from "../features/projects/ProjectNav";
+import { ProjectSwitcher } from "./ProjectSwitcher";
 import styles from "./Header.module.css";
 
 export function Header() {
@@ -11,10 +12,15 @@ export function Header() {
 
   return (
     <header className={styles.header}>
-      <Link to="/" className={styles.logo}>
-        <span className={styles.mark}>P</span>
-        PLANter
-      </Link>
+      {/* The logo and the project switcher together at the left */}
+      <div className={styles.left}>
+        <Link to="/" className={styles.logo}>
+          <span className={styles.mark}>P</span>
+          PLANter
+        </Link>
+        {/* key: a new project id remounts it, which fetches the list again */}
+        <ProjectSwitcher key={projectId ?? "none"} projectId={projectId} />
+      </div>
       {/* The page links and the log out button together at the right */}
       <div className={styles.right}>
         {projectId && <ProjectNav projectId={projectId} />}

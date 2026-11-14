@@ -27,12 +27,12 @@ describe("tasksApi", () => {
   });
 
   it("updateTask patches the task by id", async () => {
-    await updateTask("t1", { done: true, itemId: null });
+    await updateTask("t1", { status: "done", itemId: null });
 
     const [path, options] = apiRequest.mock.calls[0];
     expect(path).toBe("/api/tasks/t1");
     expect(options.method).toBe("PATCH");
-    expect(JSON.parse(options.body)).toEqual({ done: true, itemId: null });
+    expect(JSON.parse(options.body)).toEqual({ status: "done", itemId: null });
   });
 
   it("deleteTask deletes the task by id", async () => {

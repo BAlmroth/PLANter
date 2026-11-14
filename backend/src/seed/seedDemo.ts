@@ -45,9 +45,9 @@ export async function seedDemoProject(userId: string) {
   const sprints = demoSprints.map((s) => ({ id: randomUUID(), ...s }));
   const taskRows = [
     ...sprints.flatMap((s) =>
-      s.tasks.map((t) => ({ projectId, sprintId: s.id, title: t.title, done: t.done, itemId: t.item ? idOf(t.item) : null })),
+      s.tasks.map((t) => ({ projectId, sprintId: s.id, title: t.title, status: t.done ? ("done" as const) : ("planned" as const), itemId: t.item ? idOf(t.item) : null })),
     ),
-    ...demoBacklogTasks.map((t) => ({ projectId, sprintId: null, title: t.title, done: t.done, itemId: t.item ? idOf(t.item) : null })),
+    ...demoBacklogTasks.map((t) => ({ projectId, sprintId: null, title: t.title, status: t.done ? ("done" as const) : ("planned" as const), itemId: t.item ? idOf(t.item) : null })),
   ];
 
   const groups = demoGroups.map((g) => ({ id: randomUUID(), ...g }));

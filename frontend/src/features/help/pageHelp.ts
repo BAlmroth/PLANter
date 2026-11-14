@@ -38,7 +38,7 @@ export const PAGE_HELP: Record<PageKey, PageHelp> = {
   },
   tasks: {
     title: "Tasks & progress",
-    intro: "At the top: how far the plan has come and what might be missing. Below: the concrete to-dos, which you can sort into sprints.",
+    intro: "At the top: how far the plan has come and what might be missing. Below: the concrete to-dos on a board (Planned, In progress, Done), which you can sort into sprints.",
   },
   checklist: {
     title: "Checklist",

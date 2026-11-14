@@ -4,6 +4,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 /* Small caps card label, the same as on the overview */
@@ -11,11 +12,11 @@
   margin: 0 0 8px;
   padding-bottom: 8px;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--text-h);
   border-bottom: 1px solid var(--border);
 }
 
@@ -50,6 +51,8 @@
   font-size: 0.85rem;
   color: var(--text);
   background: transparent;
+  box-shadow: none;
+  translate: none;
 }
 .textButton:hover:not(:disabled) {
   color: var(--text-h);
@@ -62,7 +65,12 @@
 .secondary {
   color: var(--text-h);
   background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
   border: 1px solid var(--borderDark);
+}
+.secondary:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }
 
 /* Rename: the input and the buttons on one line */

@@ -1,0 +1,217 @@
+/* The task board: three columns side by side. On a narrow screen they stack. */
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+/* A darker beige than the page (the grey area color mixed towards the border color, no green), so the
+   columns stand out from the cream page and the white overview card, and the white cards stand out on them. */
+.column {
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--borderDark) 45%, var(--border));
+  border-radius: 12px;
+}
+
+/* A solid green bar across the top of the column, flush with its edges (negative margins undo the column
+   padding, so the column does not need overflow: hidden, which would cut off the menus of the cards).
+   All three bars have the same green: the status is told apart by the icon shape and the name. */
+.columnHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -16px -16px 12px;
+  padding: 10px 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 11px 11px 0 0;
+}
+/* StatusIcon is small by default, make it bigger here (it takes the text color, so white) */
+.columnHeading svg {
+  width: 22px;
+  height: 22px;
+}
+/* The check mark of "done" is white inside a filled circle. On the bar the circle is white too, so the check turns green. */
+.columnHeading svg path[stroke="white"] {
+  stroke: var(--primary);
+}
+.columnHeading > span:first-child {
+  gap: 8px;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+/* The count: a white pill on the green bar */
+.columnCount {
+  min-width: 26px;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--primary);
+  background: var(--surface);
+  border-radius: 999px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A task card, white on the grey column, with the same hard shadow as the other cards */
+.card {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 0;
+}
+
+.sprintTag {
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+/* Back on the left, forward on the right */
+.moves {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.forward {
+  margin-left: auto;
+}
+
+/* Small buttons without a background, like Edit and Delete in the list */
+.move {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  translate: none;
+}
+.move:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+
+.error {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* Compact (the overview): smaller everything, and a long column scrolls instead of growing */
+.compact {
+  gap: 12px;
+}
+.compact .column {
+  padding: 10px;
+}
+.compact .columnHeading {
+  margin: -10px -10px 8px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+}
+.compact .columnHeading svg {
+  width: 18px;
+  height: 18px;
+}
+.compact .columnCount {
+  min-width: 22px;
+  font-size: 0.75rem;
+}
+.compact .cards {
+  gap: 6px;
+  max-height: 260px;
+  padding-right: 2px;
+  overflow-y: auto;
+}
+.compact .card {
+  padding: 6px 8px;
+}
+.compact .title {
+  font-size: 0.85rem;
+}
+.compact .meta {
+  margin-top: 4px;
+}
+/* The buttons are only arrows here. The label stays in the tooltip and for screen readers (aria-label). */
+.compact .moves {
+  margin-top: 2px;
+}
+.compact .moveText {
+  display: none;
+}
+.compact .move {
+  padding: 0 6px;
+}
+
+/* The title with the pencil menu in the top right corner */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Edit mode: the title and the two dropdowns stacked, then Save and Cancel */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.editForm input {
+  margin: 0;
+}
+.editButtons {
+  display: flex;
+  gap: 8px;
+}
+/* An outline button for Cancel, like the other secondary buttons */
+.cancel {
+  color: var(--text-h);
+  background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
+  border: 1px solid var(--borderDark);
+}
+.cancel:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
+}

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Dropdown } from "../../components/Dropdown";
 import { getTypeChoices, type ConnectOption } from "./connections";
 
 type Props = {
@@ -58,29 +59,26 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
       </label>
       <label>
         What is it?
-        <select
+        <Dropdown
+          label="What is it?"
           value={newItemType}
-          onChange={(e) => {
-            setNewItemType(e.target.value);
+          options={typeChoices.map((option) => ({ value: option.newItemType, label: option.newItemTypeLabel }))}
+          onChange={(value) => {
+            setNewItemType(value);
             setOptionKey("");
           }}
-        >
-          {typeChoices.map((option) => (
-            <option key={option.newItemType} value={option.newItemType}>
-              {option.newItemTypeLabel}
-            </option>
-          ))}
-        </select>
+          block
+        />
       </label>
       <label>
         How is it connected to “{thisTitle}”?
-        <select value={selected?.key ?? ""} onChange={(e) => setOptionKey(e.target.value)}>
-          {verbChoices.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.verb}
-            </option>
-          ))}
-        </select>
+        <Dropdown
+          label="How is it connected"
+          value={selected?.key ?? ""}
+          options={verbChoices.map((option) => ({ value: option.key, label: option.verb }))}
+          onChange={setOptionKey}
+          block
+        />
       </label>
       {selected && (
         <p>

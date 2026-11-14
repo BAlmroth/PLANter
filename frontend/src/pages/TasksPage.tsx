@@ -7,6 +7,8 @@ import { useProjectContext } from "../features/projects/useProjectContext";
 import { TodoView } from "../features/tasks/TodoView";
 import { ItemWarningsList } from "../features/warnings/ItemWarningsList";
 import styles from "./TasksPage.module.css";
+import { Loader } from "../components/Loader";
+import { useGateLoading } from "../components/useLoadGate";
 
 // How many item warnings are listed. The rest are on the checklist page.
 const WARNING_LIMIT = 5;
@@ -26,6 +28,7 @@ const SECTION_IDS = SECTIONS.map((section) => section.value);
 export function TasksPage() {
   const { project, progress, warnings } = useProjectContext();
   const checklist = useChecklist(project.id);
+  useGateLoading(checklist.loading);
   const [active, setActive] = useActiveSection<SectionId>(SECTION_IDS, "progress-section");
 
   function jumpTo(id: SectionId) {
@@ -56,7 +59,7 @@ export function TasksPage() {
         <div className={styles.grid}>
           {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
           <div className={styles.card} data-tour="tasks-progress">
-            {progress.loading && <p>Loading progress…</p>}
+            {progress.loading && <Loader label="Loading progress…" size="inline" />}
             {progress.error && (
               <div role="alert">
                 <p>{progress.error}</p>
@@ -81,7 +84,7 @@ export function TasksPage() {
                   <span className={styles.count}>{warnings.warnings.length}</span>
                 )}
               </h3>
-              {warnings.loading && <p>Checking…</p>}
+              {warnings.loading && <Loader label="Checking…" size="inline" />}
               {warnings.error && (
                 <div role="alert">
                   <p>{warnings.error}</p>

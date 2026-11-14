@@ -1,27 +1,41 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Outlet, useLocation, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { pageKeyFromPath } from "../features/help/pageHelp";
 import { HelpButton } from "../features/tour/HelpButton";
 import { Tour } from "../features/tour/Tour";
 import { TOURS } from "../features/tour/tourSteps";
-import { useTour } from "../features/tour/useTour";import { FileSidebar } from "../features/items/FileSidebar";
+import { useTour } from "../features/tour/useTour";
+import { FileSidebar } from "../features/items/FileSidebar";
 import { useProgress } from "../features/progress/useProgress";
 import { useWarnings } from "../features/warnings/useWarnings";
 import { ProjectSubHeader } from "../features/projects/ProjectSubHeader";
 import type { Project } from "../features/projects/types";
-import type { ItemCrumb, ProjectContext } from "../features/projects/useProjectContext";
+import type {
+  ItemCrumb,
+  ProjectContext,
+} from "../features/projects/useProjectContext";
 import { useProject } from "../features/projects/useProject";
+import { LoadGate } from "../components/LoadGate";
+import { useGateLoading, useLoadGate } from "../components/useLoadGate";
 import styles from "./ProjectPage.module.css";
+import { Loader } from "../components/Loader";
 
 // Everything under /projects/:projectId. Loads the project, then shows the frame around the pages.
 export function ProjectPage() {
   const { projectId } = useParams() as { projectId: string };
-  const { project, error, loading, refetch, setProject } = useProject(projectId);
+  const { project, error, loading, refetch, setProject } =
+    useProject(projectId);
 
   if (loading) {
     return (
       <main className={styles.message}>
-        <p>Loading project…</p>
+        <Loader label="Loading project…" size="page" />
       </main>
     );
   }
@@ -66,7 +80,20 @@ function ProjectFrame({ project, setProject }: FrameProps) {
   // Set by the item page, shown in the sub header
   const [itemCrumb, setItemCrumb] = useState<ItemCrumb | null>(null);
 
-  const context: ProjectContext = { project, setProject, progress, warnings, setItemCrumb };
+  // Nothing on the project pages is shown until everything on them has loaded. "outer" holds the
+  // whole frame the first time, "main" holds the page in the middle each time the user changes page.
+  const outer = useLoadGate();
+  const main = useLoadGate();
+  useGateLoading(progress.loading || warnings.loading, outer.gate);
+  useGateLoading(main.pending, outer.gate);
+
+  const context: ProjectContext = {
+    project,
+    setProject,
+    progress,
+    warnings,
+    setItemCrumb,
+  };
 
   // Items, connections and tasks may have changed when the user moves to another page, so ask
   // for fresh numbers and warnings. The ref skips the first render, where the hooks above
@@ -88,33 +115,49 @@ function ProjectFrame({ project, setProject }: FrameProps) {
   const tour = useTour(helpPage);
 
   return (
-    <div className={styles.project}>
-      <ProjectSubHeader project={project} progress={progress.progress} itemCrumb={itemCrumb} />
-
-      <div className={styles.body}>
-        <aside className={styles.sidebar} data-tour="sidebar">
-          {/* Stays mounted when the page changes, so it does not jump. It has its own refresh button. */}
-          <FileSidebar project={project} />
-        </aside>
-
-        <main className={styles.main}>
-          <Outlet context={context} />
-        </main>
-      </div>
-
-      <HelpButton onShowTour={helpPage ? tour.start : undefined} onRestart={tour.restart} />
-      {/* key: a new page starts a fresh Tour, so nothing from the last page's step is kept */}
-      {helpPage && tour.index !== null && (
-        <Tour
-          key={helpPage}
-          steps={TOURS[helpPage]}
-          index={tour.index}
-          direction={tour.direction}
-          onStep={tour.onStep}
-          onClose={tour.close}
-          onSkipAll={tour.skipAll}
+    <LoadGate
+      gate={outer.gate}
+      pending={outer.pending}
+      label="Loading project…"
+      instant
+    >
+      <div className={styles.project}>
+        <ProjectSubHeader
+          project={project}
+          progress={progress.progress}
+          itemCrumb={itemCrumb}
         />
-      )}
-    </div>
+
+        <div className={styles.body}>
+          <aside className={styles.sidebar} data-tour="sidebar">
+            {/* Stays mounted when the page changes, so it does not jump. It has its own refresh button. */}
+            <FileSidebar project={project} />
+          </aside>
+
+          <main className={styles.main}>
+            <LoadGate gate={main.gate} pending={main.pending}>
+              <Outlet context={context} />
+            </LoadGate>
+          </main>
+        </div>
+
+        <HelpButton
+          onShowTour={helpPage ? tour.start : undefined}
+          onRestart={tour.restart}
+        />
+        {/* key: a new page starts a fresh Tour, so nothing from the last page's step is kept */}
+        {helpPage && tour.index !== null && !outer.pending && !main.pending && (
+          <Tour
+            key={helpPage}
+            steps={TOURS[helpPage]}
+            index={tour.index}
+            direction={tour.direction}
+            onStep={tour.onStep}
+            onClose={tour.close}
+            onSkipAll={tour.skipAll}
+          />
+        )}
+      </div>
+    </LoadGate>
   );
 }

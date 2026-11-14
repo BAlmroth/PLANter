@@ -1,20 +1,25 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { STATUS_LABELS } from "../items/types";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { useSprints } from "../sprints/useSprints";
+import { tasksForScope } from "../tasks/boardColumns";
+import { NewTaskForm } from "../tasks/NewTaskForm";
+import { TaskBoard } from "../tasks/TaskBoard";
 import { useTasks } from "../tasks/useTasks";
 import { InspirationCard } from "./InspirationCard";
 import { OverviewCard } from "./OverviewCard";
 import { useProjectContext } from "./useProjectContext";
 import styles from "./ProjectOverview.module.css";
+import { Dropdown } from "../../components/Dropdown";
+import { Loader } from "../../components/Loader";
+import { useGateLoading } from "../../components/useLoadGate";
 
-// How many pending tasks the todo card lists
-const TODO_LIMIT = 5;
 // How many tech stack items the tech stack card lists
 const TECH_LIMIT = 5;
 
-// The first page of a project: cards with the description, inspiration, tech stack (top row), todo list and sprints (bottom row).
+// The first page of a project: cards with the description, inspiration, tech stack (top row) and the todo board with its sprints (bottom row).
 // Every card is a summary: a click on it opens its own page, a click on an item opens the item.
 export function ProjectOverview() {
   const { project } = useProjectContext();
@@ -22,20 +27,36 @@ export function ProjectOverview() {
   const items = useItems(project.id);
   const tasks = useTasks(project.id);
   const sprints = useSprints(project.id);
+  // What the todo board shows: "all", "none" (no sprint) or a sprint id
+  const [scope, setScope] = useState("all");
+  // The New task form above the board
+  const [addingTask, setAddingTask] = useState(false);
 
   // The tech stack card lists the items of the "tech_stack" category of the web template.
   // A template without that category just gets an empty card.
   const techItems = items.items.filter((item) => item.type === "tech_stack");
   const techLabel = template.template?.itemTypes.find((type) => type.key === "tech_stack")?.pluralLabel ?? "Tech stack";
 
-  const pending = tasks.tasks.filter((task) => !task.done);
+  const pending = tasks.tasks.filter((task) => task.status !== "done");
   const tasksLoading = tasks.loading || sprints.loading;
   const tasksError = tasks.error ?? sprints.error;
+  useGateLoading(template.loading || items.loading || tasksLoading);
 
   function tryAgain() {
     if (tasks.error) tasks.refetch();
     if (sprints.error) sprints.refetch();
   }
+
+  // What the todo board can show: everything, one sprint with its progress, or the tasks without a sprint
+  const scopeOptions = [
+    { value: "all", label: "All tasks" },
+    ...sprints.sprints.map((sprint) => {
+      const sprintTasks = tasks.tasks.filter((task) => task.sprintId === sprint.id);
+      const done = sprintTasks.filter((task) => task.status === "done").length;
+      return { value: sprint.id, label: `${sprint.name} (${done} / ${sprintTasks.length} done)` };
+    }),
+    { value: "none", label: "No sprint" },
+  ];
 
   return (
     <div className={styles.grid}>
@@ -49,7 +70,7 @@ export function ProjectOverview() {
 
       <OverviewCard label={techLabel} to="plan?view=list">
         {items.loading ? (
-          <p>Loading…</p>
+          <Loader label="Loading…" size="inline" />
         ) : techItems.length === 0 ? (
           <p>No tech stack items yet.</p>
         ) : (
@@ -68,11 +89,28 @@ export function ProjectOverview() {
 
       <OverviewCard
         label="Todo"
-        to="tasks"
-        className={styles.half}
-        aside={!tasksLoading && !tasksError && <span className={styles.meta}>{pending.length} pending</span>}
+        tourId="overview-todo"
+        className={styles.full}
+        aside={
+          <span className={styles.todoAside}>
+            {!tasksLoading && !tasksError && <span className={styles.meta}>{pending.length} pending</span>}
+            <Link to="tasks" className={styles.itemLink}>
+              Open Tasks &amp; sprints
+            </Link>
+            {!tasksLoading && !tasksError && (
+              <button
+                type="button"
+                aria-expanded={addingTask}
+                aria-controls="overview-new-task"
+                onClick={() => setAddingTask((open) => !open)}
+              >
+                {addingTask ? "Close new task" : "+ New task"}
+              </button>
+            )}
+          </span>
+        }
       >
-        {tasksLoading && <p>Loading…</p>}
+        {tasksLoading && <Loader label="Loading…" size="inline" />}
         {tasksError && (
           <div role="alert">
             <p>{tasksError}</p>
@@ -83,45 +121,34 @@ export function ProjectOverview() {
         )}
         {!tasksLoading && !tasksError && (
           <>
-            {pending.length === 0 ? (
-              <p>Nothing left to do.</p>
-            ) : (
-              <ul className={styles.list}>
-                {pending.slice(0, TODO_LIMIT).map((task) => (
-                  <li key={task.id} className={styles.listRow}>
-                    {task.itemId ? (
-                      <Link to={`items/${task.itemId}`} className={styles.itemLink}>
-                        {task.title}
-                      </Link>
-                    ) : (
-                      task.title
-                    )}
-                  </li>
-                ))}
-              </ul>
+            {addingTask && (
+              <div id="overview-new-task" className={styles.newTask}>
+                {/* key: when another sprint is chosen the form starts again with that sprint selected */}
+                <NewTaskForm
+                  key={scope}
+                  projectId={project.id}
+                  items={items.items}
+                  sprints={sprints.sprints}
+                  defaultSprintId={scope !== "all" && scope !== "none" ? scope : ""}
+                  onCreated={(task) => tasks.setTasks((current) => [...current, task])}
+                />
+              </div>
             )}
+            {/* The sprint choice and its progress live here now, instead of in a card of their own */}
+            <div className={styles.scope}>
+              Show
+              <Dropdown label="Show tasks of" value={scope} options={scopeOptions} onChange={setScope} />
+            </div>
+            <TaskBoard
+              projectId={project.id}
+              tasks={tasksForScope(tasks.tasks, scope)}
+              items={items.items}
+              sprints={sprints.sprints}
+              template={template.template}
+              setTasks={tasks.setTasks}
+              compact
+            />
           </>
-        )}
-      </OverviewCard>
-
-      <OverviewCard label="Sprint" to="tasks" className={styles.half}>
-        {tasksLoading && <p>Loading…</p>}
-        {!tasksLoading && !tasksError && sprints.sprints.length === 0 && <p>No sprints yet.</p>}
-        {!tasksLoading && !tasksError && (
-          <ul className={styles.list}>
-            {sprints.sprints.map((sprint) => {
-              const sprintTasks = tasks.tasks.filter((task) => task.sprintId === sprint.id);
-              const done = sprintTasks.filter((task) => task.done).length;
-              return (
-                <li key={sprint.id} className={styles.listRow}>
-                  {sprint.name}
-                  <span className={styles.meta}>
-                    {done} / {sprintTasks.length} done
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
         )}
       </OverviewCard>
     </div>

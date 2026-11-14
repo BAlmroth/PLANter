@@ -1,4 +1,5 @@
 import { useConfirm } from "../../components/useConfirm";
+import { Dropdown } from "../../components/Dropdown";
 import { useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/api";
 import type { Item } from "../items/types";
@@ -227,20 +228,16 @@ export function GroupSection({ projectId, groups, setGroups, items, groupColors 
                   ))}
                 </ul>
                 {notInGroup.length > 0 && (
-                  // value is always "": the select only picks an item, it does not keep a choice
-                  <select
-                    aria-label={`Add an item to ${group.name}`}
+                  // The dropdown only picks an item, it does not keep a choice: the value stays "" (the placeholder shows)
+                  <Dropdown
+                    label={`Add an item to ${group.name}`}
                     value=""
+                    placeholder="+ Add item…"
+                    options={notInGroup.map((item) => ({ value: item.id, label: item.title }))}
+                    onChange={(itemId) => handleAddItem(group, itemId)}
                     disabled={busy}
-                    onChange={(e) => handleAddItem(group, e.target.value)}
-                  >
-                    <option value="">+ Add item…</option>
-                    {notInGroup.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.title}
-                      </option>
-                    ))}
-                  </select>
+                    className={styles.addItem}
+                  />
                 )}
               </li>
             );

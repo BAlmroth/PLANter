@@ -4,12 +4,15 @@ import { useChecklist } from "../features/checklist/useChecklist";
 import { useProjectContext } from "../features/projects/useProjectContext";
 import { ItemWarningsList } from "../features/warnings/ItemWarningsList";
 import styles from "./ChecklistPage.module.css";
+import { Loader } from "../components/Loader";
+import { useGateLoading } from "../components/useLoadGate";
 
 // The full checklist: "Before you start programming" with every check (✓ or ✗), and every item warning.
 // Reached from "See full checklist" and "and N more" on the Tasks & progress page, not from the nav.
 export function ChecklistPage() {
   const { project, warnings } = useProjectContext();
   const checklist = useChecklist(project.id);
+  useGateLoading(checklist.loading);
 
   const categoryChecks = checklist.checks.filter((check) => check.kind === "category");
   const readinessChecks = checklist.checks.filter((check) => check.kind === "readiness");
@@ -31,7 +34,7 @@ export function ChecklistPage() {
         </div>
         <p className={styles.intro}>The things that are easy to forget until the end. Each one links to where you fix it.</p>
 
-        {checklist.loading && <p>Checking…</p>}
+        {checklist.loading && <Loader label="Checking…" size="inline" />}
         {checklist.error && (
           <div role="alert">
             <p>{checklist.error}</p>
@@ -62,7 +65,7 @@ export function ChecklistPage() {
           {!warnings.loading && !warnings.error && <span className={styles.summary}>{warnings.warnings.length}</span>}
         </div>
 
-        {warnings.loading && <p>Checking…</p>}
+        {warnings.loading && <Loader label="Checking…" size="inline" />}
         {warnings.error && (
           <div role="alert">
             <p>{warnings.error}</p>

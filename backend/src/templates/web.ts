@@ -1,7 +1,7 @@
  import type { Template } from "./index.js";
 
 // KEYS ARE PERMANENT, LABELS ARE CUSTIMIZABLE.
-// Read each relationship as a sentence: "<source> <label> <target>", e.g. "authentication protects page".
+// Read each relationship as a sentence: "<source> <label> <target>", e.g. "authentication (shown as Security) protects page".
 
 
 export const webTemplate: Template = {
@@ -13,31 +13,31 @@ export const webTemplate: Template = {
   // magenta-orange). Each color has at least 4.5:1 contrast (WCAG AA) on white, on --bg
   // and on its own 12% tint, so it can be used as text inside a pill of the same color.
 itemTypes: [
-  { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8",
+  { key: "page", label: "Page", pluralLabel: "Pages", countsTowardProgress: true, color: "#2563A8", size: "large",
     description: "A screen the user can visit, usually with its own address (URL).",
     example: "Home, Login, Profile" },
-  { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673",
+  { key: "component", label: "Component", pluralLabel: "Components", countsTowardProgress: true, color: "#0F7673", size: "medium",
     description: "A reusable piece of a page, like a menu, a form or a card.",
     example: "Header, LoginForm, ProductCard" },
-  { key: "function", label: "Functionality", pluralLabel: "Functionality", countsTowardProgress: true, color: "#6D4BB3",
+  { key: "function", label: "Functionality", pluralLabel: "Functionality", countsTowardProgress: true, color: "#6D4BB3", size: "medium",
     description: "Something the app does when the user acts or something happens.",
     example: "Log in, Send message, Calculate total" },
-  { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true, color: "#8A5A0B",
+  { key: "data", label: "Data", pluralLabel: "Data", countsTowardProgress: true, color: "#8A5A0B", size: "medium",
     description: "Something the app stores, usually a table in the database.",
     example: "Users, Orders, Comments" },
-  { key: "authentication", label: "Authentication", pluralLabel: "Authentication", countsTowardProgress: true, color: "#B4234F",
-    description: "How users log in, and what is protected from whom.",
-    example: "Email login, Admin only" },
-  { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true, color: "#A3368F",
+  { key: "authentication", label: "Security", pluralLabel: "Security", countsTowardProgress: true, color: "#B4234F", size: "medium",
+    description: "How the app protects users and itself: login, permissions, input checks and error handling.",
+    example: "Email login, Admin only, Input validation, Error handling" },
+  { key: "design", label: "Design", pluralLabel: "Designs", countsTowardProgress: true, color: "#A3368F", size: "medium",
     description: "How it should look: colors, fonts, layouts and wireframes.",
     example: "Color palette, Mobile layout, Figma wireframe" },
-  { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#A8380A",
+  { key: "asset", label: "Asset", pluralLabel: "Assets", countsTowardProgress: true, color: "#A8380A", size: "small",
     description: "Files the app needs, like images, icons, fonts and videos.",
     example: "Logo, Hero image, Icon set" },
-  { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true, color: "#436C0D",
+  { key: "testing", label: "Test", pluralLabel: "Tests", countsTowardProgress: true, color: "#436C0D", size: "small",
     description: "A test that checks that something works as planned.",
     example: "Login form test, Checkout test" },
-  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563",
+  { key: "tech_stack", label: "Tech stack", pluralLabel: "Tech stack", countsTowardProgress: true, color: "#4B5563", size: "small",
     description: "A language, tool or service the project is built with.",
     example: "React, Express, Supabase" },
 ],
@@ -50,7 +50,7 @@ itemTypes: [
     // A component cannot contain the thing it uses so no cycles
     // Labelled "part of" / "contains", not "used by" / "uses": those words belong to the "uses"
     // type below, and one phrase must never mean two connections.
-    { key: "belongs_to", label: "part of", inverseLabel: "contains", allowCycles: false,
+    { key: "belongs_to", label: "part of", inverseLabel: "contains", allowCycles: false, readsBackward: true,
       description: "The component is a part of that page or component." },
     // Functions may call each other in a loop
     { key: "triggers", label: "triggers", inverseLabel: "triggered by", allowCycles: true,
@@ -63,10 +63,10 @@ itemTypes: [
     { key: "writes_to", label: "writes to", inverseLabel: "written by", allowCycles: true,
       description: "The functionality saves or changes that data." },
     { key: "uses", label: "uses", inverseLabel: "used by", allowCycles: true,
-      description: "Uses that design or asset, for example a color palette or a logo." },
-    { key: "protects", label: "protects", inverseLabel: "protected by", allowCycles: true,
-      description: "Only users who pass this check can reach that page or functionality." },
-    { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true,
+      description: "Uses that design, asset or tech, for example a color palette, a logo or a library." },
+    { key: "protects", label: "protects", inverseLabel: "protected by", allowCycles: true, readsBackward: true,
+      description: "Only users who pass this check can reach that page, component, functionality or data." },
+    { key: "tests", label: "tests", inverseLabel: "tested by", allowCycles: true, readsBackward: true,
       description: "This test checks that that thing works." },
   ],
 
@@ -80,6 +80,7 @@ itemTypes: [
     { source: "component", relationship: "triggers", target: "function" },
     { source: "page", relationship: "navigates_to", target: "page" },
     { source: "component", relationship: "navigates_to", target: "page" },
+    { source: "function", relationship: "navigates_to", target: "page" }, // e.g. "Log in" sends you to Home
     { source: "function", relationship: "triggers", target: "function" },
 
     // Data: what touches a table
@@ -91,15 +92,26 @@ itemTypes: [
     { source: "component", relationship: "uses", target: "design" },
     { source: "page", relationship: "uses", target: "asset" },
     { source: "component", relationship: "uses", target: "asset" },
+    { source: "design", relationship: "uses", target: "asset" }, // e.g. "Brand style" uses "Logo"
+
+    // Tech stack: what the parts are built with (page and component are left out on purpose,
+    // since almost everything on the front end would point at "React")
+    { source: "function", relationship: "uses", target: "tech_stack" },
+    { source: "data", relationship: "uses", target: "tech_stack" },
+    { source: "authentication", relationship: "uses", target: "tech_stack" },
+    { source: "testing", relationship: "uses", target: "tech_stack" },
 
     // Security
     { source: "authentication", relationship: "protects", target: "page" },
+    { source: "authentication", relationship: "protects", target: "component" },
     { source: "authentication", relationship: "protects", target: "function" },
+    { source: "authentication", relationship: "protects", target: "data" },
 
     // Testing
     { source: "testing", relationship: "tests", target: "page" },
     { source: "testing", relationship: "tests", target: "component" },
     { source: "testing", relationship: "tests", target: "function" },
+    { source: "testing", relationship: "tests", target: "data" },
     { source: "testing", relationship: "tests", target: "authentication" },
   ],
 
@@ -116,7 +128,7 @@ itemTypes: [
     { itemType: "design", label: "Plan the design" },
     { itemType: "tech_stack", label: "Choose the tech stack" },
     { itemType: "data", label: "Plan the data" },
-    { itemType: "authentication", label: "Plan authentication" },
+    { itemType: "authentication", label: "Plan security" },
     { itemType: "testing", label: "Plan the tests" },
   ],
 };

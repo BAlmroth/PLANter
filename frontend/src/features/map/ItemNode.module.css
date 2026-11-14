@@ -1,7 +1,9 @@
 /* One item on the map. --type-color is set by ItemNode, grey for an unknown type.
    Left strip = item type. Border style = status: dashed while planned, solid once started. */
 .node {
-  min-width: 150px;
+  /* Set by ItemNode from cardSize.ts, so the layout and the card agree on the width */
+  width: var(--card-width, 190px);
+  box-sizing: border-box;
   padding: 8px 12px 8px 10px;
   font-size: 14px;
   color: var(--text-h);
@@ -49,4 +51,21 @@
 
 .title {
   display: block;
+}
+
+/* Sizes. "medium" is the base style above. The size comes from the template (a page is large). */
+.small {
+  padding: 6px 10px 6px 8px;
+  font-size: 12px;
+}
+.small .type {
+  font-size: 10px;
+}
+
+.large {
+  padding: 12px 16px 12px 14px;
+  font-size: 18px;
+}
+.large .type {
+  font-size: 12px;
 }

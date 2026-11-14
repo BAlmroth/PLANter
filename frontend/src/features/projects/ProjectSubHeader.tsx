@@ -2,7 +2,6 @@ import { useLocation } from "react-router-dom";
 import { Breadcrumb, type Crumb } from "../../components/Breadcrumb";
 import { ProgressBar } from "../progress/ProgressBar";
 import type { Progress } from "../progress/types";
-import { PlanViewToggle } from "./PlanViewToggle";
 import { ProjectSettings } from "./ProjectSettings";
 import type { Project } from "./types";
 import type { ItemCrumb } from "./useProjectContext";
@@ -59,16 +58,10 @@ export function ProjectSubHeader({ project, progress, itemCrumb }: Props) {
   return (
     <div className={styles.subHeader}>
       <div className={styles.heading}>
-        <Breadcrumb crumbs={crumbs} />
+        {/* Every trail starts at the projects list */}
+        <Breadcrumb crumbs={[{ label: "Projects", to: "/" }, ...crumbs]} />
         <h1 className={styles.title}>{title}</h1>
       </div>
-
-      {/* Next to the title, at the left */}
-      {section === "plan" && (
-        <div data-tour="plan-view-toggle">
-          <PlanViewToggle />
-        </div>
-      )}
 
       <div className={styles.right}>
         {/* data-tour: the tutorial points at the progress */}

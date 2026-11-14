@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { ConnectDemo } from "./ConnectDemo";
-import { placeCard } from "./placeCard";
+import { placeCard, type Box } from "./placeCard";
 import type { TourStep } from "./tourSteps";
 import { useInertRoot } from "./useInertRoot";
 import { useTargetRect } from "./useTargetRect";
@@ -57,6 +57,12 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
   // The card's real height is needed to place it. It changes with the text, so it is measured.
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardHeight, setCardHeight] = useState(180);
+  // useLayoutEffect runs before the browser paints: the new step's height is known on the first
+  // frame, so the card is not drawn once with the old height and then moved.
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (card) setCardHeight(card.offsetHeight);
+  }, [index]);
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
@@ -74,8 +80,20 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
     if (visible) cardRef.current?.focus();
   }, [index, visible]);
 
-  const found = target.status === "found" ? target.box : null;
+  // While the next element is being found, keep the previous box: the card then slides from the
+  // old place to the new one instead of jumping through the middle of the screen.
+  const [lastBox, setLastBox] = useState<Box | null>(null);
+  const foundBox = target.status === "found" ? target.box : null;
+  // Remember the last box (React's "adjust state while rendering": only when it really changed)
+  const wanted = step.target === null ? null : foundBox ?? lastBox;
+  if (wanted !== lastBox) setLastBox(wanted);
+  const found = foundBox ?? (target.status === "searching" && step.target !== null ? lastBox : null);
+
   const cardWidth = Math.min(CARD_WIDTH, window.innerWidth - 24);
+
+  // Sliding is only on when the page is not scrolling: while it scrolls, the box is placed again
+  // every frame and must follow the element exactly, or it lags behind and swings back and forth.
+  const slide = !(target.status === "found" && !target.animate);
 
   let cardStyle: CSSProperties;
   let arrow: { placement: string; offset: number } | null = null;
@@ -94,7 +112,12 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
     arrow = { placement: place.placement, offset: place.arrowOffset };
   } else {
     // No element (or still looking for it): in the middle of the screen
-    cardStyle = { top: "50%", left: "50%", width: cardWidth, transform: "translate(-50%, -50%)" };
+    // Plain pixels, no transform: top/left can then slide to the next element without a jump
+    cardStyle = {
+      top: Math.max(12, (window.innerHeight - cardHeight) / 2),
+      left: Math.max(12, (window.innerWidth - cardWidth) / 2),
+      width: cardWidth,
+    };
   }
 
   const titleId = "tour-title";
@@ -104,8 +127,11 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
     <div className={styles.layer}>
       {found ? (
         // The giant box-shadow dims everything around the element, so the element itself stays bright
+        // key: a separate element from the dim layer. Without it React reuses the same div, and the
+        // highlight would slide out of the dim layer's top-left corner.
         <div
-          className={styles.spotlight}
+          key="spotlight"
+          className={`${styles.spotlight} ${slide ? styles.slide : ""}`}
           style={{
             top: found.top - SPOTLIGHT_PADDING,
             left: found.left - SPOTLIGHT_PADDING,
@@ -114,12 +140,12 @@ export function Tour({ steps, index, direction, onStep, onClose, onSkipAll }: Pr
           }}
         />
       ) : (
-        <div className={styles.dim} />
+        <div key="dim" className={styles.dim} />
       )}
 
       <div
         ref={cardRef}
-        className={styles.card}
+        className={`${styles.card}`}
         style={{ ...cardStyle, visibility: visible ? "visible" : "hidden" }}
         role="dialog"
         aria-modal="true"
