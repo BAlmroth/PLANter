@@ -134,22 +134,23 @@ The repo includes demo data for both templates:
 Either one is a quick way to see (and test) every part of PLANter without planning a project first.
 
 1. Follow Install, Configure and Database migrations above, then start the app ([Run locally](#run-locally)).
-2. Register an account in the app and log in once. The demo project is created for that account.
+2. Register an account in the app and log in once. The demo projects are created for that account.
 3. Find the id of your account: Supabase → **Authentication → Users** → copy the **User UID**.
 4. Seed it:
 
    ```
    cd backend
-   npm run seed:demo -- <your-user-uid>         # the web demo
-   npm run seed:demo -- <your-user-uid> game    # the game demo
+   npm run seed:demo -- <your-user-uid>         # both demos
+   npm run seed:demo -- <your-user-uid> web     # only the web demo
+   npm run seed:demo -- <your-user-uid> game    # only the game demo
    ```
 
-5. Reload the app. "Awesome Demo Portfolio" (or "Emerald Brew") is in your project list.
+5. Reload the app. "Awesome Demo Portfolio" and "Emerald Brew" are in your project list.
 
 Notes:
 
 - The seed writes to the database in `DATABASE_URL` (in `backend/.env`), so check that it points where you expect.
-- It only touches your own demo project: running it again deletes and recreates the project with this name for that user, and nothing else (seeding the game demo leaves the web demo alone, and the other way round). A project you made yourself with the same name would also be replaced, so rename it first.
+- It only touches your own demo projects: running it again deletes and recreates the projects with these names for that user, and nothing else (seeding only the game demo leaves the web demo alone, and the other way round). Each demo is saved in its own transaction, so if the second one fails, the first one is already there and the command can simply be run again. A project you made yourself with the same name would also be replaced, so rename it first.
 - The web data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings. The game demo has no warnings.
 
 ## Scripts
@@ -161,7 +162,7 @@ Notes:
 | `backend/` | `npm run typecheck` | TypeScript check of `src`, tests and configs |
 | `backend/` | `npm run build` | `prisma generate` and compiles `src` to `dist` |
 | `backend/` | `npm start` | Runs the compiled server (used by Heroku) |
-| `backend/` | `npm run seed:demo -- <user-id> [web\|game]` | Creates (or recreates) the demo project "Awesome Demo Portfolio" (web, the default) or "Emerald Brew" (game) for that user, see [Demo projects](#demo-projects) |
+| `backend/` | `npm run seed:demo -- <user-id> [web\|game]` | Creates (or recreates) both demo projects, "Awesome Demo Portfolio" (web) and "Emerald Brew" (game), for that user. `web` or `game` creates only that one. See [Demo projects](#demo-projects) |
 | `backend/` | `npm run test:db:migrate` | Applies all migrations to the local `planter_test` database |
 | `frontend/` | `npm run dev` | Starts Vite |
 | `frontend/` | `npm test` | Runs the frontend tests |
