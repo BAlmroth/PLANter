@@ -138,6 +138,14 @@ describe("POST /api/relationships in a game project", () => {
     expect((await connect(house1.id, house2.id, "upgrades_to")).status).toBe(201);
     expect((await connect(house2.id, house1.id, "upgrades_to")).status).toBe(400);
   });
+
+  it("allows a location built from inventory, but not the other way round", async () => {
+    const project = await prisma.project.create({ data: { userId: USER_A, name: "G", template: "game" } });
+    const house = await prisma.item.create({ data: { projectId: project.id, type: "location", title: "House 2" } });
+    const wood = await prisma.item.create({ data: { projectId: project.id, type: "inventory", title: "Wood" } });
+    expect((await connect(house.id, wood.id, "made_from")).status).toBe(201);
+    expect((await connect(wood.id, house.id, "made_from")).status).toBe(400);
+  });
 });
 
 describe("GET /api/projects/:projectId/relationships", () => {
