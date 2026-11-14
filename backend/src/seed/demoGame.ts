@@ -20,19 +20,20 @@ export const gameDemo: DemoData = {
     // INVENTORY: ingredients and currency
     { ref: "water", col: 0, row: 0, type: "inventory", title: "Water", description: "Free from the well in the meadow.", status: "done" },
     { ref: "coffee", col: 0, row: 1, type: "inventory", title: "Coffee", description: "Bought from Bo.", status: "done" },
-    { ref: "emerald", col: 0, row: 2, type: "inventory", title: "Emerald", description: "Mined in the emerald mine.", status: "planned" },
+    { ref: "emerald", col: 0, row: 2, type: "inventory", title: "Emerald", description: "Mined in the emerald mine.", status: "planned", image: "emerald.png" },
     { ref: "seeds", col: 0, row: 3, type: "inventory", title: "Flower seeds", description: "Found in the meadow.", status: "in_progress" },
     { ref: "wood", col: 0, row: 4, type: "inventory", title: "Wood", description: "Building material.", status: "planned" },
     { ref: "gold", col: 0, row: 5, type: "inventory", title: "Gold", description: "The only currency.", status: "done" },
 
     // INVENTORY: results, and what they give
-    { ref: "tea", col: 1, row: 1, type: "inventory", title: "Emerald tea", description: "The first real recipe. Makes plants grow faster for a day.", status: "in_progress", isMvp: true,
+    { ref: "tea", col: 1, row: 1, type: "inventory", title: "Emerald tea", description: "The first real recipe. Makes plants grow faster for a day.", status: "in_progress", isMvp: true, image: "emerald-tea.png",
       details: [{ title: "Recipe idea", text: "Mixing order should not matter: water + emerald = emerald + water." }] },
     { ref: "greenThumb", col: 2, row: 1, type: "ability", title: "Green thumb", description: "Plants grow twice as fast.", status: "planned" },
 
     // GAMEPLAY AND SCREENS
     { ref: "mixing", col: 1, row: 3, type: "mechanic", title: "Mixing", description: "Put two or three ingredients in the pot and get something new.", status: "done", isMvp: true },
-    { ref: "mixScreen", col: 2, row: 3, type: "ui", title: "Mixing screen", description: "The pot, the ingredient slots and the result.", status: "in_progress", isMvp: true },
+    { ref: "mixScreen", col: 2, row: 3, type: "ui", title: "Mixing screen", description: "The pot, the ingredient slots and the result.", status: "in_progress", isMvp: true,
+      details: [{ title: "First sketch", text: "Three slots drop into the pot, the result appears on the right.", image: "mixing-screen-sketch.png" }] },
     { ref: "hud", col: 2, row: 5, type: "ui", title: "HUD", description: "Gold and the current quest.", status: "planned" },
     { ref: "mixTest", col: 2, row: 4, type: "testing", title: "Mixing playtest", description: "Do players find the recipes without a guide?", status: "planned" },
     { ref: "godot", col: 1, row: 5, type: "tech_stack", title: "Godot", status: "done" },
@@ -41,7 +42,7 @@ export const gameDemo: DemoData = {
 
     // PLACES
     { ref: "meadow", col: 3, row: 0, type: "location", title: "Meadow", description: "Flowers, a well and Bo's stall.", status: "in_progress" },
-    { ref: "cottage", col: 3, row: 2, type: "location", title: "Cottage", description: "Where the player lives and mixes.", status: "done", isMvp: true },
+    { ref: "cottage", col: 3, row: 2, type: "location", title: "Cottage", description: "Where the player lives and mixes.", status: "done", isMvp: true, image: "cottage.png" },
     { ref: "cottage2", col: 4, row: 2, type: "location", title: "Cottage, level 2", description: "A bigger cottage with a second mixing pot.", status: "planned",
       conditions: "Can only be built in summer." },
     { ref: "mine", col: 3, row: 4, type: "location", title: "Emerald mine", description: "Dark, with slimes.", status: "planned" },
@@ -49,7 +50,7 @@ export const gameDemo: DemoData = {
     // PEOPLE AND STORY
     { ref: "ivy", col: 4, row: 3, type: "character", title: "Grandma Ivy", description: "Teaches the player to mix.", status: "done" },
     { ref: "bo", col: 4, row: 0, type: "character", title: "Bo the trader", description: "Sells coffee from a stall in the meadow.", status: "in_progress" },
-    { ref: "slime", col: 4, row: 4, type: "character", title: "Mine slime", description: "Slow and harmless, but blocks the tunnels.", status: "planned" },
+    { ref: "slime", col: 4, row: 4, type: "character", title: "Mine slime", description: "Slow and harmless, but blocks the tunnels.", status: "planned", image: "slime.png" },
     { ref: "fixQuest", col: 5, row: 2, type: "quest", title: "Fix up the cottage", description: "Grandma's first task. Teaches mixing and building.", status: "in_progress", isMvp: true },
     { ref: "prologue", col: 6, row: 2, type: "story", title: "Prologue: Grandma's cottage", status: "done" },
     { ref: "chapter1", col: 6, row: 4, type: "story", title: "Chapter 1: The emerald mine", status: "planned" },
@@ -124,7 +125,21 @@ export const gameDemo: DemoData = {
     { title: "Plan the cottage upgrade", item: "cottage2", done: false },
   ],
 
+  // Moodboard: the feeling and the look. Inspiration: games to learn from (links).
   inspirations: [
+    { title: "Meadow at dusk", text: "The mood of the whole game: warm, slow and a little magical.", image: "meadow-at-dusk.png" },
     { title: "Cozy and calm", text: "No fail states and lots of small rewards. Every new recipe should feel like a discovery." },
+    { title: "Pixel style", text: "16 x 16 tiles, soft colors, outlines in night blue instead of black." },
+    { title: "Stardew Valley", url: "https://www.stardewvalley.net", text: "The farming loop and the seasons. The reason the cottage upgrade is summer only." },
+    { title: "Little Alchemy 2", url: "https://littlealchemy2.com", text: "Finding recipes by trying combinations. Mixing should feel like this." },
+  ],
+
+  // The palette, and the items that use each color (shown on the item's moodboard)
+  colors: [
+    { hex: "#2E9E6E", name: "Emerald", items: ["emerald", "tea", "pixelArt"] },
+    { hex: "#6FA36B", name: "Meadow green", items: ["meadow", "pixelArt"] },
+    { hex: "#8C5A3C", name: "Coffee brown", items: ["coffee", "tea"] },
+    { hex: "#F4EBD0", name: "Cream", items: ["cottage", "mixScreen", "pixelArt"] },
+    { hex: "#2F3E5C", name: "Night blue (outlines)", items: ["pixelArt"] },
   ],
 };

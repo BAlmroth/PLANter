@@ -129,7 +129,9 @@ cd frontend && npm run dev    # http://localhost:5173
 The repo includes demo data for both templates:
 
 - **Awesome Demo Portfolio** (web, the default): a fully planned portfolio website. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration. Data: `backend/src/seed/demoPortfolio.ts`.
-- **Emerald Brew** (game): a small cozy game about mixing ingredients into new items. 25 items that use every game category and every connection type, with recipes and prices with amounts, an upgrade, "unlocked by" and a condition. Open "Emerald tea" or "Cottage, level 2" to see the Requirements card. Data: `backend/src/seed/demoGame.ts`.
+- **Emerald Brew** (game): a small cozy game about mixing ingredients into new items. 25 items that use every game category and every connection type, with recipes and prices with amounts, an upgrade, "unlocked by" and a condition. Open "Emerald tea" or "Cottage, level 2" to see the Requirements card. The Moodboard page has a palette, mood images and notes, and links to games to learn from. Data: `backend/src/seed/demoGame.ts`.
+
+Both demos have a color palette (linked to items) and images: main photos on some items, a sketch on an item's moodboard and an image on the Moodboard page. The images are in `backend/src/seed/images/` (small pixel-art and wireframe PNGs made for the demo). Replace a file with your own JPEG, PNG or WebP under the same name to use your own images.
 
 Either one is a quick way to see (and test) every part of PLANter without planning a project first.
 
@@ -149,7 +151,7 @@ Either one is a quick way to see (and test) every part of PLANter without planni
 
 Notes:
 
-- The seed writes to the database in `DATABASE_URL` (in `backend/.env`), so check that it points where you expect.
+- The seed writes to the database in `DATABASE_URL` and uploads the images to the Storage bucket `inspiration-images` in `SUPABASE_URL` (both in `backend/.env`), so check that they point where you expect. Running it again also deletes the old demo's image files, like deleting a project does.
 - It only touches your own demo projects: running it again deletes and recreates the projects with these names for that user, and nothing else (seeding only the game demo leaves the web demo alone, and the other way round). Each demo is saved in its own transaction, so if the second one fails, the first one is already there and the command can simply be run again. A project you made yourself with the same name would also be replaced, so rename it first.
 - The web data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings. The game demo has no warnings.
 

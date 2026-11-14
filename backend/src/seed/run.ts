@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
-import { DEMOS, seedDemoProject } from "./seedDemo.js";
+import { deleteImageFiles, saveImageFile } from "../services/images.js";
+import { DEMOS, seedDemoProject, type SeedStorage } from "./seedDemo.js";
 
 // Usage (in backend/):  npm run seed:demo -- <supabase-user-id> [web|game]
 // The user id is the id of the account that should own the demo projects
@@ -18,12 +19,15 @@ if (!userId.success || !known) {
 }
 const names = demoName === undefined ? Object.keys(DEMOS) : [demoName];
 
+// The same upload and delete as the API: images go to the private Storage bucket
+const storage: SeedStorage = { saveImage: saveImageFile, deleteImages: deleteImageFiles };
+
 try {
   // One after the other, each in its own transaction (see seedDemoProject). If one fails,
   // the ones before it are already saved, and running the command again is safe.
   for (const name of names) {
     // "!": every name is a key of DEMOS (checked above, or taken from Object.keys)
-    const result = await seedDemoProject(userId.data, DEMOS[name]!);
+    const result = await seedDemoProject(userId.data, DEMOS[name]!, storage);
     console.log(`Demo project created (${name}):`, result);
   }
 } finally {

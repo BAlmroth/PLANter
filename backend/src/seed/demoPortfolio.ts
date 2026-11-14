@@ -18,7 +18,7 @@ export const demoProject = {
 
 export const demoItems: SeedItem[] = [
   // PAGES
-  { ref: "pageHome", col: 2, row: 1, type: "page", title: "Home", description: "Landing page: who I am and my best work.", status: "done", isMvp: true },
+  { ref: "pageHome", col: 2, row: 1, type: "page", title: "Home", description: "Landing page: who I am and my best work.", status: "done", isMvp: true, image: "web-home-wireframe.png" },
   { ref: "pageProjects", col: 2, row: 6, type: "page", title: "Projects", description: "Filterable grid of all projects.", status: "in_progress", isMvp: true },
   { ref: "pageProjectDetail", col: 2, row: 8, type: "page", title: "Project detail", description: "One project: story, screenshots, links.", status: "planned", isMvp: true },
   { ref: "pageAbout", col: 2, row: 5, type: "page", title: "About", description: "Background, skills and a downloadable resume.", status: "in_progress" },
@@ -32,7 +32,7 @@ export const demoItems: SeedItem[] = [
   { ref: "compFooter", col: 1, row: 2, type: "component", title: "Footer", description: "Social links and copyright.", status: "done" },
   { ref: "compHero", col: 1, row: 1, type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true },
   { ref: "compButton", col: 1, row: 3, type: "component", title: "Button", description: "Shared button used all over the site.", status: "done" },
-  { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true },
+  { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true, image: "project-card-sketch.png" },
   { ref: "compProjectGrid", col: 1, row: 6, type: "component", title: "Project grid", description: "Responsive grid of project cards with filter chips.", status: "in_progress", isMvp: true },
   { ref: "compImageGallery", col: 1, row: 8, type: "component", title: "Image gallery", description: "Screenshots with a lightbox.", status: "planned" },
   { ref: "compSkillsList", col: 1, row: 5, type: "component", title: "Skills list", description: "Skills grouped by area with a level indicator.", status: "planned" },
@@ -245,10 +245,19 @@ export const demoBacklogTasks: { title: string; item?: string; done: boolean }[]
   { title: "Run a Lighthouse check", done: false },
 ];
 
-export const demoInspirations: { title: string; url?: string; text?: string }[] = [
+export const demoInspirations: DemoData["inspirations"] = [
   { title: "Brittany Chiang", url: "https://brittanychiang.com", text: "Clean layout and a strong project list." },
   { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Playful 3D idea. Too big for my scope, but fun." },
   { title: "Keep it simple", text: "Recruiters spend seconds on a portfolio: projects first, contact one click away." },
+  { title: "Homepage wireframe", text: "Hero with one button, then the three best projects right away.", image: "web-home-wireframe.png" },
+];
+
+// The color palette on the Moodboard page, and the items that use each color
+export const demoColors: DemoData["colors"] = [
+  { hex: "#1F2937", name: "Ink", items: ["designPalette", "designTypography"] },
+  { hex: "#FAF7F2", name: "Paper", items: ["designPalette"] },
+  { hex: "#3E6554", name: "Forest green", items: ["designPalette", "pageHome"] },
+  { hex: "#E8B04B", name: "Highlight", items: ["designPalette", "compProjectCard"] },
 ];
 
 // Everything above as one object, for the runner (seedDemo.ts)
@@ -260,4 +269,5 @@ export const portfolioDemo: DemoData = {
   sprints: demoSprints,
   backlogTasks: demoBacklogTasks,
   inspirations: demoInspirations,
+  colors: demoColors,
 };

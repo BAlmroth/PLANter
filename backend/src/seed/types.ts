@@ -18,8 +18,13 @@ export type SeedItem = {
   // DEMO_ROW_HEIGHT). Hand placed: columns by role, rows by feature, so related items sit side by side.
   col: number;
   row: number;
-  details?: { title: string; url?: string; text?: string }[];
+  // image: a file name in seed/images/, uploaded to Storage by the real seed command (see SeedImage below)
+  image?: SeedImage;
+  details?: { title: string; url?: string; text?: string; image?: SeedImage }[];
 };
+
+// A file in backend/src/seed/images/ (JPEG, PNG or WebP). Swap a file for your own image any time.
+export type SeedImage = string;
 
 export type SeedTask = { title: string; item?: string; done: boolean };
 
@@ -31,7 +36,10 @@ export type DemoData = {
   groups: { name: string; description?: string; items: string[] }[];
   sprints: { name: string; tasks: SeedTask[] }[];
   backlogTasks: SeedTask[];
-  inspirations: { title: string; url?: string; text?: string }[];
+  // section: where it shows on the Moodboard page. Missing = "inspiration" when it has a link, otherwise "moodboard"
+  inspirations: { title: string; url?: string; text?: string; image?: SeedImage; section?: "moodboard" | "inspiration" }[];
+  // The project's color palette ("#RRGGBB" in upper case), and which items use each color
+  colors: { hex: string; name?: string; items?: string[] }[];
 };
 
 // Map spacing for the demos, in pixels per grid step. Much wider than the spacing for new items
