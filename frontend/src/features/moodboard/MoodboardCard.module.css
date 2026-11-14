@@ -156,6 +156,12 @@
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
 }
+/* On the Moodboard page there is more room, so each card gets wider (fewer, bigger cards per row) */
+.references.wide {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
 /* A compact card: the whole image on top, the whole text under it. Nothing is cut off, so a card
    with a long text is a bit taller. Cards in the same row get the same height (grid stretch). */
 .reference {

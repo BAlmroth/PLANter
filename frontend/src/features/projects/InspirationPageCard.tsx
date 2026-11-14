@@ -60,6 +60,7 @@ export function InspirationPageCard({ projectId }: { projectId: string }) {
         onAddEntry={addEntry}
         onDeleteEntry={deleteEntry}
         onRemoveColor={async () => {}}
+        wideReferences
       />
     </>
   );

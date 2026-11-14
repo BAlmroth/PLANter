@@ -89,6 +89,7 @@ export function ProjectMoodboard({ projectId, entries, setInspirations }: Props)
         onRemoveColor={removeColor}
         colorForm={<ProjectColorForm onCreate={addColor} />}
         allowUrl={false}
+        wideReferences
       />
     </>
   );
