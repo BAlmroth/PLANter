@@ -21,18 +21,20 @@ export const demoItems: SeedItem[] = [
   { ref: "pageHome", col: 2, row: 1, type: "page", title: "Home", description: "Landing page: who I am and my best work.", status: "done", isMvp: true, image: "web-home-wireframe.png" },
   { ref: "pageProjects", col: 2, row: 6, type: "page", title: "Projects", description: "Filterable grid of all projects.", status: "in_progress", isMvp: true },
   { ref: "pageProjectDetail", col: 2, row: 8, type: "page", title: "Project detail", description: "One project: story, screenshots, links.", status: "planned", isMvp: true },
-  { ref: "pageAbout", col: 2, row: 5, type: "page", title: "About", description: "Background, skills and a downloadable resume.", status: "in_progress" },
-  { ref: "pageContact", col: 2, row: 10, type: "page", title: "Contact", description: "Contact form and social links.", status: "planned", isMvp: true },
+  { ref: "pageAbout", col: 2, row: 5, type: "page", title: "About", description: "Background, skills and a downloadable resume.", status: "in_progress", image: "about-portrait.png" },
+  { ref: "pageContact", col: 2, row: 10, type: "page", title: "Contact", description: "Contact form and social links.", status: "planned", isMvp: true, image: "contact-envelope.png" },
   { ref: "pageAdmin", col: 2, row: 12, type: "page", title: "Admin dashboard", description: "Only for me: add, edit and delete projects.", status: "planned" },
   // Intentional gap: a page with no components or connections, to test warnings later
   { ref: "pageNotFound", col: 2, row: 3, type: "page", title: "Not found (404)", description: "Shown for unknown URLs.", status: "planned" },
 
   // COMPONENTS
-  { ref: "compNavbar", col: 1, row: 0, type: "component", title: "Navbar", description: "Logo, page links and the theme toggle.", status: "done", isMvp: true },
+  { ref: "compNavbar", col: 1, row: 0, type: "component", title: "Navbar", description: "Logo, page links and the theme toggle.", status: "done", isMvp: true, image: "navbar-sketch.png" },
   { ref: "compFooter", col: 1, row: 2, type: "component", title: "Footer", description: "Social links and copyright.", status: "done" },
-  { ref: "compHero", col: 1, row: 1, type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true },
+  { ref: "compHero", col: 1, row: 1, type: "component", title: "Hero", description: "Big intro with name, title and call to action.", status: "done", isMvp: true,
+    details: [{ title: "Left or centered?", text: "Tried both. Going with left aligned, centered looked too much like a template.", image: "hero-layouts.png" }] },
   { ref: "compButton", col: 1, row: 3, type: "component", title: "Button", description: "Shared button used all over the site.", status: "done" },
-  { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true, image: "project-card-sketch.png" },
+  { ref: "compProjectCard", col: 1, row: 7, type: "component", title: "Project card", description: "Thumbnail, title and tags for one project.", status: "in_progress", isMvp: true, image: "project-card-sketch.png",
+    details: [{ title: "Hover", text: "The card lifts slightly on hover so it looks clickable.", image: "card-hover.png" }] },
   { ref: "compProjectGrid", col: 1, row: 6, type: "component", title: "Project grid", description: "Responsive grid of project cards with filter chips.", status: "in_progress", isMvp: true },
   { ref: "compImageGallery", col: 1, row: 8, type: "component", title: "Image gallery", description: "Screenshots with a lightbox.", status: "planned" },
   { ref: "compSkillsList", col: 1, row: 5, type: "component", title: "Skills list", description: "Skills grouped by area with a level indicator.", status: "planned" },
@@ -59,8 +61,10 @@ export const demoItems: SeedItem[] = [
   { ref: "authAdmin", col: 0, row: 12, type: "authentication", title: "Admin login", description: "Email and password for me only, no public sign-up.", status: "planned" },
 
   // DESIGN
-  { ref: "designPalette", col: 1, row: 15, type: "design", title: "Colour palette", description: "Light and dark palettes with accessible contrast.", status: "done", isMvp: true },
-  { ref: "designTypography", col: 2, row: 15, type: "design", title: "Typography", description: "One heading font, one body font, a type scale.", status: "done" },
+  { ref: "designPalette", col: 1, row: 15, type: "design", title: "Colour palette", description: "Light and dark palettes with accessible contrast.", status: "done", isMvp: true,
+    details: [{ title: "Side by side", text: "Checking the colors next to each other. The yellow is only for small highlights, never big areas.", image: "web-palette-test.png" }] },
+  { ref: "designTypography", col: 2, row: 15, type: "design", title: "Typography", description: "One heading font, one body font, a type scale.", status: "done",
+    details: [{ title: "Sizes", text: "Large headings and plain body text. Three sizes is enough.", image: "type-scale.png" }] },
   { ref: "designLayout", col: 3, row: 15, type: "design", title: "Layout and spacing", description: "12 column grid, spacing scale and breakpoints.", status: "in_progress" },
 
   // ASSETS
@@ -81,7 +85,7 @@ export const demoItems: SeedItem[] = [
     description: "UI library for the whole site.",
     details: [
       { title: "Official docs", url: "https://react.dev" },
-      { title: "Why", text: "I know it well and it fits component based pages." },
+      { title: "Why React?", text: "It's what I know best, and components fit how I build pages." },
     ],
   },
   {
@@ -97,7 +101,7 @@ export const demoItems: SeedItem[] = [
   {
     ref: "techPostgres", col: 4, row: 17, type: "tech_stack", title: "PostgreSQL", status: "in_progress",
     description: "Database for projects, skills and messages.",
-    details: [{ title: "Note", text: "Hosted on Supabase, accessed through Prisma." }],
+    details: [{ title: "Note to self", text: "Hosted on Supabase. Only reached through Prisma, never from the frontend." }],
   },
   {
     ref: "techVercel", col: 5, row: 17, type: "tech_stack", title: "Vercel", status: "planned",
@@ -246,18 +250,18 @@ export const demoBacklogTasks: { title: string; item?: string; done: boolean }[]
 ];
 
 export const demoInspirations: DemoData["inspirations"] = [
-  { title: "Brittany Chiang", url: "https://brittanychiang.com", text: "Clean layout and a strong project list." },
-  { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Playful 3D idea. Too big for my scope, but fun." },
-  { title: "Keep it simple", text: "Recruiters spend seconds on a portfolio: projects first, contact one click away." },
-  { title: "Homepage wireframe", text: "Hero with one button, then the three best projects right away.", image: "web-home-wireframe.png" },
+  { title: "Brittany Chiang", url: "https://brittanychiang.com", text: "Clean layout. The projects come first and nothing competes with them." },
+  { title: "Bruno Simon", url: "https://bruno-simon.com", text: "Too big for this project, but I like how playful it is." },
+  { title: "Minimalistic", text: "Lots of white space, one accent color, no clutter. The projects should be easy to find right away." },
+  { title: "First sketch", text: "Start page: a short intro, one button, then my best projects.", image: "web-home-wireframe.png" },
 ];
 
 // The color palette on the Moodboard page, and the items that use each color
 export const demoColors: DemoData["colors"] = [
-  { hex: "#1F2937", name: "Ink", items: ["designPalette", "designTypography"] },
-  { hex: "#FAF7F2", name: "Paper", items: ["designPalette"] },
-  { hex: "#3E6554", name: "Forest green", items: ["designPalette", "pageHome"] },
-  { hex: "#E8B04B", name: "Highlight", items: ["designPalette", "compProjectCard"] },
+  { hex: "#1F2937", name: "Ink", items: ["designPalette", "designTypography", "compNavbar", "compFooter"] },
+  { hex: "#FAF7F2", name: "Paper", items: ["designPalette", "pageAbout", "compHero"] },
+  { hex: "#3E6554", name: "Forest green", items: ["designPalette", "pageHome", "compButton", "compHero", "pageContact"] },
+  { hex: "#E8B04B", name: "Highlight", items: ["designPalette", "compProjectCard", "compThemeToggle"] },
 ];
 
 // Everything above as one object, for the runner (seedDemo.ts)

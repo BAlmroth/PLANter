@@ -26,6 +26,8 @@ type Props = {
   allowImage?: boolean;
   // data-tour name, when the tutorial points at this card (features/tour/tourSteps.ts)
   tourId?: string;
+  // Wider image cards, for the roomy Moodboard page. The item page's narrow side column keeps the small ones.
+  wideReferences?: boolean;
 };
 
 const messageFrom = (err: unknown) =>
@@ -64,6 +66,7 @@ export function MoodboardCard({
   allowUrl = true,
   allowImage = true,
   tourId,
+  wideReferences = false,
 }: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const editing = mode !== null;
@@ -240,7 +243,7 @@ export function MoodboardCard({
       {references.length > 0 && (
         <>
           <h3 className={styles.label}>Visual references</h3>
-          <ul className={styles.references}>
+          <ul className={wideReferences ? `${styles.references} ${styles.wide}` : styles.references}>
             {references.map((entry) => (
               <li key={entry.id} className={styles.reference}>
                 {/* imageUrl is a link made by our backend, and is still only used when it is http(s) */}

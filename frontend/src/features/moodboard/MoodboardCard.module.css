@@ -150,12 +150,20 @@
   color: var(--text-h);
 }
 
-/* Two small cards per row in the side column */
+/* Small square cards: two per row in the side column, more on the wide Moodboard page */
 .references {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
 }
+/* On the Moodboard page there is more room, so each card gets wider (fewer, bigger cards per row) */
+.references.wide {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+/* A compact card: the whole image on top, the whole text under it. Nothing is cut off, so a card
+   with a long text is a bit taller. Cards in the same row get the same height (grid stretch). */
 .reference {
   position: relative;
   display: flex;
@@ -169,19 +177,25 @@
 .image {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3; /* every card the same height, the image is cropped to fit */
-  object-fit: cover;
+  aspect-ratio: 4 / 3; /* the same frame on every card */
+  object-fit: contain; /* the whole image fits inside the frame: never cropped, never stretched */
+  background: var(--surface);
   border-radius: 6px;
 }
+/* The normal font (not the wide mono one), so the text needs fewer lines */
 .caption {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
   padding: 0 4px 4px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere; /* a very long word wraps instead of sticking out */
+}
+.caption .note {
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* The small x button. On a swatch or a reference it sits in the corner. */

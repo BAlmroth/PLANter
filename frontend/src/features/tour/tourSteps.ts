@@ -3,10 +3,11 @@ import { clearFlags, readFlag, writeFlag } from "../../lib/storage";
 import type { Placement } from "./placeCard";
 
 // One card in a tour. `target` is the data-tour attribute of the element to highlight
-// (<nav data-tour="project-nav">), or null for a card in the middle of the screen.
+// (<nav data-tour="project-nav">), a list of them (one highlight around all, for elements next to
+// each other), or null for a card in the middle of the screen.
 // A step whose element is not on the page (for example no items yet) is skipped.
 export type TourStep = {
-  target: string | null;
+  target: string | string[] | null;
   title: string;
   body: string;
   placement?: Placement;
@@ -54,7 +55,8 @@ export const TOURS: Record<PageKey, TourStep[]> = {
       placement: "top",
     },
     {
-      target: "nav-items",
+      // Both places it suggests, highlighted together (the two links sit next to each other)
+      target: ["nav-items", "nav-tasks"],
       title: "Next: add your items or start with tasks",
       body: "Two good places to start: add the big parts of your project (pages for a website, mechanics for a game), or write down the concrete to-dos in Tasks & progress.",
     },

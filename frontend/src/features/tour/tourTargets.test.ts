@@ -9,7 +9,8 @@ import { TOURS } from "./tourSteps";
 const files = import.meta.glob("../../**/*.tsx", { query: "?raw", import: "default", eager: true });
 const source = Object.values(files).join("\n");
 
-const targets = Object.values(TOURS).flatMap((steps) => steps.flatMap((step) => (step.target ? [step.target] : [])));
+// A step can point at one name or a list of names: all of them are checked
+const targets = Object.values(TOURS).flatMap((steps) => steps.flatMap((step) => (step.target ? [step.target].flat() : [])));
 
 describe("tour targets", () => {
   it("found the source files", () => {
