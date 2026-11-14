@@ -1,15 +1,13 @@
 import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Background, ConnectionMode, Controls, MarkerType, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge, type ReactFlowInstance } from "@xyflow/react";
+import { Background, ConnectionMode, Controls, MiniMap, Panel, ReactFlow, useNodesState, type Connection, type Edge, type ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Project } from "../projects/types";
 import { ApiError } from "../../lib/api";
-import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
-import { ItemForm } from "../items/ItemForm";
+import type { ItemFormValues } from "../items/ItemForm";
 import { createItem, updateItem } from "../items/itemsApi";
-import { getTypeColor } from "../items/typeColor";
 import { useItems } from "../items/useItems";
 import { useTemplate } from "../items/useTemplate";
 import { getAllowedRelationshipTypes } from "../relationships/connections";
@@ -17,10 +15,12 @@ import { createRelationship, deleteRelationship } from "../relationships/relatio
 import { useRelationships } from "../relationships/useRelationships";
 import type { WarningsByItem } from "../warnings/types";
 import { ConnectionPrompt } from "./ConnectionPrompt";
-import { ItemFilterBar } from "../filters/ItemFilterBar";
 import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
 import { ItemNode } from "./ItemNode";
+import { MapToolbar } from "./MapToolbar";
+import { useFullWindow } from "./useFullWindow";
 import { getCardSize } from "./cardSize";
+import { buildEdges, buildNodes, fadeNodes } from "./mapGraph";
 import { tidyLayout, type LayoutDirection } from "./tidyLayout";
 import { readFlag, writeFlag } from "../../lib/storage";
 import { MapLegend } from "./MapLegend";
@@ -28,14 +28,10 @@ import type { ItemNodeType } from "./types";
 import styles from "./MapView.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
+import { connectionText } from "../relationships/quantity";
 
 // Defined outside the component so the object is not recreated on every render.
 const nodeTypes = { item: ItemNode };
-
-// How faded the items and connections are that are not in focus (filtered out, or not connected to the selection)
-const FADED = 0.2;
-// The "half state": an item connected to the selected item, but filtered out
-const HALF_FADED = 0.6;
 
 // The relationship map: items as nodes, relationships as arrows.
 // Click a node to open the item's detail view. Drag a node to move it: the new position is saved
@@ -49,19 +45,13 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const groups = useGroups(project.id);
   // Shown above the map when saving a position or deleting a connection fails
   const [saveError, setSaveError] = useState<string | null>(null);
-  // true while the add item form is open
   const { confirm, modal } = useConfirm();
   // The React Flow instance, saved in onInit, to call fitView after "Tidy up"
   const flowRef = useRef<ReactFlowInstance<ItemNodeType, Edge> | null>(null);
+  // true: the map covers the whole window (CSS only, not the browser's fullscreen mode)
+  const { expanded, setExpanded } = useFullWindow(flowRef);
   // Which way the map flows. A view preference, kept in this browser only (lib/storage.ts).
   const [direction, setDirection] = useState<LayoutDirection>(() => (readFlag("map:vertical") ? "vertical" : "horizontal"));
-  // true: the map covers the whole window (CSS only, not the browser's fullscreen mode)
-  const [expanded, setExpanded] = useState(false);
-  const [adding, setAdding] = useState(false);
-  // true while the "Manage" panel (Tidy up and the map direction) is open
-  const [managing, setManaging] = useState(false);
-  // true while the filter panel is open
-  const [filtering, setFiltering] = useState(false);
   // The connection that was clicked, which offers a delete button
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
@@ -71,40 +61,15 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   // Items that do not match the filters fade, so the matching ones stand out
   const [filters, setFilters] = useState<ItemFilters>(NO_FILTERS);
 
-  // How many filters are on, shown on the Filter button so you can see it with the panel closed
-  const activeFilterCount =
-    filters.types.length + filters.groupIds.length + filters.statuses.length + (filters.mvpOnly ? 1 : 0);
-
   const loading = template.loading || items.loading || relationships.loading || groups.loading;
   useGateLoading(loading);
   const error = template.error ?? items.error ?? relationships.error ?? groups.error;
 
-  // Rebuilt only when the data changes, not on every render
-  const itemNodes = useMemo(() => {
-    const itemTypes = template.template?.itemTypes ?? [];
-
-    return items.items.map((item): ItemNodeType => {
-      return {
-        id: item.id,
-        type: "item",
-        // The backend gives every new item a start position (services/itemLayout.ts),
-        // so (0, 0) is a real position: the first row of the first column.
-        position: { x: item.positionX, y: item.positionY },
-        data: {
-          title: item.title,
-          category: item.type,
-          // An unknown key is shown as "Unknown" instead of crashing (see CLAUDE.md)
-          categoryLabel: itemTypes.find((type) => type.key === item.type)?.label ?? "Unknown",
-          color: itemTypes.find((type) => type.key === item.type)?.color,
-          status: item.status,
-          groups: getGroupsOfItem(item.id, groups.groups).map(({ id, name, color }) => ({ id, name, color })),
-          warnings: (warnings.get(item.id) ?? []).map((warning) => warning.message),
-          size: template.template ? getCardSize(template.template, item.type) : "medium",
-          vertical: direction === "vertical",
-        },
-      };
-    });
-  }, [template.template, items.items, groups.groups, warnings, direction]);
+  // Rebuilt only when the data changes, not on every render (the building is in mapGraph.ts)
+  const itemNodes = useMemo(
+    () => buildNodes(items.items, groups.groups, template.template, warnings, direction),
+    [template.template, items.items, groups.groups, warnings, direction],
+  );
 
   // The ids of the items that match the filters, or null when no filter is set (nothing fades)
   const matchingIds = useMemo(() => {
@@ -112,50 +77,10 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     return new Set(items.items.filter((item) => matchesFilters(item, filters, groups.groups)).map((item) => item.id));
   }, [items.items, groups.groups, filters]);
 
-  const edges = useMemo(() => {
-    // Item id -> item, to find the type (and so the color) of an edge's source item
-    const itemsById = new Map(items.items.map((item) => [item.id, item]));
-
-    return relationships.relationships.map((relationship): Edge => {
-      // Impact view: with a node selected, its own connections light up and the rest fade
-      const touchesSelected =
-        relationship.sourceItemId === selectedNodeId || relationship.targetItemId === selectedNodeId;
-      // With a filter, a connection stays visible when at least one end matches,
-      // so you can see what the matching items are connected to
-      const touchesMatch =
-        !matchingIds || matchingIds.has(relationship.sourceItemId) || matchingIds.has(relationship.targetItemId);
-      // A type that reads backwards ("component belongs_to page") is drawn the other way round:
-      // the line starts at the page and points to the component, with the reverse wording ("contains").
-      // Only the drawing is turned. The saved connection keeps its direction.
-      const relType = template.template?.relationshipTypes.find((type) => type.key === relationship.type);
-      const drawnBackward = relType?.readsBackward === true;
-      const fromId = drawnBackward ? relationship.targetItemId : relationship.sourceItemId;
-      const toId = drawnBackward ? relationship.sourceItemId : relationship.targetItemId;
-      const source = itemsById.get(fromId);
-      const sourceColor = template.template && source ? getTypeColor(template.template, source.type) : undefined;
-      return {
-        id: relationship.id,
-        source: fromId,
-        target: toId,
-        // "smoothstep" draws straight lines with 90 degree bends and rounded corners
-        type: "smoothstep",
-        // An arrowhead at the target end, so you can see which way the connection goes
-        markerEnd: { type: MarkerType.ArrowClosed },
-        // The item the line starts at shows its wording: "uses" from the source's side, "contains" from the target's
-        label: relType ? (drawnBackward ? relType.inverseLabel : relType.label) : "Unknown",
-        animated: touchesSelected,
-        // A lit-up connection takes the color of its source item's type ("page uses design": page blue).
-        // Unknown types fall back to the brand color.
-        // With a filter, the filter decides what fades. Without one, the selection does.
-        style:
-          selectedNodeId && touchesSelected
-            ? { stroke: sourceColor ?? "var(--primary)", strokeWidth: 3 }
-            : (matchingIds ? !touchesMatch : selectedNodeId !== null)
-              ? { opacity: FADED }
-              : undefined,
-      };
-    });
-  }, [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds]);
+  const edges = useMemo(
+    () => buildEdges(relationships.relationships, items.items, template.template, selectedNodeId, matchingIds),
+    [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds],
+  );
 
   // Fires once when a drag ends: save the new position of every node that was dragged
   // (several if a selection was dragged). If a save fails, reload the saved positions.
@@ -222,74 +147,29 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
     }
   }
 
-  // Full window: the map is fixed over the page (styles.expanded). While it is open the page behind
-  // cannot scroll, and Esc closes it, unless a dialog or the tutorial is open (they use Esc themselves).
-  useEffect(() => {
-    if (!expanded) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      if (document.querySelector("dialog[open]") || document.getElementById("root")?.hasAttribute("inert")) return;
-      setExpanded(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [expanded]);
-
-  // The map changes size when it expands or shrinks, so zoom to fit it again
-  useEffect(() => {
-    const timer = setTimeout(() => flowRef.current?.fitView({ duration: 200 }), 50);
-    return () => clearTimeout(timer);
-  }, [expanded]);
-
   // React Flow needs its own copy of the nodes: while dragging it updates positions (and sizes it
   // measures) through onNodesChange. The copy is reset whenever the items are loaded again.
   const [nodes, setNodes, onNodesChange] = useNodesState<ItemNodeType>([]);
   useEffect(() => setNodes(itemNodes), [itemNodes, setNodes]);
 
-  // Fading instead of hiding keeps the whole map and its connections in view.
-  // With a filter, the filter decides and a selection only adds to it:
-  // - Matches the filter: never faded, even when another item is selected.
-  // - Filtered out, but connected to the selected item: half faded, so the connections can still be read.
-  // - Filtered out and not connected: faded.
-  // Without a filter: items not connected to the selected item fade.
-  // The selected item itself is never faded: you clicked it.
-  const shownNodes = useMemo(() => {
-    let connectedIds: Set<string> | null = null;
-    if (selectedNodeId) {
-      connectedIds = new Set([selectedNodeId]);
-      for (const r of relationships.relationships) {
-        if (r.sourceItemId === selectedNodeId) connectedIds.add(r.targetItemId);
-        if (r.targetItemId === selectedNodeId) connectedIds.add(r.sourceItemId);
-      }
-    }
-    return nodes.map((node) => {
-      const connected = connectedIds?.has(node.id) ?? false;
-      let opacity: number | undefined;
-      if (node.id === selectedNodeId) {
-        opacity = undefined;
-      } else if (matchingIds) {
-        if (!matchingIds.has(node.id)) opacity = connected ? HALF_FADED : FADED;
-      } else if (connectedIds && !connected) {
-        opacity = FADED;
-      }
-      return opacity === undefined ? node : { ...node, style: { ...node.style, opacity } };
-    });
-  }, [nodes, relationships.relationships, selectedNodeId, matchingIds]);
+  // Fades the nodes that are not in focus (the rules are in fadeNodes, mapGraph.ts)
+  const shownNodes = useMemo(
+    () => fadeNodes(nodes, relationships.relationships, selectedNodeId, matchingIds),
+    [nodes, relationships.relationships, selectedNodeId, matchingIds],
+  );
 
   // Creates the connection that was dragged. Returns an error message, or null when it worked.
   // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
-  async function connect(relationshipType: string) {
+  // quantity: the amount from the prompt ("made from 20 Wood"), undefined when there is none
+  async function connect(relationshipType: string, quantity: number | undefined) {
     if (!pending) return null;
     try {
       const relationship = await createRelationship({
         sourceItemId: pending.sourceId,
         targetItemId: pending.targetId,
         type: relationshipType,
+        // Only sent when there is an amount, so other requests look exactly as before
+        ...(quantity !== undefined && { quantity }),
       });
       relationships.setRelationships((current) => [...current, relationship]);
       setPending(null);
@@ -308,6 +188,22 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
       setSelectedEdgeId(null);
     } catch (err) {
       setSaveError(err instanceof ApiError ? err.message : "Something went wrong.");
+    }
+  }
+
+  // Creates an item from the toolbar's form. Returns an error message, or null when it worked.
+  async function addItem({ title, description, type }: ItemFormValues) {
+    try {
+      // The backend gives the new item a start position (services/itemLayout.ts)
+      const item = await createItem(project.id, {
+        title,
+        type,
+        ...(description !== "" && { description }),
+      });
+      items.setItems((current) => [...current, item]);
+      return null;
+    } catch (err) {
+      return err instanceof ApiError ? err.message : "Something went wrong.";
     }
   }
 
@@ -341,9 +237,9 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
 
   // The messages that float at the bottom of the map. Only shown when there is at least one.
   const hasMessage = items.items.length === 0 || (selectedEdge && edgeSource && edgeTarget) || saveError;
-  // A new connection is waiting for its relationship type
   // The template decides the direction of a relationship (a page uses a component, never the other way around).
   // If the arrow was dragged the "wrong" way, turn it around, so it does not matter which card you start on.
+  // Called when an arrow is dragged between two nodes. The connection then waits in `pending` for its relationship type.
   function handleConnect(connection: Connection) {
     let sourceId = connection.source;
     let targetId = connection.target;
@@ -406,103 +302,17 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         <Controls />
         {template.template && (
           <>
-            {/* Top left: the filters and "Add item". The add form opens under them, in the same box. */}
-            {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
-            <Panel position="top-left" className={styles.box} data-tour="map-toolbar">
-              <div className={styles.toolbar}>
-                {/* The filters open in a panel under the toolbar. The button shows how many are on. */}
-                <button
-                  type="button"
-                  className={styles.small}
-                  aria-expanded={filtering}
-                  onClick={() => setFiltering((open) => !open)}
-                >
-                  Filter{activeFilterCount > 0 && ` (${activeFilterCount})`} {filtering ? "▴" : "▾"}
-                </button>
-                {!adding && (
-                  <button type="button" className={styles.small} onClick={() => setAdding(true)}>
-                    + Add item
-                  </button>
-                )}
-                {!adding && items.items.length > 1 && (
-                  <button
-                    type="button"
-                    className={styles.small}
-                    aria-expanded={managing}
-                    onClick={() => setManaging((open) => !open)}
-                  >
-                    Manage {managing ? "▴" : "▾"}
-                  </button>
-                )}
-              </div>
-              {filtering && (
-                <div className={styles.manage}>
-                  <ItemFilterBar
-                    filters={filters}
-                    onChange={setFilters}
-                    template={template.template}
-                    groups={groups.groups}
-                  />
-                </div>
-              )}
-              {managing && !adding && items.items.length > 1 && (
-                <div className={styles.manage}>
-                  <button
-                    type="button"
-                    className={styles.small}
-                    onClick={() => {
-                      setManaging(false);
-                      handleTidy();
-                    }}
-                  >
-                    Tidy up
-                  </button>
-                  {/* Picking the other direction tidies the map in that direction (after a confirm) */}
-                  <span className={styles.direction} role="group" aria-label="Map direction">
-                    <button
-                      type="button"
-                      className={styles.small}
-                      aria-pressed={direction === "horizontal"}
-                      onClick={() => direction !== "horizontal" && handleTidy("horizontal")}
-                    >
-                      Left → right
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.small}
-                      aria-pressed={direction === "vertical"}
-                      onClick={() => direction !== "vertical" && handleTidy("vertical")}
-                    >
-                      Top ↓ bottom
-                    </button>
-                  </span>
-                </div>
-              )}
-              {adding && (
-                <div className={styles.addForm}>
-                  <ItemForm
-                    types={template.template.itemTypes}
-                    submitLabel="Add item"
-                    onCancel={() => setAdding(false)}
-                    onSubmit={async ({ title, description, type }) => {
-                      try {
-                        // The backend gives the new item a start position (services/itemLayout.ts)
-                        const item = await createItem(project.id, {
-                          title,
-                          type,
-                          ...(description !== "" && { description }),
-                        });
-                        items.setItems((current) => [...current, item]);
-                        setAdding(false);
-                        return null;
-                      } catch (err) {
-                        return err instanceof ApiError ? err.message : "Something went wrong.";
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </Panel>
+            {/* Top left: the filters, "Add item" and Manage */}
+            <MapToolbar
+              template={template.template}
+              groups={groups.groups}
+              itemCount={items.items.length}
+              filters={filters}
+              onFiltersChange={setFilters}
+              direction={direction}
+              onTidy={handleTidy}
+              onAddItem={addItem}
+            />
             {/* Top right: the full window button and the legend side by side. data-tour is on the
                 legend only, so the tutorial does not light up the button too. */}
             <Panel position="top-right" className={styles.topRight}>
@@ -542,7 +352,12 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
                 {selectedEdge && edgeSource && edgeTarget && (
                   <>
                     <p>
-                      {edgeSource.title} {edgeLabel ?? "Unknown"} {edgeTarget.title}
+                      {edgeSource.title} {edgeLabel ?? "Unknown"}{" "}
+                      {/* "20 × Wood" when the connection has an amount */}
+                      {connectionText({
+                        otherTitle: edgeTarget.title,
+                        ...(selectedEdge.quantity != null && { amount: { value: selectedEdge.quantity, isSource: true } }),
+                      })}
                     </p>
                     <button type="button" onClick={() => handleDeleteConnection(selectedEdge.id)}>
                       Delete connection

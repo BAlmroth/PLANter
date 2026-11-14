@@ -144,6 +144,7 @@ function ProjectFrame({ project, setProject }: FrameProps) {
         <HelpButton
           onShowTour={helpPage ? tour.start : undefined}
           onRestart={tour.restart}
+          templateKey={project.template}
         />
         {/* key: a new page starts a fresh Tour, so nothing from the last page's step is kept */}
         {helpPage && tour.index !== null && !outer.pending && !main.pending && (

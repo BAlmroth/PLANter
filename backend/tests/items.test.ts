@@ -215,6 +215,21 @@ describe("PATCH /api/items/:id", () => {
     expect(res.body).toMatchObject({ title: "Login page", type: "page", status: "done", isMvp: true });
   });
 
+  it("saves conditions, and an empty string clears them", async () => {
+    const item = await createItemAs(asA, await createProjectAs(asA));
+    const saved = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ conditions: "Only in summer" });
+    expect(saved.status).toBe(200);
+    expect(saved.body.conditions).toBe("Only in summer");
+    const cleared = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ conditions: "" });
+    expect(cleared.body.conditions).toBe("");
+  });
+
+  it("rejects conditions over 500 characters", async () => {
+    const item = await createItemAs(asA, await createProjectAs(asA));
+    const res = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ conditions: "a".repeat(501) });
+    expect(res.status).toBe(400);
+  });
+
   it("saves a map position", async () => {
     const item = await createItemAs(asA, await createProjectAs(asA));
     const res = await request(app).patch(`/api/items/${item.id}`).set(asA).send({ positionX: 340.5, positionY: -20 });

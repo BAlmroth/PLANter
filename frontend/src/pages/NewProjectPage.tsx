@@ -3,14 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { ApiError } from "../lib/api";
 import { useTemplate } from "../features/items/useTemplate";
+import { useTemplateList } from "../features/items/useTemplateList";
 import { createProject } from "../features/projects/projectsApi";
 import { StarterForm } from "../features/projects/StarterForm";
 import { EMPTY_STARTER, starterSummary, toCreateInput, type Starter } from "../features/projects/starter";
 import styles from "./NewProjectPage.module.css";
 import { Loader } from "../components/Loader";
 
-// There is only one template for now (the game template is a Could) so there is no dropdown.
-// When a second template exists: add GET /api/templates (a list) and a select
+// Chosen until the user picks another one. Also used if the list of templates cannot be loaded,
+// so creating a project never depends on that list.
 const DEFAULT_TEMPLATE = "web";
 
 type Step = "basics" | "starter";
@@ -23,7 +24,17 @@ const CRUMBS = [{ label: "Projects", to: "/" }, { label: "New project" }];
 // Both steps keep their values when the user goes back and forth. Everything is sent in one request.
 export function NewProjectPage() {
   const navigate = useNavigate();
-  const { template, error: templateError, refetch } = useTemplate(DEFAULT_TEMPLATE);
+  const [templateKey, setTemplateKey] = useState(DEFAULT_TEMPLATE);
+  // If the list fails to load, there is no choice and the default is used
+  const templateChoices = useTemplateList();
+  const { template, error: templateError, refetch } = useTemplate(templateKey);
+
+  // Starter items are stored per item type, and the types belong to the template.
+  // Groups and tasks are plain names, so they are kept.
+  function chooseTemplate(key: string) {
+    setTemplateKey(key);
+    setStarter((current) => ({ ...current, items: {} }));
+  }
 
   const [step, setStep] = useState<Step>("basics");
   const [name, setName] = useState("");
@@ -45,7 +56,7 @@ export function NewProjectPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const basics = { name, description, template: DEFAULT_TEMPLATE };
+      const basics = { name, description, template: templateKey };
       const project = await createProject(toCreateInput(basics, withStarter ? starter : EMPTY_STARTER, template));
       navigate(`/projects/${project.id}`);
     } catch (err) {
@@ -71,6 +82,27 @@ export function NewProjectPage() {
         <p className={styles.lead}>What are you building? A name is enough to start.</p>
 
         <form onSubmit={goToStarter} className={styles.form}>
+          {/* Only shown when there is a real choice. Cannot be changed later: the items' categories depend on it */}
+          {templateChoices.length > 1 && (
+            <fieldset className={styles.templates}>
+              <legend>What are you planning?</legend>
+              {templateChoices.map((choice) => (
+                <label key={choice.key} className={styles.templateChoice}>
+                  <input
+                    type="radio"
+                    name="template"
+                    value={choice.key}
+                    checked={templateKey === choice.key}
+                    onChange={() => chooseTemplate(choice.key)}
+                  />
+                  <span>
+                    <strong>{choice.label}</strong>
+                    <span className={styles.templateDescription}>{choice.description}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+          )}
           <label>
             Name
             <input type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />

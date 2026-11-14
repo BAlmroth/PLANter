@@ -27,6 +27,43 @@
   margin-bottom: 24px;
 }
 
+/* "What are you planning?": one outlined card per template, side by side when there is room */
+.templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.templates legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.templateChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+/* The chosen card gets a stronger border (the checked radio says the same thing) */
+.templateChoice:has(input:checked) {
+  border-color: var(--primary);
+}
+.templateChoice input {
+  margin-top: 3px;
+}
+
+.templateDescription {
+  display: block;
+  font-size: 0.875rem;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

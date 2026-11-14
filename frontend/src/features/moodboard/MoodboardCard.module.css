@@ -17,12 +17,13 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding-bottom: 6px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--bg-dark);
 }
 .heading {
   margin: 0;
-  font-size: 1.35rem;
+  font-weight: 600;
+  font-size: 1.25rem;
 }
 
 /* The pencil button: a small square, filled green while the card is in edit mode */
@@ -81,7 +82,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-h);
+  color: var(--text);
 }
 
 .links,

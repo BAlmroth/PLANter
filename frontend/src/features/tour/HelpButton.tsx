@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { helpPath } from "../help/pageHelp";
 import styles from "./HelpButton.module.css";
 
 type Props = {
   // undefined on a page without a tour
   onShowTour?: () => void;
   onRestart: () => void;
+  // The project's template, so the Help page shows the right categories
+  templateKey: string;
 };
 
 // The round ? in the bottom-right corner of every project page, with a small menu:
 // this page's tour, the whole tutorial from the start, and the Help page.
-export function HelpButton({ onShowTour, onRestart }: Props) {
+export function HelpButton({ onShowTour, onRestart, templateKey }: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +52,7 @@ export function HelpButton({ onShowTour, onRestart }: Props) {
           <button type="button" role="menuitem" onClick={choose(onRestart)}>
             Restart the tutorial
           </button>
-          <Link to="/help" role="menuitem" onClick={() => setOpen(false)}>
+          <Link to={helpPath(templateKey)} role="menuitem" onClick={() => setOpen(false)}>
             Help &amp; guides
           </Link>
         </div>

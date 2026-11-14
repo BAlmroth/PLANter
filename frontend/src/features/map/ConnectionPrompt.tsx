@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Dropdown } from "../../components/Dropdown";
 import type { Item, Template } from "../items/types";
 import { getAllowedRelationshipTypes } from "../relationships/connections";
+import { parseQuantity } from "../relationships/quantity";
+import { QuantityField } from "../relationships/QuantityField";
 
 type Props = {
   // The item the arrow was dragged from, and the item it was dropped on
@@ -9,7 +11,8 @@ type Props = {
   target: Item;
   template: Template;
   // Returns an error message, or null when it worked (the parent then closes the prompt)
-  onSubmit: (relationshipType: string) => Promise<string | null>;
+  // quantity: only for a type with hasQuantity, undefined when the field is empty
+  onSubmit: (relationshipType: string, quantity: number | undefined) => Promise<string | null>;
   onCancel: () => void;
 };
 
@@ -19,6 +22,7 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
   const types = getAllowedRelationshipTypes(source.type, target.type, template);
   // "" means "not chosen yet", the first type is used
   const [typeKey, setTypeKey] = useState("");
+  const [quantityText, setQuantityText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const selected = types.find((type) => type.key === typeKey) ?? types[0];
@@ -26,8 +30,14 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
   async function handleSubmit() {
     if (!selected) return;
     setError(null);
+    // The amount only counts when the chosen type can have one
+    const quantity = selected.hasQuantity ? parseQuantity(quantityText) : { value: undefined };
+    if ("error" in quantity) {
+      setError(quantity.error);
+      return;
+    }
     setSubmitting(true);
-    const message = await onSubmit(selected.key);
+    const message = await onSubmit(selected.key, quantity.value);
     if (message !== null) {
       setError(message);
       setSubmitting(false);
@@ -56,6 +66,7 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
           “{source.title}” cannot be connected to “{target.title}”.
         </p>
       )}
+      {selected?.hasQuantity && <QuantityField value={quantityText} onChange={setQuantityText} />}
       {error && <p role="alert">{error}</p>}
       {selected && (
         <button type="button" onClick={handleSubmit} disabled={submitting}>

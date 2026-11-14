@@ -3,7 +3,15 @@ import type { Relationship } from "./types";
 
 // One line under an item, for example { label: "uses", otherTitle: "Button", otherType: "component" }.
 // otherType is the template key, so the UI can show it as a colored TypeBadge.
-export type Connection = { id: string; label: string; otherTitle: string; otherType: string };
+// amount is only there when the connection has one ("made from 20 Wood"), so connections without
+// an amount (every web connection) look exactly as before. isSource: is this item the one that needs it?
+export type Connection = {
+  id: string;
+  label: string;
+  otherTitle: string;
+  otherType: string;
+  amount?: { value: number; isSource: boolean };
+};
 
 // All connections of one item, seen from that item's side:
 // as the source it shows the label ("uses"), as the target the inverseLabel ("used by").
@@ -33,6 +41,8 @@ export function getConnections(
       otherTitle: other.title,
       // TypeBadge shows an unknown type key as "Unknown"
       otherType: other.type,
+      // Added only when there is an amount (null and missing both mean none)
+      ...(relationship.quantity != null && { amount: { value: relationship.quantity, isSource } }),
     });
   }
 
@@ -50,6 +60,7 @@ export type ConnectOption = {
   newItemTypeLabel: string; // for example "Component"
   thisItemTypeLabel: string; // the type label of the item the form is opened on
   newItemIsSource: boolean; // true: other item -> this item. false: this item -> other item.
+  hasQuantity?: true; // the connection can have an amount. Only there when it can (never in the web template)
 };
 
 // The relationships that can start or end at an item of this type, read from the template.
@@ -71,6 +82,7 @@ export function getConnectOptions(itemType: string, template: Template): Connect
         newItemTypeLabel: typeLabel(combination.source),
         thisItemTypeLabel: typeLabel(itemType),
         newItemIsSource: true,
+        ...(relationship.hasQuantity && { hasQuantity: true as const }),
       });
     }
     // This item is the source, so the new item is the target and uses the inverseLabel ("is triggered by")
@@ -84,6 +96,7 @@ export function getConnectOptions(itemType: string, template: Template): Connect
         newItemTypeLabel: typeLabel(combination.target),
         thisItemTypeLabel: typeLabel(itemType),
         newItemIsSource: false,
+        ...(relationship.hasQuantity && { hasQuantity: true as const }),
       });
     }
   }

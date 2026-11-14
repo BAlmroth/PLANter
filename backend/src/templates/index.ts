@@ -1,3 +1,4 @@
+import { gameTemplate } from "./game.js";
 import { webTemplate } from "./web.js";
 
 //Defines and distributes templates though project
@@ -5,6 +6,8 @@ import { webTemplate } from "./web.js";
 export type Template = {
   key: string;
   label: string;
+  // One short line shown when choosing a template for a new project. Presentation only.
+  description: string;
   itemTypes: {
     key: string;
     label: string;
@@ -16,6 +19,9 @@ export type Template = {
     // How big the card is on the map: pages large, small things (assets, tests) small.
     // Presentation only, like color and label. Missing = "medium".
     size?: "small" | "medium" | "large";
+    // true = the project overview shows a card listing the items of this type.
+    // Presentation only, like the label. At most one type has it. Missing = no card.
+    overviewCard?: boolean;
     // Help text for beginners: what this category is, in one plain sentence,
     // and a few typical names. Presentation only, like the label.
     description: string;
@@ -34,6 +40,14 @@ export type Template = {
     // For a type stored the other way round ("component belongs_to page") this is true, so the
     // map's layout puts the target on the left. The stored direction does not change.
     readsBackward?: boolean;
+    // true = a connection of this type can have an amount ("made from 20 Wood"). A rule, not
+    // presentation: the service rejects an amount on other types. Missing = no amount.
+    hasQuantity?: boolean;
+    // Shown in the item page's Requirements card ("what does it take to get this?"). Presentation only.
+    // "outgoing": the item is the source ("House 2 made from Wood" is a requirement of House 2).
+    // "incoming": the item is the target ("Quest unlocks House 2" shows on House 2 as "unlocked by").
+    // Missing = an ordinary connection. No type has it in the web template, so web items have no card.
+    requirement?: "outgoing" | "incoming";
     description: string;  // help text: what the connection means, in one plain sentence
   }[];
   // Which source type can connect to which target type, with which relationship
@@ -58,9 +72,23 @@ export type Template = {
   }[];
 };
 
-const templates = new Map<string, Template>([["web", webTemplate]]);
+// The order here is the order of the choices on the new-project page (the first one is the default)
+const templates = new Map<string, Template>([
+  ["web", webTemplate],
+  ["game", gameTemplate],
+]);
 
 // Returns the template for a key, or undefined if it doesn't exist
 export function getTemplate(key: string): Template | undefined {
   return templates.get(key);
+}
+
+// Every template, for tests and for the list below
+export function allTemplates(): Template[] {
+  return [...templates.values()];
+}
+
+// What the new-project page needs to offer a choice: no item types or rules
+export function listTemplates(): { key: string; label: string; description: string }[] {
+  return allTemplates().map(({ key, label, description }) => ({ key, label, description }));
 }

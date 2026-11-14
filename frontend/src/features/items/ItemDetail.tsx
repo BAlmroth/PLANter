@@ -1,22 +1,15 @@
 import { useConfirm } from "../../components/useConfirm";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
-import { GroupChips } from "../groups/GroupChip";
 import { getGroupsOfItem } from "../groups/itemGroups";
 import { useGroups } from "../groups/useGroups";
-import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
-import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
-import {
-  getConnectOptions,
-  getConnections,
-  groupConnectionsByLabel,
-  type ConnectOption,
-  type Connection,
-} from "../relationships/connections";
+import { getConnectOptions, getConnections, type Connection } from "../relationships/connections";
+import { connectionText } from "../relationships/quantity";
 import { useProjectContext } from "../projects/useProjectContext";
-import { createRelationship, deleteRelationship } from "../relationships/relationshipsApi";
+import { deleteRelationship, updateRelationship } from "../relationships/relationshipsApi";
+import { getRequirementRows, isRequirement, isRequirementOption } from "../requirements/requirements";
+import { RequirementsCard } from "../requirements/RequirementsCard";
 import { useRelationships } from "../relationships/useRelationships";
 import { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemMoodboard } from "../moodboard/ItemMoodboard";
@@ -24,21 +17,21 @@ import { ItemTasks } from "../tasks/ItemTasks";
 import type { Warning } from "../warnings/types";
 import { useSprints } from "../sprints/useSprints";
 import { useTasks } from "../tasks/useTasks";
-import { ItemForm } from "./ItemForm";
+import { ItemConnections } from "./ItemConnections";
+import { ItemDetailsTiles } from "./ItemDetailsTiles";
+import { ItemEditForm } from "./ItemEditForm";
+import { ItemHeader } from "./ItemHeader";
 import { ItemPhoto } from "./ItemPhoto";
-import { createItem, deleteItem, updateItem } from "./itemsApi";
+import { ItemWarnings } from "./ItemWarnings";
+import { deleteItem, updateItem } from "./itemsApi";
+import { messageFrom } from "./messageFrom";
 import type { Item, ItemStatus, UpdateItemInput } from "./types";
-import { getInvalidRelationshipCount } from "./typeChange";
-import { StatusIcon } from "./StatusIcon";
-import { TypeBadge } from "./TypeBadge";
-import { typeColorStyle } from "./typeColor";
+import { useItemConnections } from "./useItemConnections";
 import { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
 import styles from "./ItemDetail.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
-
-const messageFrom = (err: unknown) => (err instanceof ApiError ? err.message : "Something went wrong.");
 
 type Props = {
   project: Project;
@@ -66,6 +59,14 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   const groups = useGroups(project.id);
   const details = useItemDetails(itemId);
   const { setItemCrumb } = useProjectContext();
+  const { addConnectedItem, connectExisting } = useItemConnections({
+    projectId: project.id,
+    itemId,
+    setItems: items.setItems,
+    setRelationships: relationships.setRelationships,
+    refreshWarnings,
+    refreshProgress,
+  });
 
   // The sub header shows this item's title and type in its trail. Runs again when either changes.
   const crumbItem = items.items.find((i) => i.id === itemId);
@@ -79,8 +80,6 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   // true while the edit form is open
   const { confirm, modal } = useConfirm();
   const [editing, setEditing] = useState(false);
-  // Which connect form is open: a new item, an existing item, or none
-  const [connecting, setConnecting] = useState<"new" | "existing" | null>(null);
   // true while a request from a checkbox, a delete button or a remove button is running
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,10 +123,21 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   const loadedTemplate = template.template;
+  // Every connection of the item, for the counts (details tiles, delete confirmation)
   const connections = getConnections(item.id, relationships.relationships, items.items, loadedTemplate);
   const itemTasks = tasks.tasks.filter((task) => task.itemId === item.id);
   const itemGroups = getGroupsOfItem(item.id, groups.groups);
-  const connectOptions = getConnectOptions(item.type, loadedTemplate);
+  const allConnectOptions = getConnectOptions(item.type, loadedTemplate);
+  // Requirements ("made from", "costs", "unlocked by") get their own card, so the Connections card
+  // shows and offers only the rest. In the web template nothing is a requirement, so nothing changes there.
+  const requirementRows = getRequirementRows(item, relationships.relationships, items.items, loadedTemplate, allConnectOptions);
+  const otherConnections = getConnections(
+    item.id,
+    relationships.relationships.filter((r) => !isRequirement(r, item.id, loadedTemplate)),
+    items.items,
+    loadedTemplate,
+  );
+  const connectOptions = allConnectOptions.filter((option) => !isRequirementOption(option, loadedTemplate));
 
   function replaceItem(updated: Item) {
     items.setItems((current) => current.map((i) => (i.id === updated.id ? updated : i)));
@@ -178,7 +188,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   async function handleRemoveConnection(connection: Connection) {
-    if (!(await confirm({ title: "Remove connection?", message: `"${connection.label}: ${connection.otherTitle}" will be removed.`, confirmLabel: "Remove" }))) return;
+    if (!(await confirm({ title: "Remove connection?", message: `"${connection.label}: ${connectionText(connection)}" will be removed.`, confirmLabel: "Remove" }))) return;
     setError(null);
     setBusy(true);
     try {
@@ -192,51 +202,22 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
     }
   }
 
-  // Creates a new item and connects it to this one. Two requests: if the connection is refused
-  // (for example it would make a loop), the new item is deleted again so nothing is left behind.
-  // Returns an error message, or null when it worked.
-  async function addConnectedItem(option: ConnectOption, title: string) {
-    let newItem: Item;
+  // Changes the amount of a requirement ("20 × Wood" to 25). Returns an error message, or null when it worked.
+  // Errors show in the editor itself, so the rest of the page is not blocked.
+  async function handleChangeAmount(connectionId: string, quantity: number | null) {
     try {
-      newItem = await createItem(project.id, { title, type: option.newItemType });
+      const updated = await updateRelationship(connectionId, { quantity });
+      relationships.setRelationships((current) => current.map((r) => (r.id === updated.id ? updated : r)));
+      return null;
     } catch (err) {
       return messageFrom(err);
     }
-
-    try {
-      const relationship = await createRelationship({
-        sourceItemId: option.newItemIsSource ? newItem.id : item!.id,
-        targetItemId: option.newItemIsSource ? item!.id : newItem.id,
-        type: option.relationshipType,
-      });
-      items.setItems((current) => [...current, newItem]);
-      relationships.setRelationships((current) => [...current, relationship]);
-      refreshWarnings();
-      refreshProgress(); // the new item counts as planned
-      return null;
-    } catch (err) {
-      // Undo: remove the item we just created
-      const undone = await deleteItem(newItem.id).then(
-        () => true,
-        () => false,
-      );
-      return undone
-        ? messageFrom(err)
-        : `${messageFrom(err)} The new item was created but not connected. Reload to see it.`;
-    }
   }
 
-  // Connects this item to an item that already exists. Returns an error message, or null when it worked.
-  // The backend refuses combinations that are not allowed, duplicates and loops, and says why.
-  async function connectExisting(option: ConnectOption, otherItemId: string) {
+  // Saves the conditions text of the Requirements card. Errors show in the editor itself.
+  async function handleChangeConditions(conditions: string) {
     try {
-      const relationship = await createRelationship({
-        sourceItemId: option.newItemIsSource ? otherItemId : item!.id,
-        targetItemId: option.newItemIsSource ? item!.id : otherItemId,
-        type: option.relationshipType,
-      });
-      relationships.setRelationships((current) => [...current, relationship]);
-      refreshWarnings();
+      replaceItem(await updateItem(item!.id, { conditions }));
       return null;
     } catch (err) {
       return messageFrom(err);
@@ -245,57 +226,19 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
 
   if (editing) {
     return (
-      <section className={styles.card}>
-        {modal}
-        <h2 className={styles.title}>Edit {item.title}</h2>
-        <ItemForm
-          types={loadedTemplate.itemTypes}
-          showMvp
-          initialValues={{
-            title: item.title,
-            description: item.description ?? "",
-            type: item.type,
-            isMvp: item.isMvp,
-          }}
-          submitLabel="Save changes"
-          onCancel={() => setEditing(false)}
-          onSubmit={async ({ title, description, type, isMvp }) => {
-            // "" clears the description, like for projects. The type is only sent when it changed.
-            const changes: UpdateItemInput = {
-              title,
-              description,
-              isMvp,
-              ...(type !== item.type && { type }),
-            };
-            try {
-              let saved: Item;
-              try {
-                saved = await updateItem(item.id, changes);
-              } catch (err) {
-                // 409: the new type would break some connections. Ask, then send again with the flag.
-                const count = getInvalidRelationshipCount(err);
-                if (count === null) throw err;
-                const newLabel = loadedTemplate.itemTypes.find((t) => t.key === type)?.label ?? type;
-                const what = count === 1 ? "1 connection that is" : `${count} connections that are`;
-                if (!(await confirm({ title: "Change type?", message: `Changing the type to ${newLabel} deletes ${what} no longer allowed.`, confirmLabel: "Change type" }))) {
-                  return "The type was not changed.";
-                }
-                saved = await updateItem(item.id, { ...changes, confirmRelationshipRemoval: true });
-                // The server deleted some connections, so load the list again
-                relationships.refetch();
-              }
-              replaceItem(saved);
-              // The title, type or MVP flag may have changed, and with them the warnings
-              refreshWarnings();
-              refreshProgress(); // a new type moves the item to another category
-              setEditing(false);
-              return null;
-            } catch (err) {
-              return messageFrom(err);
-            }
-          }}
-        />
-      </section>
+      <ItemEditForm
+        item={item}
+        template={loadedTemplate}
+        onSaved={(saved) => {
+          replaceItem(saved);
+          // The title, type or MVP flag may have changed, and with them the warnings
+          refreshWarnings();
+          refreshProgress(); // a new type moves the item to another category
+          setEditing(false);
+        }}
+        onConnectionsRemoved={relationships.refetch}
+        onCancel={() => setEditing(false)}
+      />
     );
   }
 
@@ -305,53 +248,16 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   return (
     <div className={styles.page}>
       {modal}
-      {/* --- Header: badges on the left, status and actions on the right --- */}
-      <header className={styles.header}>
-        <div className={styles.heading}>
-          {/* The title and the trail are in the sub header */}
-          <div className={styles.titleRow}>
-            <TypeBadge typeKey={item.type} template={loadedTemplate} />
-            {item.isMvp && <span className={styles.mvp}>MVP</span>}
-            <GroupChips groups={itemGroups} />
-          </div>
-        </div>
-
-        <div className={styles.headerActions}>
-          {/* Two checkboxes cover three statuses: neither checked means "planned" */}
-          {/* data-tour: what the tutorial points at (features/tour/tourSteps.ts) */}
-          <div className={styles.status} data-tour="item-status">
-            <label className={styles.toggle}>
-              <input
-                type="checkbox"
-                checked={item.status === "in_progress"}
-                disabled={busy}
-                onChange={(e) => setStatus("in_progress", e.target.checked)}
-              />
-              In progress
-            </label>
-            <label className={styles.toggle}>
-              <input
-                type="checkbox"
-                checked={item.status === "done"}
-                disabled={busy}
-                onChange={(e) => setStatus("done", e.target.checked)}
-              />
-              Done
-            </label>
-          </div>
-          <button type="button" className={styles.danger} onClick={handleDelete} disabled={busy}>
-            Delete
-          </button>
-          <button type="button" onClick={() => setEditing(true)} disabled={busy} data-tour="item-edit">
-            Edit item
-          </button>
-        </div>
-        {error && (
-          <p role="alert" className={styles.error}>
-            {error}
-          </p>
-        )}
-      </header>
+      <ItemHeader
+        item={item}
+        template={loadedTemplate}
+        groups={itemGroups}
+        busy={busy}
+        error={error}
+        onSetStatus={setStatus}
+        onDelete={handleDelete}
+        onEdit={() => setEditing(true)}
+      />
 
       <div className={styles.columns}>
         {/* --- Main column --- */}
@@ -364,111 +270,41 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
             </div>
           </section>
 
-          <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Details</h2>
-            <dl className={styles.tiles}>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Status</dt>
-                <dd>
-                  <StatusIcon status={item.status} showLabel />
-                </dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Type</dt>
-                <dd>{typeInfo?.label ?? "Unknown"}</dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Connections</dt>
-                <dd>{connections.length}</dd>
-              </div>
-              <div className={styles.tile}>
-                <dt className={styles.label}>Tasks done</dt>
-                <dd>
-                  {doneTasks} / {itemTasks.length}
-                </dd>
-              </div>
-            </dl>
-          </section>
+          <ItemDetailsTiles
+            item={item}
+            typeLabel={typeInfo?.label ?? "Unknown"}
+            connectionCount={connections.length}
+            doneTasks={doneTasks}
+            totalTasks={itemTasks.length}
+          />
 
-          <section className={styles.card} data-tour="item-connections">
-            <h2 className={styles.cardTitle}>Connections</h2>
-            {connections.length === 0 ? (
-              <p className={styles.empty}>No connections yet.</p>
-            ) : (
-              // One box per kind of connection ("uses", "used by", …), with the other items as pills
-              <div className={styles.relationGroups}>
-                {groupConnectionsByLabel(connections).map((group) => (
-                  <div key={group.label} className={styles.relationGroup}>
-                    <h3 className={styles.label}>{group.label}</h3>
-                    <ul className={styles.pills}>
-                      {group.connections.map((connection) => (
-                        <li
-                          key={connection.id}
-                          className={styles.pill}
-                          style={typeColorStyle(loadedTemplate, connection.otherType)}
-                        >
-                          {connection.otherTitle}
-                          {/* The type label is shown next to the colored dot, so color never stands alone */}
-                          <span className={styles.pillType}>
-                            {loadedTemplate.itemTypes.find((t) => t.key === connection.otherType)?.label ?? "Unknown"}
-                          </span>
-                          <button
-                            type="button"
-                            className={styles.remove}
-                            onClick={() => handleRemoveConnection(connection)}
-                            disabled={busy}
-                            aria-label={`Remove the connection ${connection.label}: ${connection.otherTitle}`}
-                          >
-                            ×
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Only for categories that can have requirements (never in the web template) */}
+          {requirementRows.length > 0 && (
+            <RequirementsCard
+              item={item}
+              template={loadedTemplate}
+              allItems={items.items}
+              rows={requirementRows}
+              busy={busy}
+              onRemove={handleRemoveConnection}
+              onAddConnectedItem={addConnectedItem}
+              onConnectExisting={connectExisting}
+              onChangeAmount={handleChangeAmount}
+              onChangeConditions={handleChangeConditions}
+            />
+          )}
 
-            {connectOptions.length > 0 &&
-              (connecting === "new" ? (
-                <ConnectedItemForm
-                  thisTitle={item.title}
-                  options={connectOptions}
-                  onCancel={() => setConnecting(null)}
-                  onSubmit={async (option, title) => {
-                    const message = await addConnectedItem(option, title);
-                    if (message === null) setConnecting(null);
-                    return message;
-                  }}
-                />
-              ) : connecting === "existing" ? (
-                <ConnectExistingForm
-                  thisTitle={item.title}
-                  options={connectOptions}
-                  items={items.items.filter((other) => other.id !== item.id)}
-                  onCancel={() => setConnecting(null)}
-                  onSubmit={async (option, otherItemId) => {
-                    const message = await connectExisting(option, otherItemId);
-                    if (message === null) setConnecting(null);
-                    return message;
-                  }}
-                />
-              ) : (
-                <div className={styles.actions}>
-                  <button type="button" className={styles.secondary} onClick={() => setConnecting("new")} disabled={busy}>
-                    + Add connected item
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondary}
-                    onClick={() => setConnecting("existing")}
-                    disabled={busy}
-                  >
-                    Connect existing item
-                  </button>
-                </div>
-              ))}
-          </section>
+          <ItemConnections
+            item={item}
+            template={loadedTemplate}
+            allItems={items.items}
+            connections={otherConnections}
+            connectOptions={connectOptions}
+            busy={busy}
+            onRemove={handleRemoveConnection}
+            onAddConnectedItem={addConnectedItem}
+            onConnectExisting={connectExisting}
+          />
 
           <section className={styles.card} data-tour="item-tasks">
             {/* Adding or deleting a task can add or remove a warning ("is part of the MVP but has no tasks"), so ask again */}
@@ -494,24 +330,7 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
             )}
           </section>
 
-          <section className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Warnings</h2>
-              {warnings.length > 0 && <span className={styles.count}>{warnings.length}</span>}
-            </div>
-            {warnings.length === 0 ? (
-              <p className={styles.empty}>Nothing looks missing.</p>
-            ) : (
-              <ul className={styles.warnings}>
-                {warnings.map((warning) => (
-                  <li key={warning.rule} className={styles.warning}>
-                    {/* The message follows the item name, for example "Login has no components" */}
-                    <strong>{item.title}</strong> {warning.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <ItemWarnings itemTitle={item.title} warnings={warnings} />
 
           <ItemMoodboard projectId={project.id} itemId={item.id} details={details} />
         </div>

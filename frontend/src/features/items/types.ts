@@ -14,6 +14,9 @@ type: string;
 
 title: string;
 description: string | null;
+// Requirements that are not items ("Only in summer"), shown in the Requirements card. null or "" = none.
+// Optional in the type so test data without the field still fits.
+conditions?: string | null;
 status: ItemStatus;
 isMvp: boolean;
 positionX: number;
@@ -27,6 +30,7 @@ export type CreateItemInput = {
   title: string;
   type: string;
   description?: string;
+  conditions?: string;
   status?: ItemStatus;
   isMvp?: boolean;
 };
@@ -38,6 +42,13 @@ export type UpdateItemInput = Partial<CreateItemInput> & {
   positionX?: number;
   positionY?: number;
   confirmRelationshipRemoval?: boolean;
+};
+
+// One entry of GET /api/templates: enough to choose a template for a new project
+export type TemplateSummary = {
+  key: string;
+  label: string;
+  description: string;
 };
 
 // The shape of what GET /api/templates/:key returns
@@ -53,6 +64,8 @@ export type Template = {
     color: string;
     // How big the card is on the map. Missing = "medium".
     size?: "small" | "medium" | "large";
+    // true = the project overview shows a card for this type. Missing = no card.
+    overviewCard?: boolean;
     // Help text: what the category is, and typical names ("Home, Login, Profile")
     description: string;
     example: string;
@@ -66,6 +79,11 @@ export type Template = {
     allowCycles: boolean;
     // true: the map's layout puts the target on the left ("component belongs_to page": page first)
     readsBackward?: boolean;
+    // true: a connection of this type can have an amount ("made from 20 Wood"). Missing = no amount.
+    hasQuantity?: boolean;
+    // Shown in the item page's Requirements card. "outgoing": the item is the source ("House 2 made from
+    // Wood"), "incoming": the item is the target ("unlocked by"). Missing = an ordinary connection.
+    requirement?: "outgoing" | "incoming";
     // Help text: what the connection means
     description: string;
   }[];

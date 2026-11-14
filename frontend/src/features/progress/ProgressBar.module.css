@@ -16,3 +16,10 @@
   width: 72px;
   height: 6px;
 }
+
+/* Fixed width (the font is monospace) so the bar does not move when the count gets a second digit: "9/9 done" vs "10/10 done" */
+.count {
+  display: inline-block;
+  min-width: 10ch;
+  text-align: right;
+}

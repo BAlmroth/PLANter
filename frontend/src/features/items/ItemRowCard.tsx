@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { GroupDots } from "../groups/GroupChip";
 import type { Group } from "../groups/types";
 import type { Connection } from "../relationships/connections";
+import { connectionText } from "../relationships/quantity";
 import type { Warning } from "../warnings/types";
 import { WarningBadge } from "../warnings/WarningBadge";
 import { typeColorStyle } from "./typeColor";
@@ -24,7 +25,7 @@ type Props = {
 export function ItemRow({ projectId, item, template, connections, groups, warnings }: Props) {
   // "uses Button, used by Home", shown as a tooltip on the connection count
   const connectionList = connections
-    .map((connection) => `${connection.label} ${connection.otherTitle}`)
+    .map((connection) => `${connection.label} ${connectionText(connection)}`)
     .join(", ");
   // true when line 3 has something to show
   const hasTags = groups.length > 0 || connections.length > 0 || warnings.length > 0 || item.isMvp;
