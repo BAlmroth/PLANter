@@ -253,6 +253,20 @@
   color: var(--danger);
 }
 
+/* "Edit amount" in a Requirements pill: as quiet as the remove ×, but not red on hover */
+.editAmount {
+  padding: 0 6px;
+  font-size: 0.75rem;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  translate: none;
+  text-decoration: underline;
+}
+.editAmount:hover:not(:disabled) {
+  color: var(--primary);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

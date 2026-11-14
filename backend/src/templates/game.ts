@@ -86,7 +86,7 @@ export const gameTemplate: Template = {
     // --- Progression: how the player gets further ---
     // No cycles: "the key is behind the door the key opens" is a soft-lock (the player gets stuck).
     // The cycle check in the relationship service catches it when the connection is made.
-    { key: "unlocks", label: "unlocks", inverseLabel: "unlocked by", allowCycles: false,
+    { key: "unlocks", label: "unlocks", inverseLabel: "unlocked by", allowCycles: false, requirement: "incoming",
       description: "This makes that available, for example a key that opens an area, a quest that starts the next one, or a blueprint that lets you craft something new." },
     { key: "gives", label: "gives", inverseLabel: "given by", allowCycles: true,
       description: "The character hands this to the player: a quest, a gift, something from a shop or loot from a defeated enemy." },
@@ -99,12 +99,12 @@ export const gameTemplate: Template = {
     // Crafting, cooking, mixing and building. Stored as "result made_from ingredient", and read backwards
     // so the map puts the ingredients on the left and the results on the right (a recipe tree).
     // No cycles: a recipe that needs its own result somewhere down the chain can never be made.
-    { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, readsBackward: true, hasQuantity: true,
+    { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, readsBackward: true, hasQuantity: true, requirement: "outgoing",
       description: "This is crafted, cooked, mixed or built from that, for example a potion made from water and a herb, or a house built from wood." },
     // A price. Currencies are inventory too (Gold, Gems, Skill points), so the Gold item lists everything
     // it buys. Not "made from": that is a recipe, this is what the player pays. Loops are allowed:
     // trading gold for gems and gems for gold is normal.
-    { key: "costs", label: "costs", inverseLabel: "spent on", allowCycles: true, readsBackward: true, hasQuantity: true,
+    { key: "costs", label: "costs", inverseLabel: "spent on", allowCycles: true, readsBackward: true, hasQuantity: true, requirement: "outgoing",
       description: "The player pays this to buy, build or learn it, for example a sword that costs 50 gold." },
     // Levels of the same thing: house 1 -> house 2, iron axe -> steel axe. Stored from the lower level
     // to the higher, so the map reads from worst to best. No cycles: an upgrade chain has to end.

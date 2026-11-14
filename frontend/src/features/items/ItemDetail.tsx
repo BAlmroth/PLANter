@@ -7,7 +7,9 @@ import { useGroups } from "../groups/useGroups";
 import { getConnectOptions, getConnections, type Connection } from "../relationships/connections";
 import { connectionText } from "../relationships/quantity";
 import { useProjectContext } from "../projects/useProjectContext";
-import { deleteRelationship } from "../relationships/relationshipsApi";
+import { deleteRelationship, updateRelationship } from "../relationships/relationshipsApi";
+import { getRequirementRows, isRequirement, isRequirementOption } from "../requirements/requirements";
+import { RequirementsCard } from "../requirements/RequirementsCard";
 import { useRelationships } from "../relationships/useRelationships";
 import { useItemDetails } from "../itemDetails/useItemDetails";
 import { ItemMoodboard } from "../moodboard/ItemMoodboard";
@@ -121,10 +123,21 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
   }
 
   const loadedTemplate = template.template;
+  // Every connection of the item, for the counts (details tiles, delete confirmation)
   const connections = getConnections(item.id, relationships.relationships, items.items, loadedTemplate);
   const itemTasks = tasks.tasks.filter((task) => task.itemId === item.id);
   const itemGroups = getGroupsOfItem(item.id, groups.groups);
-  const connectOptions = getConnectOptions(item.type, loadedTemplate);
+  const allConnectOptions = getConnectOptions(item.type, loadedTemplate);
+  // Requirements ("made from", "costs", "unlocked by") get their own card, so the Connections card
+  // shows and offers only the rest. In the web template nothing is a requirement, so nothing changes there.
+  const requirementRows = getRequirementRows(item, relationships.relationships, items.items, loadedTemplate, allConnectOptions);
+  const otherConnections = getConnections(
+    item.id,
+    relationships.relationships.filter((r) => !isRequirement(r, item.id, loadedTemplate)),
+    items.items,
+    loadedTemplate,
+  );
+  const connectOptions = allConnectOptions.filter((option) => !isRequirementOption(option, loadedTemplate));
 
   function replaceItem(updated: Item) {
     items.setItems((current) => current.map((i) => (i.id === updated.id ? updated : i)));
@@ -189,6 +202,18 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
     }
   }
 
+  // Changes the amount of a requirement ("20 × Wood" to 25). Returns an error message, or null when it worked.
+  // Errors show in the editor itself, so the rest of the page is not blocked.
+  async function handleChangeAmount(connectionId: string, quantity: number | null) {
+    try {
+      const updated = await updateRelationship(connectionId, { quantity });
+      relationships.setRelationships((current) => current.map((r) => (r.id === updated.id ? updated : r)));
+      return null;
+    } catch (err) {
+      return messageFrom(err);
+    }
+  }
+
   if (editing) {
     return (
       <ItemEditForm
@@ -243,11 +268,26 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
             totalTasks={itemTasks.length}
           />
 
+          {/* Only for categories that can have requirements (never in the web template) */}
+          {requirementRows.length > 0 && (
+            <RequirementsCard
+              item={item}
+              template={loadedTemplate}
+              allItems={items.items}
+              rows={requirementRows}
+              busy={busy}
+              onRemove={handleRemoveConnection}
+              onAddConnectedItem={addConnectedItem}
+              onConnectExisting={connectExisting}
+              onChangeAmount={handleChangeAmount}
+            />
+          )}
+
           <ItemConnections
             item={item}
             template={loadedTemplate}
             allItems={items.items}
-            connections={connections}
+            connections={otherConnections}
             connectOptions={connectOptions}
             busy={busy}
             onRemove={handleRemoveConnection}

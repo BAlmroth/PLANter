@@ -200,6 +200,13 @@ describe("game template rules", () => {
     expect(withQuantity.sort()).toEqual(["costs", "made_from"]);
   });
 
+  it("shows recipes, prices and unlocks in the Requirements card, from the right side", () => {
+    const requirements = Object.fromEntries(
+      gameTemplate.relationshipTypes.filter((r) => r.requirement).map((r) => [r.key, r.requirement]),
+    );
+    expect(requirements).toEqual({ made_from: "outgoing", costs: "outgoing", unlocks: "incoming" });
+  });
+
   it("only upgrades within the same category", () => {
     const upgrades = gameTemplate.allowedCombinations.filter((c) => c.relationship === "upgrades_to");
     expect(upgrades.length).toBeGreaterThan(0);

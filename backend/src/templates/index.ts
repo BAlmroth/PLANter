@@ -43,6 +43,11 @@ export type Template = {
     // true = a connection of this type can have an amount ("made from 20 Wood"). A rule, not
     // presentation: the service rejects an amount on other types. Missing = no amount.
     hasQuantity?: boolean;
+    // Shown in the item page's Requirements card ("what does it take to get this?"). Presentation only.
+    // "outgoing": the item is the source ("House 2 made from Wood" is a requirement of House 2).
+    // "incoming": the item is the target ("Quest unlocks House 2" shows on House 2 as "unlocked by").
+    // Missing = an ordinary connection. No type has it in the web template, so web items have no card.
+    requirement?: "outgoing" | "incoming";
     description: string;  // help text: what the connection means, in one plain sentence
   }[];
   // Which source type can connect to which target type, with which relationship

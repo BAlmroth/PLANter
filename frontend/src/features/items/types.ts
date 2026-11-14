@@ -77,6 +77,9 @@ export type Template = {
     readsBackward?: boolean;
     // true: a connection of this type can have an amount ("made from 20 Wood"). Missing = no amount.
     hasQuantity?: boolean;
+    // Shown in the item page's Requirements card. "outgoing": the item is the source ("House 2 made from
+    // Wood"), "incoming": the item is the target ("unlocked by"). Missing = an ordinary connection.
+    requirement?: "outgoing" | "incoming";
     // Help text: what the connection means
     description: string;
   }[];
