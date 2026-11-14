@@ -39,12 +39,12 @@
   padding: 24px;
 }
 
-/* One column on a narrow screen: File view first, then the page */
+/* One column on a narrow screen, and the File sidebar is hidden (display: none, so the tour skips its step) */
 @media (max-width: 900px) {
   .body {
     grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {
-    position: static;
+    display: none;
   }
 }
