@@ -54,6 +54,9 @@
 
 /* Plain text rows (the global button style is turned off) */
 .option {
+  /* Never shrink: with overflow hidden a flex item can get squashed to a few pixels when the list is
+     taller than its max-height. The list scrolls instead. */
+  flex-shrink: 0;
   padding: 8px 10px;
   font-size: 0.9rem;
   text-align: left;
@@ -74,4 +77,32 @@
   font-weight: 600;
   color: var(--primary);
   background: var(--bg);
+}
+
+/* fullWidth: fits a narrow card. The button fills the width, the name on the left and the arrow on the right.
+   The list is not floating (a floating list is cut off by the card and the scrolling column): it opens
+   in the flow under the button and pushes the rest down. A long name wraps over two lines. */
+.full {
+  width: 100%;
+}
+.full .button {
+  width: 100%;
+  max-width: none;
+  justify-content: space-between;
+}
+.full .menu {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: 180px;
+  margin-top: 6px;
+}
+.full .option {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.full .name {
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

@@ -1,0 +1,54 @@
+.wrapper {
+  position: relative;
+}
+
+/* A small square button without a background, like the quiet text buttons, that gets one on hover */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  translate: none;
+}
+.button:hover:not(:disabled),
+.button[aria-expanded="true"] {
+  color: var(--text-h);
+  background: var(--bg-dark);
+}
+
+/* Floats under the button, to the left of it so it stays inside the card, in the same style as the other menus */
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 110px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.option {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  text-align: left;
+  color: var(--text-h);
+  background: transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  translate: none;
+}
+.option:hover {
+  background: var(--bg-dark);
+}
+.danger:hover {
+  color: var(--danger);
+}

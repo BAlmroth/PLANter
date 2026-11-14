@@ -69,6 +69,8 @@
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.3;
@@ -171,4 +173,38 @@
 }
 .compact .move {
   padding: 0 6px;
+}
+
+/* The title with the pencil menu in the top right corner */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Edit mode: the title and the two dropdowns stacked, then Save and Cancel */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.editForm input {
+  margin: 0;
+}
+.editButtons {
+  display: flex;
+  gap: 8px;
+}
+/* An outline button for Cancel, like the other secondary buttons */
+.cancel {
+  color: var(--text-h);
+  background: transparent;
+  box-shadow: 2px 2px var(--borderDark);
+  border: 1px solid var(--borderDark);
+}
+.cancel:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
 }

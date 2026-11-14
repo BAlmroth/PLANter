@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import styles from "./Dropdown.module.css";
+import { useDismiss } from "./useDismiss";
 
 export type DropdownOption = { value: string; label: string };
 
@@ -9,35 +10,23 @@ type Props = {
   value: string;
   options: DropdownOption[];
   onChange: (value: string) => void;
+  // For narrow places (a card): the button is as wide as its container and the list opens in the page
+  // flow under it, so nothing is cut off. Long names wrap instead of getting "…".
+  fullWidth?: boolean;
 };
 
 // Choose one of a few options. A button and a list of buttons instead of a <select>, because the list of a
 // <select> is drawn by the browser and cannot be styled. Looks like the project switcher in the header.
-export function Dropdown({ label, value, options, onChange }: Props) {
+export function Dropdown({ label, value, options, onChange, fullWidth = false }: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Close the menu on Esc or on a click anywhere outside it
-  useEffect(() => {
-    if (!open) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    function onClick(event: MouseEvent) {
-      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("mousedown", onClick);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("mousedown", onClick);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), wrapperRef);
 
   const current = options.find((option) => option.value === value);
 
   return (
-    <div ref={wrapperRef} className={styles.wrapper}>
+    <div ref={wrapperRef} className={`${styles.wrapper} ${fullWidth ? styles.full : ""}`}>
       <button
         type="button"
         className={styles.button}

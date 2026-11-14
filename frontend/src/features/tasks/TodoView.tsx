@@ -221,7 +221,7 @@ export function TodoView({ project, onTasksChanged }: Props) {
           sprints={sprints.sprints}
           template={template.template}
           setTasks={tasks.setTasks}
-          onMoved={onTasksChanged}
+          onChanged={onTasksChanged}
         />
       )}
 
