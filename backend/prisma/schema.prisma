@@ -95,6 +95,9 @@ model Relationship {
   targetItemId String  @map("target_item_id") @db.Uuid
   // What kind of connection it is, ex "uses"
   type         String
+  // How many, ex "House 2 made from 20 Wood". Only for types with hasQuantity in the template
+  // (checked by the service). Empty = no amount. Must be above 0 (CHECK in the migration SQL).
+  quantity     Int?
 
   project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   // Deleting an item deletes the connections that start or end at it.

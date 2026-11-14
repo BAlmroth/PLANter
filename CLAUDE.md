@@ -51,7 +51,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - Item types and relationship types come from a template. A template is defined in code in `backend/src/templates/` (for example `web.ts`): a list of item types, relationship types and which combinations are allowed. A project stores its template key (for example `"web"`).
 - A template is plain data (strings, arrays, objects, no functions), so it can be sent as JSON. It contains:
   - item types: `key`, `label`, whether the type counts toward progress, `color` (`#RRGGBB`, the type's color in the whole UI), an optional `overviewCard` flag (at most one type: the project overview shows a card listing its items, none = no card), and help text for beginners: `description` (one plain sentence) and `example` (typical names, shown as the title placeholder)
-  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), `allowCycles`, and `description` (help text)
+  - relationship types: `key`, `label`, `inverseLabel` (for example "uses" / "used by"), `allowCycles`, optional `hasQuantity` (a connection of this type can have an amount), and `description` (help text)
   - the allowed combinations of source type, relationship type and target type
   - `groupColors`: the colors a group can have (`#RRGGBB`). Lighter than the item type colors and never the same, so a group never looks like an item type
   - `warningRules`: an item of `itemType` with no `relationship` in a `direction` (`incoming`/`outgoing`) gets a warning with `message` (for example a page with no component belonging to it)
@@ -71,7 +71,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 - `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (optional), template, created_at
 - `items`: id, project_id, type, title, description, status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, image_path (optional), created_at. `image_path` is the main photo (for example a Figma screenshot), see the images rule below.
-- `relationships`: id, project_id, source_item_id, target_item_id, type. Unique on (source, target, type). An item cannot be connected to itself.
+- `relationships`: id, project_id, source_item_id, target_item_id, type, quantity (optional, `CHECK > 0`). Unique on (source, target, type). An item cannot be connected to itself. `quantity` is an amount ("House 2 made from 20 Wood"), only allowed on relationship types with `hasQuantity` in the template (400 otherwise). `PATCH /api/relationships/:id` changes only the quantity (`null` removes it): the items and the type never change.
 - `tasks`: id, project_id, item_id (optional), title, done, sprint_id (optional)
 - `sprints`: id, project_id, name
 - `item_details`: id, item_id, title, url (optional), text (optional), image_path (optional), created_at. Detail rows of an item: its moodboard. A row with an image is a visual reference (title is the caption), a row with a link and no image is a link row (text is the note). No `project_id`: ownership is checked through the item (`item: { project: { userId } }`). Shown in `created_at` order. API: `/api/items/:itemId/details` (list, create) and `/api/item-details/:id` (edit, delete, image).

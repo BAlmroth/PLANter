@@ -40,6 +40,9 @@ export type Template = {
     // For a type stored the other way round ("component belongs_to page") this is true, so the
     // map's layout puts the target on the left. The stored direction does not change.
     readsBackward?: boolean;
+    // true = a connection of this type can have an amount ("made from 20 Wood"). A rule, not
+    // presentation: the service rejects an amount on other types. Missing = no amount.
+    hasQuantity?: boolean;
     description: string;  // help text: what the connection means, in one plain sentence
   }[];
   // Which source type can connect to which target type, with which relationship

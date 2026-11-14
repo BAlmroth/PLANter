@@ -1,11 +1,25 @@
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { HttpError } from "../middleware/errorHandler.js";
-import { relationshipRuleSchema, type CreateRelationshipInput } from "../schemas/relationships.js";
-import { getTemplate } from "../templates/index.js";
+import {
+  relationshipRuleSchema,
+  type CreateRelationshipInput,
+  type UpdateRelationshipInput,
+} from "../schemas/relationships.js";
+import { getTemplate, type Template } from "../templates/index.js";
 import { getOwnedProject } from "./projects.js";
 
 type Edge = { sourceItemId: string; targetItemId: string };
+
+// An amount is only allowed on types that have hasQuantity in the template ("made from 20 Wood"),
+// never on for example "upgrades to". Read from the template, not hard-coded per type.
+function assertQuantityAllowed(template: Template, type: string, quantity: number | null | undefined) {
+  if (quantity === undefined || quantity === null) return;
+  const typeRule = template.relationshipTypes.find((t) => t.key === type);
+  if (!typeRule?.hasQuantity) {
+    throw new HttpError(400, "This type of connection cannot have an amount");
+  }
+}
 
 // Would adding source -> target create a loop? Yes if source can already be reached from target
 // by following the existing arrows (depth-first search with a list of items still to visit).
@@ -29,7 +43,7 @@ export function wouldCreateCycle(edges: Edge[], sourceId: string, targetId: stri
 // The body has no projectId. Both items are loaded in one query that also filters on the owner,
 // and the project id of the new row comes from those items.
 export async function createRelationship(userId: string, input: CreateRelationshipInput) {
-  const { sourceItemId, targetItemId, type } = input;
+  const { sourceItemId, targetItemId, type, quantity } = input;
 
   const items = await prisma.item.findMany({
     where: { id: { in: [sourceItemId, targetItemId] }, project: { userId } },
@@ -55,6 +69,7 @@ export async function createRelationship(userId: string, input: CreateRelationsh
   if (!rule.success) {
     throw new HttpError(400, "Invalid relationship", z.flattenError(rule.error));
   }
+  assertQuantityAllowed(template, type, quantity);
 
   // Types like belongs_to must not loop (A belongs to B belongs to A)
   const typeRule = template.relationshipTypes.find((t) => t.key === type);
@@ -70,7 +85,8 @@ export async function createRelationship(userId: string, input: CreateRelationsh
 
   try {
     return await prisma.relationship.create({
-      data: { projectId: source.projectId, sourceItemId, targetItemId, type },
+      // No amount sent = NULL in the database
+      data: { projectId: source.projectId, sourceItemId, targetItemId, type, quantity: quantity ?? null },
     });
   } catch (err) {
     // P2002 = unique constraint failed: same source, target and type already exists
@@ -87,6 +103,25 @@ export async function listRelationships(projectId: string, userId: string) {
   return prisma.relationship.findMany({
     where: { projectId },
     orderBy: { id: "asc" },
+  });
+}
+
+// UPDATE RELATIONSHIP (only the amount)
+// Same ownership check as delete: not owned looks like not found (404).
+export async function updateRelationship(relationshipId: string, userId: string, input: UpdateRelationshipInput) {
+  const relationship = await prisma.relationship.findFirst({
+    where: { id: relationshipId, project: { userId } },
+    include: { project: { select: { template: true } } },
+  });
+  if (!relationship) throw new HttpError(404, "Relationship not found");
+
+  const template = getTemplate(relationship.project.template);
+  if (!template) throw new Error(`Project has an unknown template: ${relationship.project.template}`);
+  assertQuantityAllowed(template, relationship.type, input.quantity);
+
+  return prisma.relationship.update({
+    where: { id: relationshipId },
+    data: { quantity: input.quantity },
   });
 }
 

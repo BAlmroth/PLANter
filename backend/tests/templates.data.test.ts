@@ -194,6 +194,12 @@ describe("game template rules", () => {
     expect(relationship("upgrades_to")?.allowCycles).toBe(false);
   });
 
+  it("only allows amounts on recipes and prices", () => {
+    // An amount on "upgrades to" or "unlocks" would mean nothing
+    const withQuantity = gameTemplate.relationshipTypes.filter((r) => r.hasQuantity).map((r) => r.key);
+    expect(withQuantity.sort()).toEqual(["costs", "made_from"]);
+  });
+
   it("only upgrades within the same category", () => {
     const upgrades = gameTemplate.allowedCombinations.filter((c) => c.relationship === "upgrades_to");
     expect(upgrades.length).toBeGreaterThan(0);

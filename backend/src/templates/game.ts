@@ -99,8 +99,13 @@ export const gameTemplate: Template = {
     // Crafting, cooking, mixing and building. Stored as "result made_from ingredient", and read backwards
     // so the map puts the ingredients on the left and the results on the right (a recipe tree).
     // No cycles: a recipe that needs its own result somewhere down the chain can never be made.
-    { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, readsBackward: true,
+    { key: "made_from", label: "made from", inverseLabel: "ingredient in", allowCycles: false, readsBackward: true, hasQuantity: true,
       description: "This is crafted, cooked, mixed or built from that, for example a potion made from water and a herb, or a house built from wood." },
+    // A price. Currencies are inventory too (Gold, Gems, Skill points), so the Gold item lists everything
+    // it buys. Not "made from": that is a recipe, this is what the player pays. Loops are allowed:
+    // trading gold for gems and gems for gold is normal.
+    { key: "costs", label: "costs", inverseLabel: "spent on", allowCycles: true, readsBackward: true, hasQuantity: true,
+      description: "The player pays this to buy, build or learn it, for example a sword that costs 50 gold." },
     // Levels of the same thing: house 1 -> house 2, iron axe -> steel axe. Stored from the lower level
     // to the higher, so the map reads from worst to best. No cycles: an upgrade chain has to end.
     { key: "upgrades_to", label: "upgrades to", inverseLabel: "upgraded from", allowCycles: false,
@@ -183,6 +188,12 @@ export const gameTemplate: Template = {
     { source: "inventory", relationship: "made_from", target: "inventory" }, // emerald tea made from water and emerald
     { source: "location", relationship: "made_from", target: "inventory" },  // house 2 built from wood and stone
     { source: "inventory", relationship: "grants", target: "ability" },
+
+    // Prices, paid in a currency (an inventory item in a "Currency" group)
+    { source: "inventory", relationship: "costs", target: "inventory" },  // sword costs 50 gold
+    { source: "location", relationship: "costs", target: "inventory" },   // house 2 costs 1000 gold
+    { source: "ability", relationship: "costs", target: "inventory" },    // fireball costs 1 skill point
+    { source: "character", relationship: "costs", target: "inventory" },  // hiring a companion
 
     // Upgrades: always to a better version of the same category
     { source: "location", relationship: "upgrades_to", target: "location" },   // house 1 -> house 2
