@@ -136,6 +136,22 @@
   margin-bottom: 16px;
   border-bottom: 1px solid var(--bg-dark);
 }
+/* A card title with an "i" (InfoBubble) next to it: the row gets the title's spacing and line */
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg-dark);
+}
+
+.cardTitleRow .cardTitle {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
 .cardHeader .cardTitle {
   margin: 0;
   border-bottom: 0;

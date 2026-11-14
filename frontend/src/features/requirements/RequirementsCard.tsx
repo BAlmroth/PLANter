@@ -2,6 +2,11 @@ import { useState } from "react";
 import type { Item, Template } from "../items/types";
 import { typeColorStyle } from "../items/typeColor";
 import styles from "../items/ItemDetail.module.css";
+import { InfoBubble } from "../../components/InfoBubble";
+
+// Shown in the "i" next to the heading. The tour step for this card says the same thing in short.
+const REQUIREMENTS_HELP =
+  "What it takes to get this item: what it is made from, what it costs or what unlocks it, with amounts. Conditions are requirements that are not items, like “only in summer”.";
 import { ConnectExistingForm } from "../relationships/ConnectExistingForm";
 import { ConnectedItemForm } from "../relationships/ConnectedItemForm";
 import type { ConnectOption, Connection } from "../relationships/connections";
@@ -58,8 +63,12 @@ export function RequirementsCard({
   }
 
   return (
-    <section className={styles.card} aria-labelledby="requirements-title">
-      <h2 id="requirements-title" className={styles.cardTitle}>Requirements</h2>
+    <section className={styles.card} aria-labelledby="requirements-title" data-tour="item-requirements">
+      {/* The "i" sits next to the heading, not inside it, so the heading's name stays "Requirements" */}
+      <div className={styles.cardTitleRow}>
+        <h2 id="requirements-title" className={styles.cardTitle}>Requirements</h2>
+        <InfoBubble text={REQUIREMENTS_HELP} label="About requirements" />
+      </div>
       <div className={styles.relationGroups}>
         {rows.map((row) => (
           <div key={row.relationshipType} className={styles.relationGroup}>
