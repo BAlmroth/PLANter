@@ -20,7 +20,7 @@ export function ProgressBar({ progress, label, color, compact = false }: Props) 
       // title: the full numbers on hover, since the short text leaves out the percent and in progress
       <span className={styles.compact} title={`${progress.done} of ${progress.total} done (${progress.percent}%)`}>
         {bar}
-        <span>
+        <span className={styles.count}>
           {progress.done}/{progress.total} done
         </span>
       </span>
