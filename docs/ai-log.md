@@ -1986,3 +1986,15 @@ Not checked: the guide has not been followed from scratch on a new computer, and
 **Tool:** Claude Code (Claude Opus 5.5)
 
 The previous entry says the README needed `http://localhost:5173/**` in Supabase's Redirect URLs. I showed the AI my real list (the Vercel URL, plus `/reset-password` for both localhost and Vercel), which already worked. The AI had guessed that my live project had the same gap without checking it, which was wrong. Exact URLs are stricter than a wildcard, so the README now lists exact URLs: `http://localhost:5173/reset-password` locally (step 4 and Troubleshooting), and `https://<your-app>.vercel.app` plus `https://<your-app>.vercel.app/reset-password` for production (Deploy).
+
+## 2026-11-15: Mobile fixes: ? button outside the page, map buttons overlapping
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+I reported that on a phone the ? button ends up outside the page and stretches it, the map does not work well, and the map buttons overlap. The AI reproduced it before changing anything: it ran the app at iPhone size in a headless browser (Playwright, run with npx from a temporary folder and not added to the project), with a fake login and fake API data, and measured how wide the page was.
+
+- **Cause of the stretched page:** the "i" bubbles (`InfoBubble`) were hidden with `visibility: hidden`, which still takes up space. A bubble opens to the right and is up to 320px wide, so on a 390px phone the page became about 500px wide. The ? button (`position: fixed`) and the full-window map are placed against that wider page, so they ended up off screen. Fix: hidden bubbles use `display: none`, and a small function in `InfoBubble.tsx` measures an open bubble and moves it left if it sticks out at the right edge. The fade-in was removed (it does not work with `display: none`). Screen readers still read the text through `aria-describedby`.
+- Went wrong: the AI first moved the bubble with `translate`, but the page still got wider while a bubble was open, so it switched to `margin-left`. The test caught this.
+- **Overlapping map buttons:** the toolbar (top left) and Full window + Legend (top right) were two separate React Flow Panels, so they didn't make room for each other. Now one Panel holds the whole top row, and the right half wraps under the toolbar on a narrow screen. The empty space between them has `pointer-events: none` so the map can still be dragged there. The MiniMap is hidden under 600px, where it covered a big part of the map.
+- Checked at phone size (page width = screen width on the overview, map, full-window map, Tasks page with the ? menu open and with an "i" bubble open) and at desktop size (same look as before). All frontend tests pass.
+- Follow-up: I asked for Full window and Legend to sit at the left on mobile. Under 600px `.topRight` gets `margin-left: 0` (instead of `auto`), so it lines up under the toolbar.

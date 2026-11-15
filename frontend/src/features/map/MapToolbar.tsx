@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Panel } from "@xyflow/react";
 import type { Group } from "../groups/types";
 import { ItemFilterBar } from "../filters/ItemFilterBar";
 import type { ItemFilters } from "../filters/itemFilters";
@@ -22,7 +21,7 @@ type Props = {
 };
 
 // The box in the top left corner of the map: Filter, "+ Add item" and Manage. Each opens a panel
-// under the buttons, in the same box. Must be rendered inside <ReactFlow> (it is a Panel).
+// under the buttons, in the same box. MapView places it in the map's top row (a Panel).
 export function MapToolbar({ template, groups, itemCount, filters, onFiltersChange, direction, onTidy, onAddItem }: Props) {
   // true while the add item form is open
   const [adding, setAdding] = useState(false);
@@ -37,7 +36,7 @@ export function MapToolbar({ template, groups, itemCount, filters, onFiltersChan
 
   return (
     // data-tour: what the tutorial points at (features/tour/tourSteps.ts)
-    <Panel position="top-left" className={styles.box} data-tour="map-toolbar">
+    <div className={styles.box} data-tour="map-toolbar">
       <div className={styles.toolbar}>
         {/* The filters open in a panel under the toolbar. The button shows how many are on. */}
         <button
@@ -116,6 +115,6 @@ export function MapToolbar({ template, groups, itemCount, filters, onFiltersChan
           />
         </div>
       )}
-    </Panel>
+    </div>
   );
 }

@@ -47,11 +47,40 @@
   font-size: 0.85rem;
 }
 
+/* The top row of the map: the toolbar at the left, the full window button and the legend at the right.
+   The width is the map's minus the 15px Panel margin on each side. When both halves do not fit
+   (a phone), the right half wraps onto a second row. */
+.topRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  width: calc(100% - 30px);
+  /* The empty space between the two halves lets drags and clicks through to the map */
+  pointer-events: none;
+}
+.topRow > * {
+  pointer-events: auto;
+}
+
 /* The full window button and the legend in a row. The legend can grow downwards when opened. */
 .topRight {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  margin-left: auto; /* stays at the right, also when it wraps onto its own row */
+}
+
+@media (max-width: 600px) {
+  /* On a phone the full window button and the legend sit at the left, under the toolbar */
+  .topRight {
+    margin-left: 0;
+  }
+  /* The overview in the corner takes too much of a phone screen */
+  .miniMap {
+    display: none;
+  }
 }
 
 /* A different color from the other buttons (green), so it stands out: dark, like the text */
