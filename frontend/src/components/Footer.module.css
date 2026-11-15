@@ -62,8 +62,11 @@
   text-decoration: underline;
 }
 
-/* A small outlined button. Overrides the global button look (fill, shadow, hover lift). */
+/* A small outlined button. Overrides the global button look (fill, shadow, hover lift).
+   margin-right keeps it clear of the round ? button, which is fixed in the bottom-right corner
+   (42px wide, 20px from the edge: features/tour/HelpButton.module.css). */
 .toTop {
+  margin-right: 56px;
   font: inherit;
   padding: 2px 10px;
   color: var(--primary);
