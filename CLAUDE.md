@@ -197,7 +197,7 @@ planter/
 
 - Frontend (`frontend/`): `npm run dev` (Vite, port 5173), `npm test`, `npm run build`
 - Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`, `npm run typecheck` (src, tests and configs)
-- Test database: Postgres.app (PostgreSQL, port 5432) must be running, with a database `planter_test`. `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
+- Test database: a local PostgreSQL on port 5432 (Postgres.app on macOS) must be running, with a database `planter_test`. If the `postgres` user has a password (Windows, Linux), set `TEST_DATABASE_URL` in `backend/.env` (`tests/testDatabaseUrl.ts`). `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
 - Demo data (`backend/`): `npm run seed:demo -- <supabase-user-id> [web|game]` creates (or replaces) both demo projects for that user, "Awesome Demo Portfolio" (web) and "Emerald Brew" (game). `web` or `game` creates only that one
 - Prisma (`backend/`): `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
 

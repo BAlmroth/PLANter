@@ -1937,3 +1937,46 @@ Vitest runs every `*.test.ts` file in `backend/tests/` with `npm test`. `describ
   - Not covered: the login and register pages are outside the error boundary, and a failed load on the item page is still the small inline message (the item hooks only keep the message, not the status, so a 500 cannot be told apart).
   - The first typecheck found two `Link` imports that were no longer used, which the AI removed. The typecheck and build also failed on my own unfinished edit in `features/tour/tourSteps.ts` (a removed `title`), which the AI pointed out and left alone.
   - Frontend: 190 tests and lint clean. Typecheck and build clean except for my `tourSteps.ts` edit. Not checked in a browser.
+
+## 2026-11-15: Test database on Windows and Linux
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**What I asked:** My test database setup only worked on a Mac (Postgres.app). I asked how to fix that, then asked for the fix without Docker and without breaking anything.
+
+**What the AI found:** The test code was not Mac-specific, only the instructions were. Two things would still break on other systems:
+- The connection string in `vitest.config.ts` had no password. Postgres.app accepts that, but the Windows installer and Linux setups give the `postgres` user a password.
+- `test:db:migrate` set a variable with `DIRECT_URL=... prisma migrate deploy`, which does not work in Windows `cmd` or PowerShell.
+
+The AI suggested Docker as an option, but Docker is not in the stack and I said no.
+
+**What was generated:**
+- `backend/tests/testDatabaseUrl.ts`: `getTestDatabaseUrl()` returns `TEST_DATABASE_URL` from the shell, else from `backend/.env`, else the old Postgres.app URL. It reads only that one variable from `.env` (`dotenv`'s `parse`), so the Supabase URLs never reach the tests.
+- `backend/tests/migrateTestDb.ts`: a Node script for `npm run test:db:migrate` (run with `tsx`). Same localhost guard as `tests/setup.ts`, then runs `npx prisma migrate deploy` with `DIRECT_URL` set to the test URL.
+- `vitest.config.ts` uses `getTestDatabaseUrl()`. `TEST_DATABASE_URL=` added to `backend/.env.example`.
+- README "Test database" section rewritten for macOS, Windows and Linux (install, create the database, `TEST_DATABASE_URL` when there is a password, new error message in Problems). Commands line in `CLAUDE.md` updated.
+
+**Checked:** typecheck clean, `npm run test:db:migrate` works on my Mac, all 398 backend tests pass without setting anything (the default URL is the same as before), and the migrate script refuses a URL that is not localhost. Not tested on a real Windows or Linux machine.
+
+## 2026-11-15: Testing the cross-platform test database, and a new installation guide
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+**Testing the test database change.** I asked the AI to test the whole flow of the change above. Postgres.app does not check passwords, so it cannot show that a password works. The AI started a second, temporary PostgreSQL (with Postgres.app's own programs) on port 5433 that requires a password, like a Windows or Linux install.
+- With `TEST_DATABASE_URL` set in the terminal: `npm run test:db:migrate` applied all 17 migrations, all 398 backend tests passed, and a second migrate said "No pending migrations".
+- A wrong password stopped with "Authentication failed", and an address that is not localhost was refused by the guard.
+- With the line in `backend/.env` instead (as the README says): migrate and all 398 tests passed. The AI backed up my `.env`, added the line and restored it afterwards, and checked that the file was identical to the backup.
+- It checked the temporary server's transaction counter to prove the tests really ran there and not against Postgres.app.
+- With no setting (my normal Mac setup) and the temporary server off: migrate and all 398 tests passed against Postgres.app.
+- The temporary server and its files were deleted. Went wrong: the first start failed because the scratch folder path was too long for PostgreSQL's socket file, so the AI turned sockets off (the tests only use TCP). Still not tested on a real Windows or Linux computer.
+
+**New README.** I asked for a README that is very easy to read, with an installation guide that is easy to follow and does not miss any steps. The AI rewrote it as a numbered guide (steps 1 to 8), where every step ends with a "✅ Check", plus a "Run the tests" guide (T1 to T5) with separate instructions for macOS, Windows and Linux, and one Troubleshooting section with tables. Deploy, Security check, Scripts and Demo projects kept their content.
+
+Before writing, the AI checked the code instead of trusting the old README, and found steps that were missing or in the wrong order:
+- `npx prisma generate` needs `DIRECT_URL` (`prisma.config.ts` throws without it), so it must come after the `.env` files. The old README put it right after `npm install`. The generated client is not in git, so a fresh clone cannot start without this step.
+- Which Supabase connection strings to use (taken from the shape of my own `.env`, without showing the secrets): `DATABASE_URL` = Transaction pooler (port 6543) with `?pgbouncer=true`, `DIRECT_URL` = Session pooler (port 5432), and replacing `[YOUR-PASSWORD]`.
+- Windows commands for copying the `.env` files (`cp` does not exist there).
+- "Forgot password" sends the user to `/reset-password` (`ForgotPassword.tsx`), but the old README only added `http://localhost:5173` to Supabase's Redirect URLs, so the link would open the start page instead. The guide now says `http://localhost:5173/**` (and `https://<your-app>.vercel.app/**` for production).
+- The button names in the guide ("Register", "Create account") were checked against `Login.tsx` and `Register.tsx`.
+
+Not checked: the guide has not been followed from scratch on a new computer, and the Supabase menu names can change when Supabase updates its dashboard.
