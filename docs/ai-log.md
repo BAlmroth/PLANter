@@ -1998,3 +1998,17 @@ I reported that on a phone the ? button ends up outside the page and stretches i
 - **Overlapping map buttons:** the toolbar (top left) and Full window + Legend (top right) were two separate React Flow Panels, so they didn't make room for each other. Now one Panel holds the whole top row, and the right half wraps under the toolbar on a narrow screen. The empty space between them has `pointer-events: none` so the map can still be dragged there. The MiniMap is hidden under 600px, where it covered a big part of the map.
 - Checked at phone size (page width = screen width on the overview, map, full-window map, Tasks page with the ? menu open and with an "i" bubble open) and at desktop size (same look as before). All frontend tests pass.
 - Follow-up: I asked for Full window and Legend to sit at the left on mobile. Under 600px `.topRight` gets `margin-left: 0` (instead of `auto`), so it lines up under the toolbar.
+
+## 2026-11-15: Checklist page made easier to read
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+I said the checklist page was hard to read: just a lot of text with ✓ and ✗. I asked for a more user-friendly style, with more explanation where needed. The AI generated:
+
+- **Backend:** each check now has a `description` (one plain sentence). Category checks reuse the item type's `description` from the template, so that help text is still written in one place. The four readiness checks have their sentences next to their labels in `services/checklist.ts`. The API test now uses `expect.objectContaining`, so it does not break when a field is added.
+- **Page:** each check has its description, checks that are not done come first in each group, and Item warnings got a one-line intro.
+- Went wrong: the first version added an overall progress bar, an intro under each group, rows with borders and backgrounds, circles instead of ✓/✗, struck-through done checks and links styled as buttons. I said it was too cluttered, that I liked the ✗, and that it did not follow my styling. The AI went back to the original look (mono uppercase group labels with "3 / 5", ✓/✗, plain text links, no boxes) and kept only the descriptions, the not-done-first order and the warnings intro.
+- Follow-up: I said there was still too much text and it was not sectioned enough, and suggested a hover "?" per check. Each description moved into the existing small "i" bubble (`InfoBubble`) next to the check, the Item warnings intro moved into an "i" next to its heading, and Categories and Ready to build each got a tinted panel (`--bg-dark`, like the Tasks & sprints section).
+- Follow-up: the "i" right after each label landed in a different place on every row, and I did not like the dark tint. Each row is now a CSS grid with fixed columns (mark, label, link, "i"), so every "i" lines up at the right edge. The tint was replaced by a thin line under each group label.
+
+Not checked: the new look has not been checked in a browser by the AI, only typecheck, tests and build.

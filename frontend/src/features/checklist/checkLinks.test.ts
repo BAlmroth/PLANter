@@ -3,7 +3,7 @@ import { linkForCheck } from "./checkLinks";
 import type { Check } from "./types";
 
 function check(key: string, kind: Check["kind"]): Check {
-  return { key, kind, label: key, passed: false };
+  return { key, kind, label: key, description: "", passed: false };
 }
 
 describe("linkForCheck", () => {

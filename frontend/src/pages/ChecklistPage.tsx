@@ -2,6 +2,7 @@ import { ITEM_WARNINGS_ID } from "../features/checklist/checkLinks";
 import { CheckList } from "../features/checklist/CheckList";
 import { useChecklist } from "../features/checklist/useChecklist";
 import { useProjectContext } from "../features/projects/useProjectContext";
+import { InfoBubble } from "../components/InfoBubble";
 import { ItemWarningsList } from "../features/warnings/ItemWarningsList";
 import styles from "./ChecklistPage.module.css";
 import { Loader } from "../components/Loader";
@@ -17,6 +18,7 @@ export function ChecklistPage() {
   const categoryChecks = checklist.checks.filter((check) => check.kind === "category");
   const readinessChecks = checklist.checks.filter((check) => check.kind === "readiness");
   const passed = checklist.checks.filter((check) => check.passed).length;
+  const total = checklist.checks.length;
 
   return (
     <div className={styles.page}>
@@ -28,11 +30,11 @@ export function ChecklistPage() {
           </h2>
           {!checklist.loading && !checklist.error && (
             <span className={styles.summary}>
-              {passed} of {checklist.checks.length} done
+              {passed} of {total} done
             </span>
           )}
         </div>
-        <p className={styles.intro}>The things that are easy to forget until the end. Each one links to where you fix it.</p>
+        <p className={styles.intro}>The things that are easy to forget until the end. Each ✗ links to where you fix it.</p>
 
         {checklist.loading && <Loader label="Checking…" size="inline" />}
         {checklist.error && (
@@ -59,9 +61,16 @@ export function ChecklistPage() {
         data-tour="checklist-warnings"
       >
         <div className={styles.header}>
-          <h2 id="all-item-warnings" className={styles.heading}>
-            Item warnings
-          </h2>
+          <div className={styles.titleRow}>
+            <h2 id="all-item-warnings" className={styles.heading}>
+              Item warnings
+            </h2>
+            <InfoBubble
+              text={'Items that are probably missing something. They have a "!" in the list and on the map.'}
+              label="About item warnings"
+              size="small"
+            />
+          </div>
           {!warnings.loading && !warnings.error && <span className={styles.summary}>{warnings.warnings.length}</span>}
         </div>
 

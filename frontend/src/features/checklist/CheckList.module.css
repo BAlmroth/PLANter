@@ -1,7 +1,7 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* Same small caps style as the other card labels, with "3 / 5" next to it */
@@ -16,6 +16,9 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-h);
+  /* A thin line under the label marks where a group starts */
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
 }
 
 .count {
@@ -32,13 +35,14 @@
   list-style: none;
 }
 
-/* One check: mark, label, and the link pushed to the right. Wraps on a narrow screen. */
+/* One check in four columns: mark, label (takes the free space), link, "i".
+   Fixed columns, so the marks and the "i"s line up from row to row. */
 .passed,
 .failed {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
+  display: grid;
+  grid-template-columns: 1.2em 1fr auto 20px;
+  align-items: center;
+  gap: 10px;
   font-size: 0.95rem;
 }
 
@@ -55,6 +59,7 @@
 .passed .mark {
   color: var(--primary);
 }
+
 .failed .label {
   color: var(--text-h);
 }
@@ -63,9 +68,17 @@
 }
 
 .link {
-  margin-left: auto;
+  grid-column: 3;
   font-size: 0.85rem;
   color: var(--primary);
+  white-space: nowrap;
+}
+
+/* A done check has no link, so the "i" is placed in its column by number */
+.help {
+  grid-column: 4;
+  display: flex;
+  justify-content: center;
 }
 
 /* Read by screen readers, not shown on screen */

@@ -11,6 +11,7 @@ export type Check = {
   key: string;
   kind: CheckKind;
   label: string; // a todo, e.g. "Plan the tests"
+  description: string; // one plain sentence: what this check is about. Help text, like the label.
   passed: boolean;
 };
 
@@ -24,10 +25,12 @@ export function buildChecklist(
   sprintCount: number,
 ): Check[] {
   // 1. Categories from the template: at least one item of the type
+  // The description is the item type's own help text, so it is written in one place (the template).
   const categoryChecks: Check[] = template.checklistItemTypes.map((entry) => ({
     key: `has_${entry.itemType}`,
     kind: "category",
     label: entry.label,
+    description: template.itemTypes.find((type) => type.key === entry.itemType)?.description ?? "",
     passed: items.some((item) => item.type === entry.itemType),
   }));
 
@@ -38,12 +41,36 @@ export function buildChecklist(
   const hasMvp = items.some((item) => item.isMvp);
 
   const readinessChecks: Check[] = [
-    { key: "has_mvp", kind: "readiness", label: "Mark the MVP items", passed: hasMvp },
+    {
+      key: "has_mvp",
+      kind: "readiness",
+      label: "Mark the MVP items",
+      description: "The MVP is the smallest version of the project that is worth building. It is what you build first.",
+      passed: hasMvp,
+    },
     // Needs an MVP first, otherwise "every MVP item has tasks" would pass for an empty MVP
-    { key: "mvp_has_tasks", kind: "readiness", label: "Add tasks to every MVP item", passed: hasMvp && mvpWarnings.length === 0 },
-    { key: "has_sprint", kind: "readiness", label: "Create a sprint", passed: sprintCount > 0 },
+    {
+      key: "mvp_has_tasks",
+      kind: "readiness",
+      label: "Add tasks to every MVP item",
+      description: "Tasks split an item into steps small enough to start working on.",
+      passed: hasMvp && mvpWarnings.length === 0,
+    },
+    {
+      key: "has_sprint",
+      kind: "readiness",
+      label: "Create a sprint",
+      description: "A sprint is a short period of work, often one week, with its own set of tasks.",
+      passed: sprintCount > 0,
+    },
     // Needs items first, otherwise an empty project would pass
-    { key: "connections", kind: "readiness", label: "Fix missing connections", passed: items.length > 0 && connectionWarnings.length === 0 },
+    {
+      key: "connections",
+      kind: "readiness",
+      label: "Fix missing connections",
+      description: "Some items are almost always connected to something, like a page to its components.",
+      passed: items.length > 0 && connectionWarnings.length === 0,
+    },
   ];
 
   return [...categoryChecks, ...readinessChecks];
