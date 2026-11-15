@@ -282,6 +282,12 @@
   gap: 8px;
 }
 
+/* A single button under a text or a form ("+ Add", "Create a new one instead"):
+   space above it, so it never touches "Nothing yet." or the form's buttons */
+.buttonRow {
+  margin: 12px 0 0;
+}
+
 /* Quieter buttons than the green default */
 .secondary {
   color: var(--text-h);
