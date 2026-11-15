@@ -5,6 +5,8 @@
   align-items: center;
   gap: 8px 24px;
   padding: 10px 24px;
+  /* The bar is full width, but its content lines up with the centered page (--page-max) */
+  padding-inline: max(24px, calc((100% - var(--page-max)) / 2 + 24px));
   font-family: var(--mono);
   font-size: 0.85rem;
   color: var(--text);

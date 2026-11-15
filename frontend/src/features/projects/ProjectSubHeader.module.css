@@ -4,6 +4,8 @@
   flex-wrap: wrap;
   gap: 12px 24px;
   padding: 14px 24px;
+  /* The bar is full width, but its content lines up with the centered page (--page-max) */
+  padding-inline: max(24px, calc((100% - var(--page-max)) / 2 + 24px));
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }

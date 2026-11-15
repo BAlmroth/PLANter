@@ -33,10 +33,26 @@
   --shadow-btn: 3px 3px #183f2d;
   --shadow-focus: 3px 3px var(--primary);
 
+  /* The widest the app content gets. In rem, so it grows together with the text below. */
+  --page-max: 90rem;
+
   font: 16px/150% var(--sans);
   color: var(--text);
   background: var(--bg);
   color-scheme: light;
+}
+
+/* Bigger text on big screens. Almost every size in the app is in rem (relative to this one),
+   so changing it here scales text, spacing and --page-max together. */
+@media (min-width: 1680px) {
+  :root {
+    font-size: 17px;
+  }
+}
+@media (min-width: 2200px) {
+  :root {
+    font-size: 18px;
+  }
 }
 
 body {

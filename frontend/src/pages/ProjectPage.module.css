@@ -4,11 +4,16 @@
 }
 
 /* File view on the left, the current page on the right */
+/* At most --page-max wide and centered, so a wide screen does not stretch the text boxes and lists */
 .body {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr); /* minmax: wide content (the map) must not stretch the grid */
+  grid-template-columns: 20rem minmax(0, 1fr); /* minmax: wide content (the map) must not stretch the grid */
   align-items: start;
   gap: 24px;
+  box-sizing: border-box; /* the max width includes the padding */
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
   padding: 24px;
 }
 
