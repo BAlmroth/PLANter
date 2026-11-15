@@ -1,7 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
+import { GroupChip } from "../groups/GroupChip";
+import type { Group } from "../groups/types";
+import styles from "./ItemForm.module.css";
 
-export type ItemFormValues = { title: string; description: string; type: string; isMvp: boolean };
+// groupIds: the ticked groups (always [] when the form shows no groups)
+export type ItemFormValues = { title: string; description: string; type: string; isMvp: boolean; groupIds: string[] };
 
 type Props = {
   initialValues?: Partial<ItemFormValues>;
@@ -9,6 +13,8 @@ type Props = {
   types?: { key: string; label: string; description: string; example: string }[];
   // Shows the MVP checkbox (used when editing)
   showMvp?: boolean;
+  // When given (and not empty), the form shows a checkbox per group
+  groups?: Group[];
   submitLabel: string;
   onSubmit: (values: ItemFormValues) => Promise<string | null>;
   onCancel: () => void;
@@ -19,6 +25,7 @@ export function ItemForm({
   initialValues = {},
   types,
   showMvp = false,
+  groups = [],
   submitLabel,
   onSubmit,
   onCancel,
@@ -26,6 +33,7 @@ export function ItemForm({
   const [title, setTitle] = useState(initialValues.title ?? "");
   const [description, setDescription] = useState(initialValues.description ?? "");
   const [isMvp, setIsMvp] = useState(initialValues.isMvp ?? false);
+  const [groupIds, setGroupIds] = useState(initialValues.groupIds ?? []);
   // Starts on the first type in the list, or on the item's own type when editing
   const [type, setType] = useState(initialValues.type ?? types?.[0]?.key ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +53,7 @@ export function ItemForm({
     setSubmitting(true);
     // onSubmit returns an error message, or null when it worked.
     // On success the parent closes the form, so we only update our state on failure.
-    const message = await onSubmit({ title, description, type, isMvp });
+    const message = await onSubmit({ title, description, type, isMvp, groupIds });
     if (message !== null) {
       setError(message);
       setSubmitting(false);
@@ -87,6 +95,25 @@ export function ItemForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
+      {groups.length > 0 && (
+        <fieldset className={styles.groups}>
+          <legend>Groups (optional)</legend>
+          {groups.map((group) => (
+            <label key={group.id} className={styles.group}>
+              <input
+                type="checkbox"
+                checked={groupIds.includes(group.id)}
+                onChange={(e) =>
+                  setGroupIds((current) =>
+                    e.target.checked ? [...current, group.id] : current.filter((id) => id !== group.id),
+                  )
+                }
+              />
+              <GroupChip group={group} />
+            </label>
+          ))}
+        </fieldset>
+      )}
       {showMvp && (
         <label>
           <input type="checkbox" checked={isMvp} onChange={(e) => setIsMvp(e.target.checked)} />

@@ -12,6 +12,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
+  margin-bottom: 16px; /* extra space so the add form and groups panel do not crowd the filters */
 }
 
 .count {
@@ -161,6 +162,12 @@
   margin: 8px 0 0;
   font-size: 0.9rem;
   opacity: 0.7;
+}
+
+/* "Add new item" above the form */
+.formTitle {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
 }
 
 /* ItemForm (shared, so styled from here): one field per row, the buttons side by side at the bottom */

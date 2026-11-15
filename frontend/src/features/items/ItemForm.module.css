@@ -1,0 +1,36 @@
+/* The group checkboxes: one pill per group, side by side, wrapping onto new rows */
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: none;
+}
+.groups legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+/* A checkbox with the group chip, shaped like the pill toggles on the item page */
+.groups .group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.groups .group:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--bg);
+}
+.groups .group input {
+  margin: 0;
+  accent-color: var(--primary);
+}

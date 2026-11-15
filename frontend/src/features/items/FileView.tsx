@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ApiError } from "../../lib/api";
 import type { Project } from "../projects/types";
 import { GroupSection } from "../groups/GroupSection";
-import { getGroupsOfItem } from "../groups/itemGroups";
+import { getGroupsOfItem, withItemInGroups } from "../groups/itemGroups";
+import { saveItemGroups } from "../groups/saveItemGroups";
 import { useGroups } from "../groups/useGroups";
 import { ItemFilterBar } from "../filters/ItemFilterBar";
 import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../filters/itemFilters";
@@ -38,6 +39,8 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
   const groups = useGroups(project.id);
   // true while the add form is open
   const [adding, setAdding] = useState(false);
+  // Shown when a new item could not be added to every chosen group
+  const [groupError, setGroupError] = useState<string | null>(null);
   // true while the group panel is open. Closed by default, so the page starts with the items.
   const [managingGroups, setManagingGroups] = useState(false);
   // How the items are divided into cards
@@ -138,7 +141,14 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
             {managingGroups ? "Close groups" : "Manage groups"}
           </button>
           {!adding && (
-            <button type="button" onClick={() => setAdding(true)} data-tour="add-item">
+            <button
+              type="button"
+              onClick={() => {
+                setGroupError(null);
+                setAdding(true);
+              }}
+              data-tour="add-item"
+            >
               + Add item
             </button>
           )}
@@ -160,11 +170,13 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
       {/* ItemForm is shared with the map and the item page, so it is styled from here (.addForm) */}
       {adding && (
         <div className={`${styles.card} ${styles.addForm}`}>
+          <h2 className={styles.formTitle}>Add new item</h2>
           <ItemForm
             types={loadedTemplate.itemTypes}
+            groups={groups.groups}
             submitLabel="Add item"
             onCancel={() => setAdding(false)}
-            onSubmit={async ({ title, description, type }) => {
+            onSubmit={async ({ title, description, type, groupIds }) => {
               try {
                 const item = await createItem(project.id, {
                   title,
@@ -173,6 +185,12 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
                 });
                 // Show the new item without asking the server for the whole list again
                 items.setItems((current) => [...current, item]);
+                // The item exists now, so the form closes even if a group fails (sending again would make a copy)
+                if (groupIds.length > 0) {
+                  const result = await saveItemGroups(item.id, [], groupIds);
+                  groups.setGroups((current) => withItemInGroups(current, item.id, result.groupIds));
+                  if (result.failed) setGroupError(`“${item.title}” was added, but not to every group. Try again from the item page.`);
+                }
                 setAdding(false);
                 onItemAdded();
                 return null;
@@ -183,6 +201,8 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
           />
         </div>
       )}
+
+      {groupError && <p role="alert">{groupError}</p>}
 
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
       {items.items.length === 0 && <p className={styles.empty}>No items yet. Use “+ Add item” to create the first one.</p>}
