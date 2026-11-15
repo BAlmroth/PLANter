@@ -498,3 +498,7 @@ After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add 
 | `database "planter_test" does not exist` | Do T2 again |
 | `relation ... does not exist` or missing columns | Run `npm run test:db:migrate` (T4) |
 | "Tests must use the local test database" or "TEST_DATABASE_URL must point at localhost" | The address must use `localhost`. Do not work around this: it protects your Supabase data |
+
+## License
+
+[MIT](LICENSE) © 2026 Benita Almroth
