@@ -6,6 +6,10 @@ import type { Sprint } from "./types";
 // The answer is stored together with the project it belongs to
 type Result = { projectId: string; sprints: Sprint[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_SPRINTS: Sprint[] = [];
+
 // Fetches a project's sprints and keeps track of loading and error state.
 export function useSprints(projectId: string) {
   const [result, setResult] = useState<Result | null>(null);
@@ -51,7 +55,7 @@ export function useSprints(projectId: string) {
   }
 
   return {
-    sprints: loading ? [] : result.sprints,
+    sprints: loading ? NO_SPRINTS : result.sprints,
     error: loading ? null : result.error,
     loading,
     refetch,

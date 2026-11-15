@@ -6,6 +6,11 @@ import type { ItemColorLink, ProjectColor } from "./types";
 // The answer is stored together with the project it belongs to
 type Result = { projectId: string; colors: ProjectColor[]; links: ItemColorLink[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_COLORS: ProjectColor[] = [];
+const NO_LINKS: ItemColorLink[] = [];
+
 // Fetches a project's palette and which items use which colors, and keeps track of loading and error state.
 // They are loaded together because they are used together (for example "used by 3 items").
 export function useColors(projectId: string) {
@@ -54,8 +59,8 @@ export function useColors(projectId: string) {
   }
 
   return {
-    colors: loading ? [] : result.colors,
-    links: loading ? [] : result.links,
+    colors: loading ? NO_COLORS : result.colors,
+    links: loading ? NO_LINKS : result.links,
     error: loading ? null : result.error,
     loading,
     refetch,

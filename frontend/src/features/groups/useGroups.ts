@@ -6,6 +6,10 @@ import type { Group } from "./types";
 // The answer is stored together with the project it belongs to
 type Result = { projectId: string; groups: Group[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_GROUPS: Group[] = [];
+
 // Fetches a project's groups and keeps track of loading and error state.
 export function useGroups(projectId: string) {
   const [result, setResult] = useState<Result | null>(null);
@@ -51,7 +55,7 @@ export function useGroups(projectId: string) {
   }
 
   return {
-    groups: loading ? [] : result.groups,
+    groups: loading ? NO_GROUPS : result.groups,
     error: loading ? null : result.error,
     loading,
     refetch,
