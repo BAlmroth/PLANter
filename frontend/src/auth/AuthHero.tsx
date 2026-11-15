@@ -5,11 +5,14 @@ import styles from "./AuthHero.module.css";
 export function AuthHero() {
   return (
     <section className={styles.hero}>
-      <p className={styles.brand}>PLANter</p>
-      <h2 className={styles.headline}>Plan it before you build it.</h2>
+      <p className={styles.brand}>
+        {/* alt="" because the name next to it already says PLANter */}
+        <img src="/logo.png" alt="" className={styles.logo} />
+        PLANter
+      </p>
+      <h2 className={styles.headline}>Plan it before you build it</h2>
       <p className={styles.lead}>
-        A visual plan for your website or app: break it into pages, components
-        and data, and connect the pieces.
+        Visually plan your project, all in one place
       </p>
 
       <svg

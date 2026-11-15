@@ -20,9 +20,18 @@
 }
 
 .name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
   font-family: var(--heading);
   font-weight: 600;
   color: var(--text-h);
+}
+
+.logo {
+  width: 24px;
+  height: 24px;
 }
 
 /* A group: small label, then its links on the same line. A thin line separates the groups. */
