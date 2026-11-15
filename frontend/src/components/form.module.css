@@ -1,0 +1,19 @@
+/* Shared layout for the plain forms (item, project, connections):
+   one field per row, and the buttons side by side with space above, so they never touch a field */
+.form label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* "New item", "New task", ... above a form that adds something */
+.title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}

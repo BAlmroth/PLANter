@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
 import { GroupChip } from "../groups/GroupChip";
 import type { Group } from "../groups/types";
+import formStyles from "../../components/form.module.css";
 import styles from "./ItemForm.module.css";
 
 // groupIds: the ticked groups (always [] when the form shows no groups)
@@ -61,7 +62,7 @@ export function ItemForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={formStyles.form}>
       {types && (
         <label>
           Type
@@ -121,12 +122,14 @@ export function ItemForm({
         </label>
       )}
       {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Please wait…" : submitLabel}
-      </button>{" "}
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className={formStyles.buttons}>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Please wait…" : submitLabel}
+        </button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }

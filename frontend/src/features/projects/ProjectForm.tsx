@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import formStyles from "../../components/form.module.css";
 
 export type ProjectFormValues = { name: string; description: string };
 
@@ -6,6 +7,8 @@ type Props = {
   initialValues?: ProjectFormValues;
   submitLabel: string;
   onSubmit: (values: ProjectFormValues) => Promise<string | null>;
+  // When given, a Cancel button is shown next to the submit button
+  onCancel?: () => void;
 };
 
 // Name + description form, shared by the create page and the edit mode on the project page.
@@ -13,6 +16,7 @@ export function ProjectForm({
   initialValues = { name: "", description: "" },
   submitLabel,
   onSubmit,
+  onCancel,
 }: Props) {
   const [name, setName] = useState(initialValues.name);
   const [description, setDescription] = useState(initialValues.description);
@@ -37,7 +41,7 @@ export function ProjectForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={formStyles.form}>
       <label>
         Name
         <input
@@ -57,9 +61,16 @@ export function ProjectForm({
         />
       </label>
       {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Please wait…" : submitLabel}
-      </button>
+      <div className={formStyles.buttons}>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Please wait…" : submitLabel}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel}>
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

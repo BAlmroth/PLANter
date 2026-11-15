@@ -164,18 +164,11 @@
   opacity: 0.7;
 }
 
-/* "Add new item" above the form */
-.formTitle {
-  margin: 0 0 16px;
-  font-size: 1.25rem;
-}
-
-/* ItemForm (shared, so styled from here): one field per row, the buttons side by side at the bottom */
+/* ItemForm (shared, so its width and text size are set from here). The field and button layout
+   comes from components/form.module.css. */
 .addForm form {
   max-width: 520px;
 }
 .addForm label {
-  display: block;
-  margin-bottom: 12px;
   font-size: 0.9rem;
 }
