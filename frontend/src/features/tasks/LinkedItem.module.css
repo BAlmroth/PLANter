@@ -13,6 +13,9 @@
   background: color-mix(in srgb, var(--type-color, var(--text)) 12%, white);
   border: 1.5px solid var(--type-color, var(--text));
   border-radius: 999px;
+  /* relative: the hidden screen reader text (position: absolute) is placed inside the pill.
+     Without it, it was placed far down a long task list and made the page taller. */
+  position: relative;
 }
 .linked:hover {
   text-decoration: underline;

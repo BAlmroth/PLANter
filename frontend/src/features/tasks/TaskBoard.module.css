@@ -157,6 +157,8 @@
   font-size: 0.75rem;
 }
 .compact .cards {
+  /* relative: anything positioned inside the scrolling list is cut off by it, instead of making the page taller */
+  position: relative;
   gap: 6px;
   max-height: 260px;
   padding-right: 2px;

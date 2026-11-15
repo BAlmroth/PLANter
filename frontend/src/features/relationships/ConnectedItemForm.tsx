@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
+import formStyles from "../../components/form.module.css";
 import { getTypeChoices, type ConnectOption } from "./connections";
 import { parseQuantity } from "./quantity";
 import { QuantityField } from "./QuantityField";
@@ -57,7 +58,8 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={formStyles.form}>
+      <h3 className={formStyles.title}>New connected item</h3>
       <label>
         Title of the new item
         <input
@@ -99,12 +101,14 @@ export function ConnectedItemForm({ thisTitle, options, onSubmit, onCancel }: Pr
         </p>
       )}
       {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Please wait…" : "Add and connect"}
-      </button>{" "}
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className={formStyles.buttons}>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Please wait…" : "Add and connect"}
+        </button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }

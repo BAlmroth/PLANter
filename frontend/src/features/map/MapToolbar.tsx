@@ -5,6 +5,7 @@ import type { ItemFilters } from "../filters/itemFilters";
 import { ItemForm, type ItemFormValues } from "../items/ItemForm";
 import type { Template } from "../items/types";
 import type { LayoutDirection } from "./tidyLayout";
+import formStyles from "../../components/form.module.css";
 import styles from "./MapView.module.css";
 
 type Props = {
@@ -103,6 +104,7 @@ export function MapToolbar({ template, groups, itemCount, filters, onFiltersChan
       )}
       {adding && (
         <div className={styles.addForm}>
+          <h3 className={formStyles.title}>New item</h3>
           <ItemForm
             types={template.itemTypes}
             submitLabel="Add item"

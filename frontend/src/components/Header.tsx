@@ -15,7 +15,8 @@ export function Header() {
       {/* The logo and the project switcher together at the left */}
       <div className={styles.left}>
         <Link to="/" className={styles.logo}>
-          <span className={styles.mark}>P</span>
+          {/* alt="" because the name next to it already says PLANter */}
+          <img src="/logo.png" alt="" className={styles.mark} />
           PLANter
         </Link>
         {/* key: a new project id remounts it, which fetches the list again */}

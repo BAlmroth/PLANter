@@ -64,7 +64,9 @@
   border-color: var(--primary);
 }
 .templateChoice input {
+  flex-shrink: 0;
   margin-top: 3px;
+  accent-color: var(--primary);
 }
 
 .templateDescription {

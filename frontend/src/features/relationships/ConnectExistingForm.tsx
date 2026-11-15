@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Dropdown } from "../../components/Dropdown";
+import formStyles from "../../components/form.module.css";
 import type { Item } from "../items/types";
 import { getTypeChoices, type ConnectOption } from "./connections";
 import { parseQuantity } from "./quantity";
@@ -55,7 +56,8 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={formStyles.form}>
+      <h3 className={formStyles.title}>New connection</h3>
       <label>
         What type of item?
         <Dropdown
@@ -102,12 +104,14 @@ export function ConnectExistingForm({ thisTitle, options, items, onSubmit, onCan
         </p>
       )}
       {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={submitting || !selectedItem}>
-        {submitting ? "Please wait…" : "Connect"}
-      </button>{" "}
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className={formStyles.buttons}>
+        <button type="submit" disabled={submitting || !selectedItem}>
+          {submitting ? "Please wait…" : "Connect"}
+        </button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }

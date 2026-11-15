@@ -8,6 +8,10 @@ import type { Item } from "./types";
 
 type Result = { projectId: string; items: Item[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_ITEMS: Item[] = [];
+
 export function useItems(projectId: string) {
     const [result, setResult] = useState<Result | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
@@ -54,7 +58,7 @@ export function useItems(projectId: string) {
   }
 
   return {
-    items: loading ? [] : result.items,
+    items: loading ? NO_ITEMS : result.items,
     error: loading ? null : result.error,
     loading,
     refetch,

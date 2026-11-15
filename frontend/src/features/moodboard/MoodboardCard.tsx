@@ -3,6 +3,7 @@ import { ApiError } from "../../lib/api";
 import { IMAGE_TYPES, imageProblem } from "../../lib/imageFile";
 import { isHexColor } from "../colors/isHexColor";
 import { isHttpUrl } from "../projects/isHttpUrl";
+import formStyles from "../../components/form.module.css";
 import styles from "./MoodboardCard.module.css";
 import { InfoBubble } from "../../components/InfoBubble";
 
@@ -86,6 +87,8 @@ export function MoodboardCard({
   // "+ Link, text or image", with the parts the form does not have left out
   const entryParts = [allowUrl && "link", "text", allowImage && "image"].filter(Boolean).join(", ");
   const entryLabel = `+ ${entryParts.replace(/, ([^,]*)$/, " or $1").replace(/^./, (c) => c.toUpperCase())}`;
+  // The title above the form: "New link, text or image"
+  const entryTitle = `New ${entryParts.replace(/, ([^,]*)$/, " or $1").toLowerCase()}`;
   const [error, setError] = useState<string | null>(null);
 
   // An entry with an image is a visual reference. All the others are links and notes.
@@ -177,6 +180,7 @@ export function MoodboardCard({
       )}
       {mode === "color" && colorForm && (
         <div className={styles.editBox}>
+          <h3 className={formStyles.title}>New color</h3>
           {colorForm}
           <button type="button" className={styles.secondary} onClick={() => setMode("menu")}>
             Back
@@ -185,6 +189,7 @@ export function MoodboardCard({
       )}
       {mode === "entry" && (
         <form onSubmit={handleAdd} className={`${styles.form} ${styles.editBox}`}>
+          <h3 className={formStyles.title}>{entryTitle}</h3>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={100} />
           {allowUrl && (
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… (optional)" aria-label="Link" maxLength={2000} />

@@ -19,6 +19,7 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
         <ProjectForm
           initialValues={{ name: project.name, description: project.description ?? "" }}
           submitLabel="Save changes"
+          onCancel={() => setEditing(false)}
           onSubmit={async ({ name, description }) => {
             try {
               // An empty description is sent as "" to clear it (the backend does not accept null)
@@ -30,9 +31,6 @@ export function ProjectDescriptionCard({ project, setProject }: Props) {
             }
           }}
         />
-        <button type="button" onClick={() => setEditing(false)}>
-          Cancel
-        </button>
       </OverviewCard>
     );
   }

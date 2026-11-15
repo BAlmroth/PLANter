@@ -6,6 +6,10 @@ import type { Inspiration } from "./types";
 // The answer is stored together with the project it belongs to
 type Result = { projectId: string; inspirations: Inspiration[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_INSPIRATIONS: Inspiration[] = [];
+
 // Fetches a project's inspirations and keeps track of loading and error state.
 export function useInspirations(projectId: string) {
   const [result, setResult] = useState<Result | null>(null);
@@ -51,7 +55,7 @@ export function useInspirations(projectId: string) {
   }
 
   return {
-    inspirations: loading ? [] : result.inspirations,
+    inspirations: loading ? NO_INSPIRATIONS : result.inspirations,
     error: loading ? null : result.error,
     loading,
     refetch,

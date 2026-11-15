@@ -6,6 +6,10 @@ import type { Check } from "./types";
 // The answer is stored together with the project id it belongs to
 type Result = { projectId: string; checks: Check[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_CHECKS: Check[] = [];
+
 // Fetches the checklist of one project. Same pattern as useWarnings.
 // Used by the page that shows it, not shared through the project context: the page loads
 // it when it opens, which is also when the items, tasks or sprints may have changed.
@@ -40,7 +44,7 @@ export function useChecklist(projectId: string) {
   }
 
   return {
-    checks: loading ? [] : result.checks,
+    checks: loading ? NO_CHECKS : result.checks,
     error: loading ? null : result.error,
     loading,
     refetch,

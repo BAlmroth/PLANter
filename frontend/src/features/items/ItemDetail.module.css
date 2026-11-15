@@ -46,11 +46,15 @@
   border-radius: 999px;
 }
 
+/* margin-left: auto keeps the row on the right, also when it wraps under a long title (many groups).
+   flex-end does the same for the buttons when they wrap inside the row on a narrow screen. */
 .headerActions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .status {

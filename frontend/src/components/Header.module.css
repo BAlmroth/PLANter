@@ -28,16 +28,10 @@
   text-decoration: none;
 }
 
-/* The square with the letter, until there is a real logo */
+/* The logo image (frontend/public/logo.png) */
 .mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--on-primary);
-  background: var(--primary);
-  border-radius: var(--radius);
+  width: 36px;
+  height: 36px;
 }
 
 .right {

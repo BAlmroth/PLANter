@@ -11,7 +11,11 @@ export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.brand}>
-        <span className={styles.name}>PLANter</span>
+        <span className={styles.name}>
+          {/* alt="" because the name next to it already says PLANter */}
+          <img src="/logo.png" alt="" className={styles.logo} />
+          PLANter
+        </span>
         <small>© 2026 Benita Almroth</small>
       </div>
 

@@ -11,6 +11,7 @@ import { useTasks } from "../tasks/useTasks";
 import { InspirationCard } from "./InspirationCard";
 import { OverviewCard } from "./OverviewCard";
 import { useProjectContext } from "./useProjectContext";
+import formStyles from "../../components/form.module.css";
 import styles from "./ProjectOverview.module.css";
 import { Dropdown } from "../../components/Dropdown";
 import { Loader } from "../../components/Loader";
@@ -125,6 +126,7 @@ export function ProjectOverview() {
           <>
             {addingTask && (
               <div id="overview-new-task" className={styles.newTask}>
+                <h3 className={formStyles.title}>New task</h3>
                 {/* key: when another sprint is chosen the form starts again with that sprint selected */}
                 <NewTaskForm
                   key={scope}

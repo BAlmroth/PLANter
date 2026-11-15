@@ -3,6 +3,7 @@ import type { Sprint } from "../sprints/types";
 import { NewTaskForm } from "./NewTaskForm";
 import { TaskRow } from "./TaskRow";
 import type { Task } from "./types";
+import formStyles from "../../components/form.module.css";
 import styles from "./ItemTasks.module.css";
 
 type Props = {
@@ -43,6 +44,7 @@ export function ItemTasks({ projectId, itemId, tasks, sprints, setTasks, onTasks
 
       {adding && (
         <div id="item-new-task" className={styles.newTask}>
+          <h3 className={formStyles.title}>New task</h3>
           <NewTaskForm
             projectId={projectId}
             // No item list needed: the item is fixed

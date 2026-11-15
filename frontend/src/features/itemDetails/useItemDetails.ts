@@ -6,6 +6,10 @@ import type { ItemDetailRow } from "./types";
 // The answer is stored together with the item it belongs to
 type Result = { itemId: string; details: ItemDetailRow[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_DETAILS: ItemDetailRow[] = [];
+
 // Fetches an item's detail rows (its moodboard) and keeps track of loading and error state.
 export function useItemDetails(itemId: string) {
   const [result, setResult] = useState<Result | null>(null);
@@ -47,7 +51,7 @@ export function useItemDetails(itemId: string) {
   }
 
   return {
-    details: loading ? [] : result.details,
+    details: loading ? NO_DETAILS : result.details,
     error: loading ? null : result.error,
     loading,
     refetch,

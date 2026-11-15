@@ -229,6 +229,8 @@ export function ItemDetail({ project, itemId, warnings, refreshWarnings, refresh
       <ItemEditForm
         item={item}
         template={loadedTemplate}
+        groups={groups.groups}
+        setGroups={groups.setGroups}
         onSaved={(saved) => {
           replaceItem(saved);
           // The title, type or MVP flag may have changed, and with them the warnings

@@ -6,6 +6,10 @@ import type { Relationship } from "./types";
 // The answer is stored together with the project it belongs to
 type Result = { projectId: string; relationships: Relationship[]; error: string | null };
 
+// Returned while loading. One shared array, so it is the same on every render:
+// a new [] each time would change useMemo/useEffect dependencies and cause an endless re-render.
+const NO_RELATIONSHIPS: Relationship[] = [];
+
 // Fetches a project's relationships and keeps track of loading and error state (same idea as useItems).
 export function useRelationships(projectId: string) {
   const [result, setResult] = useState<Result | null>(null);
@@ -51,7 +55,7 @@ export function useRelationships(projectId: string) {
   }
 
   return {
-    relationships: loading ? [] : result.relationships,
+    relationships: loading ? NO_RELATIONSHIPS : result.relationships,
     error: loading ? null : result.error,
     loading,
     refetch,
