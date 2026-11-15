@@ -3,6 +3,9 @@
   flex-direction: column;
   justify-content: center;
   padding: 48px;
+  /* On a wide screen the content (about 30rem wide) sits in the middle of the green half,
+     instead of against the left edge of the window */
+  padding-inline: max(48px, calc((100% - 30rem) / 2));
   color: var(--on-bar);
   /* Blueprint look: a faint dot grid over soft glows on dark green */
   background:
