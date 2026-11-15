@@ -2,6 +2,8 @@
 
 A visual planning tool for code projects for websites, apps and games. A project is broken down into items (for a website: pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
 
+This app was created to fill the gap that most planning tools have. Instead of having to keep track of things yourself, or using several planning means, you get it all in one place.
+
 **Contents**
 
 - [Features](#features) · [Tech stack](#tech-stack)
@@ -50,7 +52,7 @@ backend/    Express API, Prisma schema and migrations, tests
 
 ## Installation guide
 
-Follow the steps in order. Each step ends with a **✅ Check** so you know it worked before you go on. It takes about 20 minutes.
+Follow the steps in order. Each step ends with a **Check** so you know it worked before you go on. It takes about 20 minutes.
 
 > **Commands:** run them in a terminal (macOS/Linux: Terminal, Windows: PowerShell). When a step says "in `backend/`", first go to that folder with `cd`. Where Windows needs a different command, it is shown separately.
 
@@ -61,7 +63,7 @@ You need:
 1. **Git**: [git-scm.com/downloads](https://git-scm.com/downloads) (already installed on most Macs).
 2. **Node.js version 26**: [nodejs.org](https://nodejs.org/). The backend requires 26 (`"node": "26.x"` in `backend/package.json`). `npm` comes with Node.
 
-**✅ Check:**
+**Check:**
 
 ```
 git --version
@@ -77,7 +79,7 @@ git clone https://github.com/BAlmroth/PLANter.git
 cd PLANter
 ```
 
-**✅ Check:** the `PLANter` folder has a `frontend` and a `backend` folder.
+**Check:** the `PLANter` folder has a `frontend` and a `backend` folder.
 
 ### Step 3: Install the packages
 
@@ -91,7 +93,7 @@ npm install
 cd ..
 ```
 
-**✅ Check:** both `backend/` and `frontend/` now have a `node_modules` folder, and `npm install` did not end with `ERR!`.
+**Check:** both `backend/` and `frontend/` now have a `node_modules` folder, and `npm install` did not end with `ERR!`.
 
 ### Step 4: Create a Supabase project
 
@@ -99,7 +101,7 @@ Supabase holds the database, the logins and the uploaded images.
 
 1. Create a free account at [supabase.com](https://supabase.com/) and click **New project**.
 2. Choose a name and a **database password**. Write the password down: you need it in step 5, and Supabase does not show it again.
-3. Wait until the project is ready (a minute or two).
+3. Wait until the project is ready.
 4. **Create the image bucket:** go to **Storage → New bucket**.
    - Name: `inspiration-images` (exactly this)
    - **Public bucket: off**
@@ -110,7 +112,7 @@ Supabase holds the database, the logins and the uploaded images.
    - **Redirect URLs:** add `http://localhost:5173/reset-password` (the page the "Forgot password" email link opens)
 6. (Optional) Email confirmation: under **Authentication → Sign In / Providers → Email** you can turn **Confirm email** on or off. When it is on, you must click the link in the email before you can log in.
 
-**✅ Check:** the Storage page shows `inspiration-images` **without** a "Public" label.
+**Check:** the Storage page shows `inspiration-images` **without** a "Public" label.
 
 ### Step 5: Create the `.env` files
 
@@ -146,7 +148,7 @@ In Supabase, click the **Connect** button at the top of the project page to find
 | `PORT` | `3000` (already filled in) | |
 | `TEST_DATABASE_URL` | Leave empty for now. Only needed for the tests, see [Run the tests](#run-the-tests) | |
 
-In both connection strings, **replace `[YOUR-PASSWORD]`** with the database password from step 4 (remove the brackets too). Example of the finished lines:
+In both connection strings, **replace `[YOUR-PASSWORD]`** with the database password from step 4 (remove the brackets too). EXAMPLE of the finished lines:
 
 ```
 DATABASE_URL=postgresql://postgres.abcdefgh:MyPassword@aws-0-eu-north-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -167,7 +169,7 @@ The `service_role` key can read and write everything, so it only ever goes in `b
 
 Everything that starts with `VITE_` is built into the website's JavaScript and is public. That is why the frontend only gets the public `anon` key.
 
-**✅ Check:** no line in either file ends with `=` and nothing after it, except `TEST_DATABASE_URL`. No `[YOUR-PASSWORD]` is left.
+**Check:** no line in either file ends with `=` and nothing after it, except `TEST_DATABASE_URL`. No `[YOUR-PASSWORD]` is left.
 
 ### Step 6: Set up the database
 
@@ -182,7 +184,7 @@ npx prisma migrate deploy
 - `npx prisma generate` creates the database code the backend uses (in `backend/src/generated/`, not in git). It reads `DIRECT_URL`, so it only works after step 5.
 - `npx prisma migrate deploy` creates all the tables in your Supabase database, with Row Level Security turned on for every table.
 
-**✅ Check:** `migrate deploy` ends with **"All migrations have been successfully applied."** In Supabase, **Table Editor** now shows tables like `projects` and `items`.
+**Check:** `migrate deploy` ends with **"All migrations have been successfully applied."** In Supabase, **Table Editor** now shows tables like `projects` and `items`.
 
 ### Step 7: Start the app
 
@@ -202,7 +204,7 @@ cd frontend
 npm run dev
 ```
 
-**✅ Check:**
+**Check:**
 
 - Open [http://localhost:3000/health](http://localhost:3000/health). It shows `{"status":"ok"}`.
 - Open [http://localhost:5173](http://localhost:5173). The PLANter login page is shown.
@@ -215,9 +217,9 @@ If the backend stops with "Missing or invalid environment variables", the list u
 2. If email confirmation is on (step 4.6), click the link in the email first.
 3. Log in and create your first project.
 
-**✅ Check:** the new project is in your project list, and it is still there after reloading the page.
+**Check:** the new project is in your project list, and it is still there after reloading the page.
 
-PLANter is now installed. 🎉 Next, you can [add the demo projects](#demo-projects) to see every feature with real data, or [set up the tests](#run-the-tests).
+PLANter is now installed. Next, you can [add the demo projects](#demo-projects) to see every feature with real data, or [set up the tests](#run-the-tests).
 
 To start the app again later, you only need step 7.
 
@@ -289,7 +291,7 @@ The database must be called `planter_test`.
 sudo -u postgres createdb planter_test
 ```
 
-**✅ Check:** the command printed `CREATE DATABASE` (on Linux it prints nothing, which means it worked).
+**Check:** the command printed `CREATE DATABASE` (on Linux it prints nothing, which means it worked).
 
 #### T3. Tell the tests your password (Windows and Linux only)
 
@@ -312,7 +314,7 @@ cd backend
 npm run test:db:migrate
 ```
 
-**✅ Check:** it ends with **"All migrations have been successfully applied."**
+**Check:** it ends with **"All migrations have been successfully applied."**
 
 #### T5. Run the tests
 
@@ -320,7 +322,7 @@ npm run test:db:migrate
 npm test
 ```
 
-**✅ Check:** the summary says every test file **passed**.
+**Check:** the summary says every test file **passed**.
 
 ### Backend tests: every time
 
@@ -368,7 +370,7 @@ Both demos have a color palette (linked to items) and images: main photos on som
 
 4. Reload the app.
 
-**✅ Check:** "Awesome Demo Portfolio" and "Emerald Brew" are in your project list.
+**Check:** "Awesome Demo Portfolio" and "Emerald Brew" are in your project list.
 
 Good to know:
 
