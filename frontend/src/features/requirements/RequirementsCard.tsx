@@ -127,7 +127,7 @@ export function RequirementsCard({
               </ul>
             )}
             {adding?.relationshipType !== row.relationshipType && (
-              <p>
+              <p className={styles.buttonRow}>
                 <button type="button" className={styles.secondary} onClick={() => startAdding(row)} disabled={busy}>
                   + Add
                 </button>
@@ -164,7 +164,7 @@ export function RequirementsCard({
               onSubmit={(option, title, quantity) => closeOnSuccess(onAddConnectedItem(option, title, quantity))}
             />
           )}
-          <p>
+          <p className={styles.buttonRow}>
             <button
               type="button"
               className={styles.secondary}

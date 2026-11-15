@@ -66,7 +66,7 @@ export function ConditionsEditor({ conditions, busy, onSave }: Props) {
       ) : (
         <p className={styles.description}>{saved}</p>
       )}
-      <p>
+      <p className={styles.buttonRow}>
         <button type="button" className={styles.secondary} onClick={startEditing} disabled={busy}>
           {saved === "" ? "+ Add" : "Edit"}
         </button>
