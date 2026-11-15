@@ -206,11 +206,16 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
       {groupError && <p role="alert">{groupError}</p>}
 
       {filtering && sections.length === 0 && <p className={styles.empty}>No items match the filters.</p>}
-      {items.items.length === 0 && <p className={styles.empty}>No items yet. Use “+ Add item” to create the first one.</p>}
+      {/* With no items the sections below are empty (no size), so the tutorial's "Your items" step points here instead */}
+      {items.items.length === 0 && (
+        <p className={styles.empty} data-tour="file-sections">
+          No items yet. Use “+ Add item” to create the first one.
+        </p>
+      )}
 
       {/* One full-width section per category (or group), stacked. The items of a section fill a grid,
           so a big section gets more rows instead of one long column. */}
-      <div className={styles.sections} data-tour="file-sections">
+      <div className={styles.sections} data-tour={items.items.length > 0 ? "file-sections" : undefined}>
         {sections.map((section) => (
           // The heading line is in the section's color: the item type's in "Category" mode, the group's in "Group" mode.
           // --type-color is reused for both: CSS only needs "the color of this section".

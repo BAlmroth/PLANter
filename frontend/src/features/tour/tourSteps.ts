@@ -96,7 +96,8 @@ export const TOURS: Record<PageKey, TourStep[]> = {
     {
       target: "file-sections",
       title: "Your items",
-      body: "Click an item to open it and add details, connections and tasks. The bar on each heading shows how much is done.",
+      // Points at the list, or at the "No items yet" text when there are none, so the text fits both
+      body: "Your items show up here, sorted by category or group. Click one to open it and add details, connections and tasks.",
       placement: "top",
     },
   ],

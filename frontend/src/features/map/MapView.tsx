@@ -21,7 +21,7 @@ import { MapToolbar } from "./MapToolbar";
 import { useFullWindow } from "./useFullWindow";
 import { useCenterX } from "./useCenterX";
 import { getCardSize } from "./cardSize";
-import { buildEdges, buildNodes, fadeNodes } from "./mapGraph";
+import { buildEdges, buildNodes, fadeNodes, type LineStyle } from "./mapGraph";
 import { tidyLayout, type LayoutDirection } from "./tidyLayout";
 import { readFlag, writeFlag } from "../../lib/storage";
 import { MapLegend } from "./MapLegend";
@@ -58,6 +58,12 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const mapCenterX = useCenterX(mapElement);
   // Which way the map flows. A view preference, kept in this browser only (lib/storage.ts).
   const [direction, setDirection] = useState<LayoutDirection>(() => (readFlag("map:vertical") ? "vertical" : "horizontal"));
+  // Elbow lines or curves. Also a view preference, kept in this browser only.
+  const [lineStyle, setLineStyle] = useState<LineStyle>(() => (readFlag("map:curved") ? "default" : "smoothstep"));
+  function changeLineStyle(style: LineStyle) {
+    setLineStyle(style);
+    writeFlag("map:curved", style === "default");
+  }
   // The connection that was clicked, which offers a delete button
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
@@ -84,8 +90,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   }, [items.items, groups.groups, filters]);
 
   const edges = useMemo(
-    () => buildEdges(relationships.relationships, items.items, template.template, selectedNodeId, matchingIds),
-    [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds],
+    () => buildEdges(relationships.relationships, items.items, template.template, selectedNodeId, matchingIds, lineStyle),
+    [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds, lineStyle],
   );
 
   // Fires once when a drag ends: save the new position of every node that was dragged
@@ -319,6 +325,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
               onFiltersChange={setFilters}
               direction={direction}
               onTidy={handleTidy}
+              lineStyle={lineStyle}
+              onLineStyleChange={changeLineStyle}
               onAddItem={addItem}
             />
             {/* Right: the full window button and the legend side by side. data-tour is on the

@@ -117,6 +117,59 @@
   color: #fff;
 }
 
+/* The "Curved lines" switch: an outline button (not green like the actions), with a small track
+   whose knob moves to the right and turns dark when it is on */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--borderDark);
+  box-shadow: 2px 2px var(--borderDark);
+}
+.switch:hover:not(:disabled) {
+  translate: -1px -1px;
+  box-shadow: 3px 3px var(--borderDark);
+}
+/* Pressed in, onto its own (beige) shadow instead of the green buttons' dark one */
+.switch:active:not(:disabled) {
+  translate: 2px 2px;
+  box-shadow: 0 0 var(--borderDark);
+}
+.track {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  background: var(--border);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+/* The knob */
+.track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border-radius: 50%;
+  transition: translate 0.15s;
+}
+.switch[aria-checked="true"] .track {
+  background: var(--text-h);
+}
+.switch[aria-checked="true"] .track::after {
+  translate: 12px 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .track::after {
+    transition: none;
+  }
+}
+
 /* The add form opens under the toolbar, inside the same box. ItemForm is shared, so it is styled from here. */
 .addForm {
   width: 280px;

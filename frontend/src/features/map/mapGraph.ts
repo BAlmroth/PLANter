@@ -52,13 +52,19 @@ export function buildNodes(
 }
 
 // One edge per relationship.
+// How the lines are drawn. Both are built into React Flow:
+// "smoothstep" = elbow lines (90 degree bends, rounded corners), "default" = smooth curves.
+export type LineStyle = "smoothstep" | "default";
+
 // matchingIds: the ids of the items that match the filters, or null when no filter is set.
+// lineStyle: elbow lines unless the user picked curves in Manage.
 export function buildEdges(
   relationships: Relationship[],
   items: Item[],
   template: Template | null,
   selectedNodeId: string | null,
   matchingIds: Set<string> | null,
+  lineStyle: LineStyle = "smoothstep",
 ): Edge[] {
   // Item id -> item, to find the type (and so the color) of an edge's source item
   const itemsById = new Map(items.map((item) => [item.id, item]));
@@ -84,8 +90,7 @@ export function buildEdges(
       id: relationship.id,
       source: fromId,
       target: toId,
-      // "smoothstep" draws straight lines with 90 degree bends and rounded corners
-      type: "smoothstep",
+      type: lineStyle,
       // An arrowhead at the target end, so you can see which way the connection goes
       markerEnd: { type: MarkerType.ArrowClosed },
       // The item the line starts at shows its wording: "uses" from the source's side, "contains" from the target's
