@@ -48,9 +48,16 @@
   color: var(--text);
 }
 
-/* Categories and Ready to build, with space between them */
+/* Categories and Ready to build, two panels on top of each other */
 .groups {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+/* A heading with a small "i" (InfoBubble) next to it */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

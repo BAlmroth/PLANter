@@ -8,5 +8,6 @@ export type Check = {
   key: string; // stable, for example "has_testing". Labels can change, keys do not.
   kind: CheckKind;
   label: string; // a todo, for example "Plan the tests"
+  description: string; // one plain sentence about what the check is (help text from the backend)
   passed: boolean;
 };

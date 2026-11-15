@@ -3,7 +3,7 @@ import type { Check } from "./types";
 import { getYetToPlan } from "./missingCategories";
 
 function check(key: string, kind: Check["kind"], passed: boolean): Check {
-  return { key, kind, label: key, passed };
+  return { key, kind, label: key, description: "", passed };
 }
 
 describe("getYetToPlan", () => {

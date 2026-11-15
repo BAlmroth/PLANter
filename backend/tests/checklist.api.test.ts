@@ -94,8 +94,8 @@ describe("GET /api/projects/:id/checklist", () => {
 
     const res = await getChecklist(projectId, asA);
     expect(res.status).toBe(200);
-    expect(res.body).toContainEqual({ key: "has_testing", kind: "category", label: "Plan the tests", passed: false });
-    expect(res.body).toContainEqual({ key: "has_sprint", kind: "readiness", label: "Create a sprint", passed: false });
+    expect(res.body).toContainEqual(expect.objectContaining({ key: "has_testing", kind: "category", label: "Plan the tests", passed: false }));
+    expect(res.body).toContainEqual(expect.objectContaining({ key: "has_sprint", kind: "readiness", label: "Create a sprint", passed: false }));
     expect(passedKeys(res.body)).toEqual([]);
   });
 

@@ -2,15 +2,13 @@
 
 PLANter is a visual planning tool for code projects: a "game design document for websites and apps". A project is broken down into items (pages, components, functions, data, design, assets, security, testing, tech stack), which can be marked as part of the MVP, and that are connected with typed relationships ("belongs to", "triggers", "uses", "reads from", "protects", "tests"). The project can be viewed as a File view (items grouped by category) and as an interactive relationship map (React Flow). Both views are equally important. There is also a progress overview and, later, a todo list with sprints.
 
-This is a thesis project (examensarbete) for a web developer education. Full plan: `docs/project-plan.md`.
+This is a thesis project (examensarbete) for a web developer education.
 
 ## How to work with me
 
 - I am a student and I need to understand every line that goes into the project. Work in small steps, explain new concepts briefly (React Flow, Zod, Prisma, Row Level Security, middleware), and do not generate large amounts of code at once.
 - If something in my plan is unclear, wrong or risky, say so before building it.
 - Do not add features, libraries or tools that are not in this file or in the plan without asking first. This includes state management, UI and CSS.
-- All AI use must be documented for the thesis. After a significant session, add an entry to `docs/ai-log.md`: date, what I asked, what was generated, what I changed or corrected, and anything that went wrong.
-- Read `docs/tech-clarification.md` and `docs/project-plan.md` on each user request.
 
 ## Tech stack
 
@@ -40,9 +38,9 @@ Login, registration and logout are done in the frontend directly against Supabas
 
 1. The frontend never reads or writes the database directly. Only Supabase Auth (and possibly Storage) is used from the frontend. All data goes through the Express API.
 2. Every API route except a health check uses the `requireAuth` middleware. The user id comes from the verified token, never from the request body.
-3. Prisma connects directly to Postgres and bypasses Row Level Security. Therefore every route that touches a project, item, relationship, task or sprint must check that the logged-in user owns it, using one shared helper. When a user does not own a resource, respond as if it does not exist (404).
+3. Prisma connects directly to Postgres and bypasses Row Level Security. Therefore every route that touches a project, item, relationship, task or sprint must check that the logged-in user owns it, using the shared helpers (`getOwnedProject`, `getOwnedItem`) or an owner filter in the query (`project: { userId }`). When a user does not own a resource, respond as if it does not exist (404).
 4. All input is validated with Zod before it is used. Schemas live in `backend/src/schemas/`.
-5. Row Level Security is enabled on every table in `public` (including Prisma's `_prisma_migrations`) with no policies (deny-all), as a safety net: the Supabase Data API can neither read nor write any table, only Express through Prisma can. Never disable it, and every migration that creates a table must also enable RLS on it. This differs on purpose from the original plan (ownership policies), see `docs/ai-log.md` (2026-10-15).
+5. Row Level Security is enabled on every table in `public` (including Prisma's `_prisma_migrations`) with no policies (deny-all), as a safety net: the Supabase Data API can neither read nor write any table, only Express through Prisma can. Never disable it, and every migration that creates a table must also enable RLS on it. This differs on purpose from the original plan (ownership policies).
 6. Secrets only in environment variables. The Supabase service role key and any AI API key exist only in the backend. Never put secrets in variables starting with `VITE_`.
 7. Do not write own cryptography. Password handling stays in Supabase Auth.
 
@@ -67,7 +65,7 @@ Login, registration and logout are done in the frontend directly against Supabas
 - Users can name items freely, but the category (item type) is fixed by the template.
 - A game template (Could) is added as another template definition, with no change to the rest of the code.
 
-### Data model (starting point, refine in sprint 1)
+### Data model
 
 - `projects`: id, user_id (plain UUID of the Supabase user, no Prisma relation to `auth.users`), name, description (optional), template, created_at
 - `items`: id, project_id, type, title, description, conditions (optional, max 500: requirements that are not items, like "only in summer", shown in the Requirements card), status (`planned` | `in_progress` | `done`), is_mvp, position_x, position_y, image_path (optional), created_at. `image_path` is the main photo (for example a Figma screenshot), see the images rule below.
@@ -107,7 +105,7 @@ The tool should help you remember what is usually forgotten, without clutter. Bo
 - Item warnings (`GET /api/projects/:id/warnings`, `services/warnings.ts`): one warning per item and broken rule. The template's `warningRules`, plus "an MVP item that is not done and has no tasks" (in code, not tied to a type). Shown as a "!" badge on the item in the list and on the map, and as a list on Tasks & progress and on the checklist page.
 - Project checklist (`GET /api/projects/:id/checklist`, `services/checklist.ts`): every check with `passed`, never only the failed ones. `kind: "category"` (one per `checklistItemTypes` entry) or `kind: "readiness"` (`has_mvp`, `mvp_has_tasks`, `has_sprint`, `connections`). The readiness checks reuse `findWarnings`, so the checklist and the badges always agree. Empty never counts as passed (no MVP, no items).
 - Check keys are stable like other keys, labels can change. The frontend only uses keys for navigation (`features/checklist/checkLinks.ts`).
-- UI: Tasks & progress is one page with two sections and a sticky toggle that jumps between them (no scroll snap): "Progress & warnings" (progress, "Yet to plan" = the failed category checks, item warnings max 5) on top, "Tasks & sprints" below (New task and Sprints behind buttons). The checklist page (`/projects/:id/checklist`, not in the nav) shows every check with ✓/✗ and a link to where it is fixed, and all item warnings.
+- UI: Tasks & progress is one page with two sections and a sticky toggle that jumps between them (no scroll snap): "Progress & warnings" (progress, "Yet to plan" = the failed category checks, item warnings max 5) on top, "Tasks & sprints" below (New task and Sprints behind buttons). The checklist page (`/projects/:id/checklist`, not in the nav) shows every check with ✓/✗ (not done first, its `description` in a small "i" bubble in the last column) and a link to where it is fixed, and all item warnings. Each check has a one-sentence `description` from the backend (categories reuse the item type's template `description`).
 - Add only rules where a missing link is almost always a real mistake. A rule that is often wrong (for example "every page must be protected", when many pages are public) gets ignored and clutters the UI.
 
 ### Help and onboarding
@@ -151,15 +149,14 @@ Cut line if time runs short: Could first, then search, filter, MVP marking and r
 planter/
   CLAUDE.md
   README.md
-  docs/                 project-plan.md, ai-log.md
   frontend/
     src/                tests live next to the code they test (api.test.ts next to api.ts)
-      lib/              supabaseClient.ts, api.ts (fetch wrapper that adds the token)
+      lib/              supabaseClient.ts, api.ts (fetch wrapper that adds the token), storage.ts (localStorage)
+      config/           env.ts
       auth/             AuthProvider, Login, Register, ProtectedRoute
       pages/            top-level pages
-      features/         projects, items, relationships, map, file-view, progress, warnings, checklist, tasks
+      features/         one folder per feature (items holds the File view, map, relationships, tasks, sprints, progress, warnings, checklist, groups, colors, moodboard, tour, help, ...)
       components/       shared UI components
-      types/
   backend/
     tests/
     prisma/             schema.prisma, migrations/
@@ -167,19 +164,21 @@ planter/
       app.ts            Express app (exported, used by Supertest)
       server.ts         starts the server
       config/           env.ts (validates environment variables with Zod)
-      middleware/       requireAuth.ts, validate.ts, errorHandler.ts
-      routes/           projects.ts, items.ts, relationships.ts, tasks.ts, sprints.ts
-      services/         business logic: ownership, relationships, progress, warnings, checklist
-      schemas/          Zod schemas
-      templates/        web.ts, index.ts
-      lib/              prisma.ts, supabase.ts
+      middleware/       requireAuth.ts, validate.ts, errorHandler.ts, imageBody.ts
+      routes/           one file per resource (projects, items, relationships, tasks, sprints, groups, colors, ...)
+      services/         business logic, one file per resource. Ownership helpers: getOwnedProject (projects.ts), getOwnedItem (items.ts)
+      schemas/          Zod schemas, text.ts (textSchema, urlSchema)
+      templates/        web.ts, game.ts, index.ts
+      lib/              prisma.ts, supabase.ts, storage.ts
+      seed/             demo projects (npm run seed:demo)
+      generated/        Prisma client (generated, not committed)
 ```
 
 ## Conventions
 
 - TypeScript strict mode. No `any` without a comment explaining why.
 - Routes are thin: validate, check ownership, call a service, return the result. Logic lives in `services/`.
-- API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user. 409 for needs confirmation instances. as when deleting och updating an item affects relations.
+- API errors have one shape: `{ "error": { "message": string, "details"?: unknown } }`. Use 400 for validation errors, 401 when not logged in, 404 when the resource does not exist or is not owned by the user. 409 when an action needs confirmation, for example when deleting or updating an item affects its relationships.
 - User text (project description, item titles, details, inspiration) is stored as the user typed it, and is made safe when it is shown: the frontend renders it only as text (React escapes it), never as HTML (no `dangerouslySetInnerHTML`), and never in `href`/`src` unless it passed the `http(s)` URL check.
 - Colors in the UI: one visual channel per meaning, so a color always means the same thing.
   - Item type = hue, read from the template (`TypeBadge` pill, colored strip or dot, map node strip). Set with the CSS variable `--type-color` (`typeColorVar` / `typeColorStyle` in `features/items/typeColor.ts`), and CSS falls back to grey for an unknown type.
@@ -193,11 +192,11 @@ planter/
 - Small commits with clear messages (for example `feat: add item CRUD routes`). Commit often.
 - UI language is English unless I say otherwise.
 
-## Commands (fill in as they are set up)
+## Commands
 
 - Frontend (`frontend/`): `npm run dev` (Vite, port 5173), `npm test`, `npm run build`
 - Backend (`backend/`): `npm run dev` (port 3000), `npm test`, `npm run build`, `npm run typecheck` (src, tests and configs)
-- Test database: Postgres.app (PostgreSQL, port 5432) must be running, with a database `planter_test`. `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
+- Test database: a local PostgreSQL on port 5432 (Postgres.app on macOS) must be running, with a database `planter_test`. If the `postgres` user has a password (Windows, Linux), set `TEST_DATABASE_URL` in `backend/.env` (`tests/testDatabaseUrl.ts`). `npm run test:db:migrate` applies all migrations to it (run again after every new migration). Tests never use Supabase: `tests/setup.ts` stops them if `DATABASE_URL` is not localhost.
 - Demo data (`backend/`): `npm run seed:demo -- <supabase-user-id> [web|game]` creates (or replaces) both demo projects for that user, "Awesome Demo Portfolio" (web) and "Emerald Brew" (game). `web` or `game` creates only that one
 - Prisma (`backend/`): `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
 
@@ -215,5 +214,5 @@ Never commit `.env` files. Keep `.env.example` files with the names below and no
 - Automated tests pass for relationship rules, progress calculation and ownership (including a test with two users)
 - Security check done: RLS is enabled on every table (no rows from `select tablename from pg_tables where schemaname = 'public' and not rowsecurity;`, and a Data API request with the anon key returns nothing), ownership is checked on every route, all input goes through Zod, no secrets in the repo
 - README explains how to install, configure and run the project
-- AI use is documented in `docs/ai-log.md` and in the thesis
+- AI use is documented in the thesis
 - Each feature validates its input, shows loading and error states, and has been reviewed

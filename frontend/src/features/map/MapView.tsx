@@ -301,8 +301,10 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         <Background />
         <Controls />
         {template.template && (
-          <>
-            {/* Top left: the filters, "Add item" and Manage */}
+          // One Panel for the whole top row, so the two halves can never overlap: side by side when
+          // there is room, and the right half wraps under the toolbar on a narrow screen (a phone).
+          <Panel position="top-left" className={styles.topRow}>
+            {/* Left: the filters, "Add item" and Manage */}
             <MapToolbar
               template={template.template}
               groups={groups.groups}
@@ -313,9 +315,9 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
               onTidy={handleTidy}
               onAddItem={addItem}
             />
-            {/* Top right: the full window button and the legend side by side. data-tour is on the
+            {/* Right: the full window button and the legend side by side. data-tour is on the
                 legend only, so the tutorial does not light up the button too. */}
-            <Panel position="top-right" className={styles.topRight}>
+            <div className={styles.topRight}>
               <button
                 type="button"
                 className={`${styles.small} ${styles.fullWindow}`}
@@ -328,8 +330,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
               <div data-tour="map-legend">
                 <MapLegend template={template.template} />
               </div>
-            </Panel>
-          </>
+            </div>
+          </Panel>
         )}
         {/* Bottom center, one box for everything that needs an answer, so two never overlap:
             picking a relationship type after dragging an arrow between two nodes, or else the clicked
@@ -371,6 +373,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
         )}
         {/* Overview in the corner: every item as a small block in its type's color. Drag or scroll it to move the map. */}
         <MiniMap<ItemNodeType>
+          // Hidden on a phone (MapView.module.css), where it would cover a large part of the map
+          className={styles.miniMap}
           // The MiniMap sets an SVG fill attribute, which can't read CSS variables, so the
           // fallback for unknown types is a hex value (the same as --borderDark)
           nodeColor={(node) => node.data.color ?? "#bdae99"}

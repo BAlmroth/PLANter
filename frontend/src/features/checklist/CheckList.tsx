@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { InfoBubble } from "../../components/InfoBubble";
 import { linkForCheck } from "./checkLinks";
 import type { Check } from "./types";
 import styles from "./CheckList.module.css";
@@ -8,9 +9,12 @@ type Props = {
   checks: Check[];
 };
 
-// One group of checks with ✓ or ✗ in front of each, and a link to where a failed one is fixed.
+// One group of checks with ✓ or ✗ in front of each, a small "i" with what the check is about,
+// and a link to where a failed one is fixed.
 export function CheckList({ title, checks }: Props) {
   const passed = checks.filter((check) => check.passed).length;
+  // What is left to do comes first. filter keeps the backend's order inside each part.
+  const sorted = [...checks.filter((check) => !check.passed), ...checks.filter((check) => check.passed)];
 
   return (
     <section className={styles.group}>
@@ -20,8 +24,9 @@ export function CheckList({ title, checks }: Props) {
           {passed} / {checks.length}
         </span>
       </h3>
+
       <ul className={styles.list}>
-        {checks.map((check) => {
+        {sorted.map((check) => {
           const link = check.passed ? null : linkForCheck(check);
           return (
             <li key={check.key} className={check.passed ? styles.passed : styles.failed}>
@@ -29,8 +34,10 @@ export function CheckList({ title, checks }: Props) {
               <span className={styles.mark} aria-hidden="true">
                 {check.passed ? "✓" : "✗"}
               </span>
-              <span className={styles.visuallyHidden}>{check.passed ? "Done:" : "Not done:"}</span>
-              <span className={styles.label}>{check.label}</span>
+              <span className={styles.label}>
+                <span className={styles.visuallyHidden}>{check.passed ? "Done:" : "Not done:"}</span>
+                {check.label}
+              </span>
               {/* A link further down this page is a plain <a href="#id">: the browser scrolls to it by itself.
                   A link to another page goes through the router (<Link>), so the app does not reload. */}
               {link &&
@@ -43,6 +50,12 @@ export function CheckList({ title, checks }: Props) {
                     {link.label}
                   </Link>
                 ))}
+              {/* Always in the last column, so every "i" lines up no matter how long the label is */}
+              {check.description && (
+                <span className={styles.help}>
+                  <InfoBubble text={check.description} label={`About ${check.label}`} size="small" />
+                </span>
+              )}
             </li>
           );
         })}

@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "test": "vitest run",
-    "test:db:migrate": "DIRECT_URL=postgresql://postgres@localhost:5432/planter_test prisma migrate deploy",
+    "test:db:migrate": "tsx tests/migrateTestDb.ts",
     "typecheck": "tsc",
     "dev": "tsx watch src/server.ts",
     "seed:demo": "tsx src/seed/run.ts",
@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": "26.x"

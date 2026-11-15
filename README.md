@@ -2,6 +2,15 @@
 
 A visual planning tool for code projects for websites, apps and games. A project is broken down into items (for a website: pages, components, functions, data, design, assets, security, testing, tech stack) that are connected with typed relationships. The project is shown as a File view (items grouped by category), as an interactive relationship map, and as a progress overview.
 
+This app was created to fill the gap that most planning tools have. Instead of having to keep track of things yourself, or using several planning means, you get it all in one place.
+
+**Contents**
+
+- [Features](#features) · [Tech stack](#tech-stack)
+- [Installation guide](#installation-guide): get PLANter running on your computer, step by step
+- [Run the tests](#run-the-tests): set up the local test database (macOS, Windows, Linux)
+- [Demo projects](#demo-projects) · [Scripts](#scripts) · [Database migrations](#database-migrations) · [Deploy](#deploy) · [Security check](#security-check)
+- [Troubleshooting](#troubleshooting)
 
 ## Features
 
@@ -24,8 +33,8 @@ A visual planning tool for code projects for websites, apps and games. A project
 | --- | --- | --- |
 | Frontend | React, TypeScript, Vite, React Flow (`@xyflow/react`), React Router | Vercel |
 | Backend | Node.js, Express 5, TypeScript, Zod, Prisma | Heroku |
-| Database and login | Supabase (PostgreSQL, Auth, Row Level Security) | Supabase |
-| Tests | Vitest, Supertest, local PostgreSQL (Postgres.app) | |
+| Database and login | Supabase (PostgreSQL, Auth, Storage, Row Level Security) | Supabase |
+| Tests | Vitest, Supertest, a local PostgreSQL | your computer |
 
 ```
 React (Vercel) --login/register/logout--> Supabase Auth
@@ -34,111 +43,323 @@ React --API requests + token--> Express (Heroku) --Prisma--> Supabase PostgreSQL
 
 The frontend only uses Supabase for login. All data goes through the Express API, which checks the token, validates the input with Zod and checks that the user owns the data.
 
-## Project structure
-
 ```
 frontend/   React app (Vite)
 backend/    Express API, Prisma schema and migrations, tests
 ```
 
-## Requirements
+---
 
-- Node.js 26 (the backend pins `"node": "26.x"` in `package.json`)
-- A Supabase project
-- Postgres.app (macOS) for the backend tests, see [Test database](#test-database-local-postgres)
+## Installation guide
 
-## Install
+Follow the steps in order. Each step ends with a **Check** so you know it worked before you go on. It takes about 20 minutes.
+
+> **Commands:** run them in a terminal (macOS/Linux: Terminal, Windows: PowerShell). When a step says "in `backend/`", first go to that folder with `cd`. Where Windows needs a different command, it is shown separately.
+
+### Step 1: Install the tools
+
+You need:
+
+1. **Git**: [git-scm.com/downloads](https://git-scm.com/downloads) (already installed on most Macs).
+2. **Node.js version 26**: [nodejs.org](https://nodejs.org/). The backend requires 26 (`"node": "26.x"` in `backend/package.json`). `npm` comes with Node.
+
+**Check:**
 
 ```
-git clone <repo url>
+git --version
+node -v
+```
+
+`node -v` must print `v26.` followed by any numbers.
+
+### Step 2: Download the code
+
+```
+git clone https://github.com/BAlmroth/PLANter.git
 cd PLANter
-cd backend && npm install
-cd ../frontend && npm install
 ```
 
-`npm install` in `backend/` does not generate the Prisma client. Run `npx prisma generate` in `backend/` once (and again after every change in `prisma/schema.prisma`).
+**Check:** the `PLANter` folder has a `frontend` and a `backend` folder.
 
-## Configure
+### Step 3: Install the packages
 
-Copy the example files and fill in the values. `.env` files are never committed.
+From the `PLANter` folder, one command at a time:
+
+```
+cd backend
+npm install
+cd ../frontend
+npm install
+cd ..
+```
+
+**Check:** both `backend/` and `frontend/` now have a `node_modules` folder, and `npm install` did not end with `ERR!`.
+
+### Step 4: Create a Supabase project
+
+Supabase holds the database, the logins and the uploaded images.
+
+1. Create a free account at [supabase.com](https://supabase.com/) and click **New project**.
+2. Choose a name and a **database password**. Write the password down: you need it in step 5, and Supabase does not show it again.
+3. Wait until the project is ready.
+4. **Create the image bucket:** go to **Storage → New bucket**.
+   - Name: `inspiration-images` (exactly this)
+   - **Public bucket: off**
+   
+   All images are stored here (project inspiration, the main photo of an item, moodboard images). Without the bucket, uploading an image fails. Only the backend can read and write it.
+5. **Set the login URLs:** go to **Authentication → URL Configuration**.
+   - **Site URL:** `http://localhost:5173`
+   - **Redirect URLs:** add `http://localhost:5173/reset-password` (the page the "Forgot password" email link opens)
+6. (Optional) Email confirmation: under **Authentication → Sign In / Providers → Email** you can turn **Confirm email** on or off. When it is on, you must click the link in the email before you can log in.
+
+**Check:** the Storage page shows `inspiration-images` **without** a "Public" label.
+
+### Step 5: Create the `.env` files
+
+The `.env` files hold the addresses and keys the app needs. They are secret and are never committed to git. Start by copying the examples.
+
+macOS / Linux (from the `PLANter` folder):
 
 ```
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### Backend (`backend/.env`)
+Windows (PowerShell, from the `PLANter` folder):
 
-| Variable | What it is | Where to find it |
+```
+copy backend\.env.example backend\.env
+copy frontend\.env.example frontend\.env
+```
+
+Now open both files in your editor and fill in the values.
+
+#### `backend/.env`
+
+In Supabase, click the **Connect** button at the top of the project page to find the connection strings.
+
+| Variable | What to write | Where to find it |
 | --- | --- | --- |
-| `DATABASE_URL` | Pooled connection string, used by the running app | Supabase: **Connect** → connection pooler |
-| `DIRECT_URL` | Direct connection string, used by the Prisma CLI for migrations | Supabase: **Connect** → direct connection |
-| `SUPABASE_URL` | The project URL | Supabase: **Project Settings → API** |
-| `SUPABASE_SERVICE_ROLE_KEY` | Used to verify login tokens. Bypasses Row Level Security, so it must only ever be in the backend | Supabase: **Project Settings → API** |
-| `FRONTEND_URL` | The only origin allowed by CORS. Exact match, no trailing slash | `http://localhost:5173` locally, the Vercel URL in production |
-| `PORT` | Port of the API (default 3000). Heroku sets it itself | |
+| `DATABASE_URL` | The **Transaction pooler** string (port `6543`), with `?pgbouncer=true` added at the end | **Connect** → Transaction pooler |
+| `DIRECT_URL` | The **Session pooler** string (port `5432`) | **Connect** → Session pooler |
+| `SUPABASE_URL` | The project URL, like `https://abcdefgh.supabase.co` | **Project Settings → API** (or **Data API**) |
+| `SUPABASE_SERVICE_ROLE_KEY` | The `service_role` key (secret) | **Project Settings → API Keys** |
+| `FRONTEND_URL` | `http://localhost:5173` (already filled in). No `/` at the end | |
+| `PORT` | `3000` (already filled in) | |
+| `TEST_DATABASE_URL` | Leave empty for now. Only needed for the tests, see [Run the tests](#run-the-tests) | |
 
-The backend checks these with Zod at startup (`backend/src/config/env.ts`) and stops with a list of what is missing.
+In both connection strings, **replace `[YOUR-PASSWORD]`** with the database password from step 4 (remove the brackets too). EXAMPLE of the finished lines:
 
-### Frontend (`frontend/.env`)
+```
+DATABASE_URL=postgresql://postgres.abcdefgh:MyPassword@aws-0-eu-north-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.abcdefgh:MyPassword@aws-0-eu-north-1.pooler.supabase.com:5432/postgres
+```
 
-| Variable | What it is |
-| --- | --- |
-| `VITE_SUPABASE_URL` | The Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | The anon (public) key. **Never** the service role key |
-| `VITE_API_URL` | URL of the backend without a trailing slash, for example `http://localhost:3000` |
+> Why two strings? The running app uses the transaction pooler (many short connections). Prisma's migrations need a session connection, which the session pooler gives. Supabase's "Direct connection" only works on networks with IPv6, so the session pooler is the safe choice.
 
-Everything that starts with `VITE_` is built into the JavaScript bundle and is public. Secrets never go in a `VITE_` variable.
+The `service_role` key can read and write everything, so it only ever goes in `backend/.env`, never in the frontend.
 
-### Supabase
+#### `frontend/.env`
 
-1. Create a project.
-2. Apply the database migrations (next section).
-3. **Authentication → URL Configuration:** set the Site URL to the frontend URL, and add it to Redirect URLs (both `http://localhost:5173` and the Vercel URL).
-4. Email confirmation can be on or off. When it is on, Register shows "Check your email" until the link is clicked.
-5. **Storage → New bucket:** create a bucket named `inspiration-images` with **Public bucket turned off**. All images are stored there: project inspiration, the main photo of an item and the moodboard images of an item. Without this bucket, uploading an image fails. Only the backend (with the service role key) can read and write it, and it hands out links that stop working after an hour.
+| Variable | What to write | Where to find it |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | The same project URL as `SUPABASE_URL` | **Project Settings → API** |
+| `VITE_SUPABASE_ANON_KEY` | The `anon` / public key. **Never** the service role key | **Project Settings → API Keys** |
+| `VITE_API_URL` | `http://localhost:3000` (no `/` at the end) | |
 
-## Database migrations
+Everything that starts with `VITE_` is built into the website's JavaScript and is public. That is why the frontend only gets the public `anon` key.
 
-The schema is in `backend/prisma/schema.prisma` and the migrations are in `backend/prisma/migrations/`. To apply all migrations to the database in `DIRECT_URL` (Supabase):
+**Check:** no line in either file ends with `=` and nothing after it, except `TEST_DATABASE_URL`. No `[YOUR-PASSWORD]` is left.
+
+### Step 6: Set up the database
+
+In `backend/`, run these two commands:
 
 ```
 cd backend
-npx prisma migrate status   # which migrations are applied
-npx prisma migrate deploy   # apply the missing ones
+npx prisma generate
+npx prisma migrate deploy
 ```
 
-Every migration that creates a table must also enable Row Level Security on it (`CLAUDE.md`, rule 5):
+- `npx prisma generate` creates the database code the backend uses (in `backend/src/generated/`, not in git). It reads `DIRECT_URL`, so it only works after step 5.
+- `npx prisma migrate deploy` creates all the tables in your Supabase database, with Row Level Security turned on for every table.
 
-1. `npx prisma migrate dev --create-only --name <name>`
-2. Add `ALTER TABLE "<table>" ENABLE ROW LEVEL SECURITY;` at the end of the new `migration.sql`
-3. `npx prisma migrate dev`, then `npm run test:db:migrate`
-4. Run the RLS check in [Security check](#security-check)
+**Check:** `migrate deploy` ends with **"All migrations have been successfully applied."** In Supabase, **Table Editor** now shows tables like `projects` and `items`.
 
-## Run locally
+### Step 7: Start the app
 
-Two terminals:
+You need **two terminals** open at the same time, one for the backend and one for the frontend.
+
+Terminal 1 (backend):
 
 ```
-cd backend && npm run dev     # http://localhost:3000, GET /health returns { "status": "ok" }
-cd frontend && npm run dev    # http://localhost:5173
+cd backend
+npm run dev
 ```
+
+Terminal 2 (frontend):
+
+```
+cd frontend
+npm run dev
+```
+
+**Check:**
+
+- Open [http://localhost:3000/health](http://localhost:3000/health). It shows `{"status":"ok"}`.
+- Open [http://localhost:5173](http://localhost:5173). The PLANter login page is shown.
+
+If the backend stops with "Missing or invalid environment variables", the list under it tells you which line in `backend/.env` is wrong.
+
+### Step 8: Create an account
+
+1. On [http://localhost:5173](http://localhost:5173), click **Register**, fill in an email and a password and click **Create account**.
+2. If email confirmation is on (step 4.6), click the link in the email first.
+3. Log in and create your first project.
+
+**Check:** the new project is in your project list, and it is still there after reloading the page.
+
+PLANter is now installed. Next, you can [add the demo projects](#demo-projects) to see every feature with real data, or [set up the tests](#run-the-tests).
+
+To start the app again later, you only need step 7.
+
+---
+
+## Run the tests
+
+The backend tests run against a **real PostgreSQL database on your own computer**, so they test the whole chain: routes, Zod, ownership checks, Prisma and the database constraints. They delete data between tests, so they must **never** run against Supabase. A safety guard stops them if the database is not on `localhost`. Supabase Auth is the only thing that is faked in the tests.
+
+The frontend tests need no database.
+
+### Frontend tests (no setup)
+
+```
+cd frontend
+npm test
+```
+
+### Backend tests: one-time setup
+
+Do steps 1 to 6 of the [Installation guide](#installation-guide) first. Then follow the steps for your system.
+
+#### T1. Install and start PostgreSQL
+
+**macOS:**
+
+1. Download [Postgres.app](https://postgresapp.com/), move it to **Applications** and open it.
+2. Click **Initialize**. The server now runs on port 5432, and an elephant icon is in the menu bar.
+3. The user is `postgres` and there is **no password**.
+
+**Windows:**
+
+1. Download the installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) and run it.
+2. Keep the default port **5432**.
+3. Choose a password for the `postgres` user and **write it down**. Use only letters and numbers: characters like `@`, `:` or `/` break the connection string.
+4. PostgreSQL now runs in the background and starts with the computer.
+
+**Linux (Debian/Ubuntu):**
+
+```
+sudo apt install postgresql
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+```
+
+The second command gives the `postgres` user the password `postgres`. PostgreSQL starts by itself.
+
+#### T2. Create the test database
+
+The database must be called `planter_test`.
+
+**macOS:**
+
+```
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U postgres -h localhost -c "CREATE DATABASE planter_test;"
+```
+
+**Windows:**
+
+1. Open **SQL Shell (psql)** from the Start menu.
+2. Press **Enter** four times to accept the defaults (Server, Database, Port, Username).
+3. Type your password and press **Enter** (nothing is shown while you type, that is normal).
+4. Type `CREATE DATABASE planter_test;` and press **Enter**.
+
+(Or use pgAdmin, which comes with the installer: right-click **Databases → Create → Database**.)
+
+**Linux:**
+
+```
+sudo -u postgres createdb planter_test
+```
+
+**Check:** the command printed `CREATE DATABASE` (on Linux it prints nothing, which means it worked).
+
+#### T3. Tell the tests your password (Windows and Linux only)
+
+**macOS with Postgres.app: skip this step.** Without a password, the tests use `postgresql://postgres@localhost:5432/planter_test` by themselves.
+
+Windows and Linux: open `backend/.env` and fill in `TEST_DATABASE_URL`, with your password instead of `YOUR_PASSWORD`:
+
+```
+TEST_DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/planter_test
+```
+
+(On Linux with the command from T1, the password is `postgres`.) Write `localhost`, not `127.0.0.1`: the safety guard only accepts `localhost`.
+
+This is the only line from `.env` the tests use. Your Supabase values stay as they are and are never touched by the tests.
+
+#### T4. Create the tables in the test database
+
+```
+cd backend
+npm run test:db:migrate
+```
+
+**Check:** it ends with **"All migrations have been successfully applied."**
+
+#### T5. Run the tests
+
+```
+npm test
+```
+
+**Check:** the summary says every test file **passed**.
+
+### Backend tests: every time
+
+- PostgreSQL must be running (macOS: open Postgres.app. Windows and Linux: it runs by itself).
+- After pulling a new migration, run `npm run test:db:migrate` again.
+- After a change in `prisma/schema.prisma`, run `npx prisma generate` again.
+
+### Look at the test data or start over
+
+- **Look:** macOS: double-click `planter_test` in Postgres.app. Windows: pgAdmin or SQL Shell (psql). Any system: `psql -U postgres -h localhost planter_test`.
+- **Start over:** run `DROP DATABASE planter_test;`, then do T2 and T4 again.
+
+### How it works
+
+| What | Where |
+| --- | --- |
+| Which database the tests use | `backend/tests/testDatabaseUrl.ts`: `TEST_DATABASE_URL` from the terminal, then from `backend/.env`, otherwise `postgresql://postgres@localhost:5432/planter_test` |
+| Test settings | `backend/vitest.config.ts` sets `DATABASE_URL` to that address for the tests |
+| Safety guards | `backend/tests/setup.ts` stops all tests, and `backend/tests/migrateTestDb.ts` stops the migration, if the address does not contain `localhost` |
+| Migrate script | `npm run test:db:migrate` runs `backend/tests/migrateTestDb.ts` (a Node script, so it works on Windows too) |
+
+---
 
 ## Demo projects
 
-The repo includes demo data for both templates:
+The repo includes demo data for both templates. It is a quick way to see (and test) every part of PLANter without planning a project first.
 
-- **Awesome Demo Portfolio** (web, the default): a fully planned portfolio website. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration. Data: `backend/src/seed/demoPortfolio.ts`.
+- **Awesome Demo Portfolio** (web): a fully planned portfolio website. It uses every item type, every relationship type and all three statuses, and has groups, sprints, tasks, item details and project inspiration. Data: `backend/src/seed/demoPortfolio.ts`.
 - **Emerald Brew** (game): a small cozy game about mixing ingredients into new items. 25 items that use every game category and every connection type, with recipes and prices with amounts, an upgrade, "unlocked by" and a condition. Open "Emerald tea" or "Cottage, level 2" to see the Requirements card. The Moodboard page has a palette, mood images and notes, and links to games to learn from. Data: `backend/src/seed/demoGame.ts`.
 
 Both demos have a color palette (linked to items) and images: main photos on some items, a sketch on an item's moodboard and an image on the Moodboard page. The images are in `backend/src/seed/images/` (small pixel-art and wireframe PNGs made for the demo). Replace a file with your own JPEG, PNG or WebP under the same name to use your own images.
 
-Either one is a quick way to see (and test) every part of PLANter without planning a project first.
+### Add the demos
 
-1. Follow Install, Configure and Database migrations above, then start the app ([Run locally](#run-locally)).
-2. Register an account in the app and log in once. The demo projects are created for that account.
-3. Find the id of your account: Supabase → **Authentication → Users** → copy the **User UID**.
-4. Seed it:
+1. Finish the [Installation guide](#installation-guide), including step 8 (an account you have logged in with).
+2. Find the id of your account: Supabase → **Authentication → Users** → click your user → copy the **User UID**.
+3. In `backend/`, run one of these, with your UID instead of `<your-user-uid>`:
 
    ```
    cd backend
@@ -147,13 +368,15 @@ Either one is a quick way to see (and test) every part of PLANter without planni
    npm run seed:demo -- <your-user-uid> game    # only the game demo
    ```
 
-5. Reload the app. "Awesome Demo Portfolio" and "Emerald Brew" are in your project list.
+4. Reload the app.
 
-Notes:
+**Check:** "Awesome Demo Portfolio" and "Emerald Brew" are in your project list.
 
-- The seed writes to the database in `DATABASE_URL` and uploads the images to the Storage bucket `inspiration-images` in `SUPABASE_URL` (both in `backend/.env`), so check that they point where you expect. Running it again also deletes the old demo's image files, like deleting a project does.
+Good to know:
+
+- The seed writes to the database in `DATABASE_URL` and uploads the images to the bucket `inspiration-images` in `SUPABASE_URL` (both in `backend/.env`). Running it again also deletes the old demo's image files, like deleting a project does.
 - It only touches your own demo projects: running it again deletes and recreates the projects with these names for that user, and nothing else (seeding only the game demo leaves the web demo alone, and the other way round). Each demo is saved in its own transaction, so if the second one fails, the first one is already there and the command can simply be run again. A project you made yourself with the same name would also be replaced, so rename it first.
-- The web data includes two deliberate gaps (a page with no connections and a function nothing triggers), so they can be used to test warnings. The game demo has no warnings.
+- The web demo has two deliberate gaps (a page with no connections and a function nothing triggers), so you can see the warnings. The game demo has no warnings.
 
 ## Scripts
 
@@ -161,15 +384,38 @@ Notes:
 | --- | --- | --- |
 | `backend/` | `npm run dev` | Starts the API and restarts it on changes |
 | `backend/` | `npm test` | Runs the tests against the local test database |
+| `backend/` | `npm run test:db:migrate` | Creates or updates the tables in the local `planter_test` database |
 | `backend/` | `npm run typecheck` | TypeScript check of `src`, tests and configs |
 | `backend/` | `npm run build` | `prisma generate` and compiles `src` to `dist` |
 | `backend/` | `npm start` | Runs the compiled server (used by Heroku) |
-| `backend/` | `npm run seed:demo -- <user-id> [web\|game]` | Creates (or recreates) both demo projects, "Awesome Demo Portfolio" (web) and "Emerald Brew" (game), for that user. `web` or `game` creates only that one. See [Demo projects](#demo-projects) |
-| `backend/` | `npm run test:db:migrate` | Applies all migrations to the local `planter_test` database |
+| `backend/` | `npm run seed:demo -- <user-id> [web\|game]` | Creates (or recreates) the demo projects for that user. See [Demo projects](#demo-projects) |
+| `backend/` | `npx prisma generate` | Creates the database code from `prisma/schema.prisma` |
+| `backend/` | `npx prisma migrate deploy` | Applies new migrations to the Supabase database |
 | `frontend/` | `npm run dev` | Starts Vite |
 | `frontend/` | `npm test` | Runs the frontend tests |
 | `frontend/` | `npm run lint` | ESLint |
 | `frontend/` | `npm run build` | Type check and production build to `dist` |
+
+## Database migrations
+
+The schema is in `backend/prisma/schema.prisma` and the migrations are in `backend/prisma/migrations/`.
+
+**After pulling new code** that has new migrations:
+
+```
+cd backend
+npx prisma generate          # update the database code
+npx prisma migrate status    # see which migrations are missing
+npx prisma migrate deploy    # apply them to Supabase
+npm run test:db:migrate      # apply them to the test database
+```
+
+**When you create a migration** with a new table, it must also turn on Row Level Security for that table (`CLAUDE.md`, rule 5):
+
+1. `npx prisma migrate dev --create-only --name <name>`
+2. Add `ALTER TABLE "<table>" ENABLE ROW LEVEL SECURITY;` at the end of the new `migration.sql`
+3. `npx prisma migrate dev`, then `npm run test:db:migrate`
+4. Run the RLS check in [Security check](#security-check)
 
 ## Deploy
 
@@ -205,11 +451,11 @@ Migrations are not run by the deploy. Apply new ones with `npx prisma migrate de
 3. `frontend/vercel.json` sends every path to `index.html`, so reloading a page like `/projects/<id>` works.
 4. Set the Production Branch to `main` (**Settings → Git**). Vercel deploys `main` to production on every push, and builds other branches (like `dev`) only as previews.
 
-After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add the Vercel URL in Supabase (Site URL and Redirect URLs).
+After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add the Vercel URL in Supabase (**Authentication → URL Configuration**: `https://<your-app>.vercel.app` as Site URL, and `https://<your-app>.vercel.app` and `https://<your-app>.vercel.app/reset-password` in Redirect URLs).
 
 ## Security check
 
-- Row Level Security is on for every table. This SQL (Supabase SQL editor) must return no rows:
+- Row Level Security is on for every table. This SQL (Supabase **SQL Editor**) must return no rows:
 
   ```sql
   select tablename from pg_tables where schemaname = 'public' and not rowsecurity;
@@ -225,66 +471,34 @@ After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add 
 
 - Every API route except `/health` requires a valid token, and data that belongs to another user gives 404. The backend tests check this with two users.
 
-## Test database (local Postgres)
+## Troubleshooting
 
-### Why
+### Installing and running
 
-The backend tests (`cd backend && npm test`) run against a real PostgreSQL database, so they test the whole chain: routes, Zod, ownership checks, Prisma and the database constraints. They delete rows between tests, so they must **never** run against Supabase. A local database is safe to wipe and needs no internet.
-
-Supabase Auth is the only thing that is mocked in the tests (fake users and tokens).
-
-### What to download
-
-[Postgres.app](https://postgresapp.com/) (macOS). It is a normal Mac app that runs PostgreSQL on port 5432. Download it, move it to `/Applications` and open it.
-
-### One-time setup
-
-1. Open Postgres.app and click **Initialize** (or **Start**) so a server is running on port 5432.
-2. Create the test database. Either double-click a database in the Postgres.app window to open `psql`, or run:
-
-   ```
-   /Applications/Postgres.app/Contents/Versions/latest/bin/psql -U postgres -h localhost -c "CREATE DATABASE planter_test;"
-   ```
-
-   (Optional: add `/Applications/Postgres.app/Contents/Versions/latest/bin` to your `PATH` so `psql` works everywhere.)
-3. Apply the migrations to it:
-
-   ```
-   cd backend
-   npm run test:db:migrate
-   ```
-
-4. Run the tests:
-
-   ```
-   npm test
-   ```
-
-### Every time
-
-- Postgres.app must be **running** (the elephant icon is in the menu bar). If it is not, the tests fail with a connection error.
-- After every new Prisma migration, run `npm run test:db:migrate` again.
-- After every change in `prisma/schema.prisma`, run `npx prisma generate`. An old generated client causes strange errors (for example "Unknown argument `description`").
-
-### Where things are
-
-| What | Where |
+| Problem | Fix |
 | --- | --- |
-| Connection string for tests | `backend/vitest.config.ts`: `postgresql://postgres@localhost:5432/planter_test` (not a secret, no password) |
-| Safety guard | `backend/tests/setup.ts` stops all tests if `DATABASE_URL` does not contain `localhost` |
-| Migrations | `backend/prisma/migrations/` |
-| Migrate script | `test:db:migrate` in `backend/package.json` |
+| `npm install` warns about the Node version (`EBADENGINE`) | Install Node.js 26 (step 1) |
+| `npx prisma generate` says "Cannot resolve environment variable: DIRECT_URL" | `backend/.env` is missing or `DIRECT_URL` is empty (step 5) |
+| `prisma migrate deploy` says "Authentication failed" (`P1000`) | Wrong database password in `DIRECT_URL`, or `[YOUR-PASSWORD]` is still there |
+| `prisma migrate deploy` says "Can't reach database server" (`P1001`) | Use the **Session pooler** string for `DIRECT_URL`, not "Direct connection" |
+| Backend stops with "Missing or invalid environment variables" | Fix the lines it lists in `backend/.env` |
+| Backend crashes with "Cannot find module ... generated/prisma" | Run `npx prisma generate` in `backend/` |
+| Login page shows an error or nothing happens on Register | Check `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then restart `npm run dev` in `frontend/` (Vite only reads `.env` at start) |
+| Logged in, but projects fail to load ("Failed to fetch" or a CORS error in the browser console) | The backend is not running, `VITE_API_URL` is wrong, or `FRONTEND_URL` is not exactly `http://localhost:5173` |
+| The "Forgot password" email link opens the start page instead of "Reset password" | Add `http://localhost:5173/reset-password` to Redirect URLs (step 4) |
+| Image upload fails | The bucket `inspiration-images` is missing or misspelled (step 4) |
+| Strange errors like "Unknown argument `description`" | The database code is old: run `npx prisma generate` |
 
-The test connection string is set in `vitest.config.ts`, so your real `.env` (which points at Supabase) is not used by the tests and does not need to change.
+### Backend tests
 
-### Look at the data or reset it
+| Problem | Fix |
+| --- | --- |
+| `ECONNREFUSED` or "connection refused" | PostgreSQL is not running (macOS: open Postgres.app) |
+| `password authentication failed for user "postgres"` or `P1000` | Set `TEST_DATABASE_URL` with the right password (T3) |
+| `database "planter_test" does not exist` | Do T2 again |
+| `relation ... does not exist` or missing columns | Run `npm run test:db:migrate` (T4) |
+| "Tests must use the local test database" or "TEST_DATABASE_URL must point at localhost" | The address must use `localhost`. Do not work around this: it protects your Supabase data |
 
-- Open the database in the Postgres.app window (double-click `planter_test`), or run `psql -U postgres -h localhost planter_test`.
-- Full reset: `DROP DATABASE planter_test;`, create it again and run `npm run test:db:migrate`.
+## License
 
-### Problems
-
-- `ECONNREFUSED` or "connection refused": Postgres.app is not running.
-- `database "planter_test" does not exist`: do step 2 again.
-- `relation ... does not exist` or missing columns: run `npm run test:db:migrate`.
-- "Tests must use the local test database": `DATABASE_URL` does not point at localhost. Do not work around this, it protects the Supabase data.
+[MIT](LICENSE) © 2026 Benita Almroth
