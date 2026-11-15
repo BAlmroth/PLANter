@@ -5,6 +5,7 @@ import type { ItemFilters } from "../filters/itemFilters";
 import { ItemForm, type ItemFormValues } from "../items/ItemForm";
 import type { Template } from "../items/types";
 import type { LayoutDirection } from "./tidyLayout";
+import type { LineStyle } from "./mapGraph";
 import formStyles from "../../components/form.module.css";
 import styles from "./MapView.module.css";
 
@@ -17,13 +18,16 @@ type Props = {
   direction: LayoutDirection;
   // Tidies the map. A direction is only given when the user picks the other one.
   onTidy: (newDirection?: LayoutDirection) => void;
+  // Elbow lines or curves. Only changes the drawing, nothing is saved in the database.
+  lineStyle: LineStyle;
+  onLineStyleChange: (style: LineStyle) => void;
   // Creates the item. Returns an error message, or null when it worked.
   onAddItem: (values: ItemFormValues) => Promise<string | null>;
 };
 
 // The box in the top left corner of the map: Filter, "+ Add item" and Manage. Each opens a panel
 // under the buttons, in the same box. MapView places it in the map's top row (a Panel).
-export function MapToolbar({ template, groups, itemCount, filters, onFiltersChange, direction, onTidy, onAddItem }: Props) {
+export function MapToolbar({ template, groups, itemCount, filters, onFiltersChange, direction, onTidy, lineStyle, onLineStyleChange, onAddItem }: Props) {
   // true while the add item form is open
   const [adding, setAdding] = useState(false);
   // true while the "Manage" panel (Tidy up and the map direction) is open
@@ -100,6 +104,18 @@ export function MapToolbar({ template, groups, itemCount, filters, onFiltersChan
               Top ↓ bottom
             </button>
           </span>
+          {/* On = curved lines, off = elbow lines. role="switch" + aria-checked: a screen reader says
+              "Curved lines, switch, on". The knob's position shows the state, not only its color. */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={lineStyle === "default"}
+            className={`${styles.small} ${styles.switch}`}
+            onClick={() => onLineStyleChange(lineStyle === "default" ? "smoothstep" : "default")}
+          >
+            <span className={styles.track} aria-hidden="true" />
+            Curved lines
+          </button>
         </div>
       )}
       {adding && (

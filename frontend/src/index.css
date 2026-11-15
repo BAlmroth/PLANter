@@ -149,6 +149,12 @@ button:disabled {
   color: var(--danger);
 }
 
+/* The words on the map's lines ("uses", "belongs to"). React Flow's default is 10px, too small to read.
+   px, not rem: the map has its own zoom. */
+.react-flow__edge-text {
+  font-size: 13px;
+}
+
 /* React Flow's zoom buttons are plain buttons too: no retro shadow or lift on them */
 .react-flow__controls button,
 .react-flow__controls button:hover:not(:disabled),

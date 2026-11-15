@@ -5,7 +5,7 @@
   width: var(--card-width, 190px);
   box-sizing: border-box;
   padding: 8px 12px 8px 10px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
   background: var(--surface);
   border: 2px solid var(--border);
@@ -29,7 +29,7 @@
 /* The type name in the type's color, for example PAGE in blue */
 .type {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -56,10 +56,10 @@
 /* Sizes. "medium" is the base style above. The size comes from the template (a page is large). */
 .small {
   padding: 6px 10px 6px 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .small .type {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .large {
@@ -67,5 +67,5 @@
   font-size: 18px;
 }
 .large .type {
-  font-size: 12px;
+  font-size: 13px;
 }

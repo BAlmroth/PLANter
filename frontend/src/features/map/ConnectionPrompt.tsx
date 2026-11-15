@@ -49,7 +49,8 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
     // so the box can lay them out on one line
     <>
       {selected ? (
-        <p>
+        // A <div>, not a <p>: the Dropdown is a <div>, and HTML does not allow a <div> inside a <p>
+        <div>
           {source.title}{" "}
           <Dropdown
             label="Connection type"
@@ -60,7 +61,7 @@ export function ConnectionPrompt({ source, target, template, onSubmit, onCancel 
             openUp
           />{" "}
           {target.title}
-        </p>
+        </div>
       ) : (
         <p>
           “{source.title}” cannot be connected to “{target.title}”.

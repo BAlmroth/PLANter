@@ -19,8 +19,9 @@ import { hasFilters, matchesFilters, NO_FILTERS, type ItemFilters } from "../fil
 import { ItemNode } from "./ItemNode";
 import { MapToolbar } from "./MapToolbar";
 import { useFullWindow } from "./useFullWindow";
+import { useCenterX } from "./useCenterX";
 import { getCardSize } from "./cardSize";
-import { buildEdges, buildNodes, fadeNodes } from "./mapGraph";
+import { buildEdges, buildNodes, fadeNodes, type LineStyle } from "./mapGraph";
 import { tidyLayout, type LayoutDirection } from "./tidyLayout";
 import { readFlag, writeFlag } from "../../lib/storage";
 import { MapLegend } from "./MapLegend";
@@ -50,8 +51,19 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   const flowRef = useRef<ReactFlowInstance<ItemNodeType, Edge> | null>(null);
   // true: the map covers the whole window (CSS only, not the browser's fullscreen mode)
   const { expanded, setExpanded } = useFullWindow(flowRef);
+  // The map's box on the page. State (a callback ref), not useRef: the map is only rendered after
+  // loading, and the state change tells useCenterX that it is there.
+  const [mapElement, setMapElement] = useState<HTMLDivElement | null>(null);
+  // Where the middle of the map is in the window, so the pinned message box can sit there
+  const mapCenterX = useCenterX(mapElement);
   // Which way the map flows. A view preference, kept in this browser only (lib/storage.ts).
   const [direction, setDirection] = useState<LayoutDirection>(() => (readFlag("map:vertical") ? "vertical" : "horizontal"));
+  // Elbow lines or curves. Also a view preference, kept in this browser only.
+  const [lineStyle, setLineStyle] = useState<LineStyle>(() => (readFlag("map:curved") ? "default" : "smoothstep"));
+  function changeLineStyle(style: LineStyle) {
+    setLineStyle(style);
+    writeFlag("map:curved", style === "default");
+  }
   // The connection that was clicked, which offers a delete button
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // The two item ids of an arrow that was just dragged, while the user picks a relationship type
@@ -78,8 +90,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   }, [items.items, groups.groups, filters]);
 
   const edges = useMemo(
-    () => buildEdges(relationships.relationships, items.items, template.template, selectedNodeId, matchingIds),
-    [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds],
+    () => buildEdges(relationships.relationships, items.items, template.template, selectedNodeId, matchingIds, lineStyle),
+    [template.template, items.items, relationships.relationships, selectedNodeId, matchingIds, lineStyle],
   );
 
   // Fires once when a drag ends: save the new position of every node that was dragged
@@ -258,7 +270,7 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
   return (
     // The controls float over the map in Panels instead of taking space above it.
     // A Panel stays in its corner when the map is moved or zoomed.
-    <div className={expanded ? `${styles.map} ${styles.expanded}` : styles.map}>
+    <div ref={setMapElement} className={expanded ? `${styles.map} ${styles.expanded}` : styles.map}>
       {modal}
       <ReactFlow
         nodes={shownNodes}
@@ -313,6 +325,8 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
               onFiltersChange={setFilters}
               direction={direction}
               onTidy={handleTidy}
+              lineStyle={lineStyle}
+              onLineStyleChange={changeLineStyle}
               onAddItem={addItem}
             />
             {/* Right: the full window button and the legend side by side. data-tour is on the
@@ -333,11 +347,17 @@ export function MapView({ project, warnings }: { project: Project; warnings: War
             </div>
           </Panel>
         )}
-        {/* Bottom center, one box for everything that needs an answer, so two never overlap:
+        {/* At the bottom of the window, centered over the map (pinned, see MapView.module.css), one box for everything that needs an answer, so two never overlap:
             picking a relationship type after dragging an arrow between two nodes, or else the clicked
             connection with its delete button, or the empty state. Errors show in both cases. */}
         {(prompting || hasMessage) && (
-          <Panel position="bottom-center" className={`${styles.box} ${styles.message}`}>
+          <Panel
+            position="bottom-center"
+            className={`${styles.box} ${styles.message} ${styles.pinned}`}
+            // React Flow centers the box with left: 50% and translateX(-50%). With position: fixed that is
+            // the middle of the window, so left is moved to the middle of the map instead.
+            style={mapCenterX !== null ? { left: mapCenterX } : undefined}
+          >
             {pendingSource && pendingTarget && template.template ? (
               // key: a new prompt (with fresh state) for every new connection
               <ConnectionPrompt
