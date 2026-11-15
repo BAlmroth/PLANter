@@ -19,6 +19,7 @@ import { ItemRow } from "./ItemRowCard";
 import { typeColorVar } from "./typeColor";
 import type { useItems } from "./useItems";
 import { useTemplate } from "./useTemplate";
+import formStyles from "../../components/form.module.css";
 import styles from "./FileView.module.css";
 import { Loader } from "../../components/Loader";
 import { useGateLoading } from "../../components/useLoadGate";
@@ -170,7 +171,7 @@ export function FileView({ project, items, warnings, progress, onItemAdded }: Pr
       {/* ItemForm is shared with the map and the item page, so it is styled from here (.addForm) */}
       {adding && (
         <div className={`${styles.card} ${styles.addForm}`}>
-          <h2 className={styles.formTitle}>Add new item</h2>
+          <h3 className={formStyles.title}>New item</h3>
           <ItemForm
             types={loadedTemplate.itemTypes}
             groups={groups.groups}
