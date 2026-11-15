@@ -25,11 +25,9 @@
   cursor: pointer;
 }
 
-/* The real radio button: invisible, but still there for the keyboard and screen readers.
-   width and display override the global input style in index.css. */
+/* The real radio button: invisible, but still there for the keyboard and screen readers. */
 .swatch input {
   position: absolute;
-  display: inline;
   width: 1px;
   height: 1px;
   margin: 0;
