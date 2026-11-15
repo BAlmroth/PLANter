@@ -147,6 +147,17 @@
   padding: 4px 12px;
   font-size: 0.85rem;
 }
+/* The message box sticks to the bottom of the window instead of the bottom of the map, so it is
+   always visible, also when the map is taller than the screen. Two classes, so it wins over
+   React Flow's own .react-flow__panel { position: absolute }. */
+.message.pinned {
+  position: fixed;
+  bottom: 16px;
+  margin: 0;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+}
+
 /* An outline button for Cancel, so the main action stands out */
 .secondary {
   padding: 4px 12px;
