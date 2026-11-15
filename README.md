@@ -107,7 +107,7 @@ Supabase holds the database, the logins and the uploaded images.
    All images are stored here (project inspiration, the main photo of an item, moodboard images). Without the bucket, uploading an image fails. Only the backend can read and write it.
 5. **Set the login URLs:** go to **Authentication → URL Configuration**.
    - **Site URL:** `http://localhost:5173`
-   - **Redirect URLs:** add `http://localhost:5173/**` (the `/**` lets the "Forgot password" email link open the `/reset-password` page)
+   - **Redirect URLs:** add `http://localhost:5173/reset-password` (the page the "Forgot password" email link opens)
 6. (Optional) Email confirmation: under **Authentication → Sign In / Providers → Email** you can turn **Confirm email** on or off. When it is on, you must click the link in the email before you can log in.
 
 **✅ Check:** the Storage page shows `inspiration-images` **without** a "Public" label.
@@ -449,7 +449,7 @@ Migrations are not run by the deploy. Apply new ones with `npx prisma migrate de
 3. `frontend/vercel.json` sends every path to `index.html`, so reloading a page like `/projects/<id>` works.
 4. Set the Production Branch to `main` (**Settings → Git**). Vercel deploys `main` to production on every push, and builds other branches (like `dev`) only as previews.
 
-After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add the Vercel URL in Supabase (**Authentication → URL Configuration**: Site URL, and `https://<your-app>.vercel.app/**` in Redirect URLs).
+After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add the Vercel URL in Supabase (**Authentication → URL Configuration**: `https://<your-app>.vercel.app` as Site URL, and `https://<your-app>.vercel.app` and `https://<your-app>.vercel.app/reset-password` in Redirect URLs).
 
 ## Security check
 
@@ -483,7 +483,7 @@ After the first deploy, set `FRONTEND_URL` on Heroku to the Vercel URL, and add 
 | Backend crashes with "Cannot find module ... generated/prisma" | Run `npx prisma generate` in `backend/` |
 | Login page shows an error or nothing happens on Register | Check `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then restart `npm run dev` in `frontend/` (Vite only reads `.env` at start) |
 | Logged in, but projects fail to load ("Failed to fetch" or a CORS error in the browser console) | The backend is not running, `VITE_API_URL` is wrong, or `FRONTEND_URL` is not exactly `http://localhost:5173` |
-| The "Forgot password" email link opens the start page instead of "Reset password" | Add `http://localhost:5173/**` to Redirect URLs (step 4) |
+| The "Forgot password" email link opens the start page instead of "Reset password" | Add `http://localhost:5173/reset-password` to Redirect URLs (step 4) |
 | Image upload fails | The bucket `inspiration-images` is missing or misspelled (step 4) |
 | Strange errors like "Unknown argument `description`" | The database code is old: run `npx prisma generate` |
 

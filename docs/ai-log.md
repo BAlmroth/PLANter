@@ -1980,3 +1980,9 @@ Before writing, the AI checked the code instead of trusting the old README, and 
 - The button names in the guide ("Register", "Create account") were checked against `Login.tsx` and `Register.tsx`.
 
 Not checked: the guide has not been followed from scratch on a new computer, and the Supabase menu names can change when Supabase updates its dashboard.
+
+## 2026-11-15: Correction: exact redirect URLs instead of a wildcard
+
+**Tool:** Claude Code (Claude Opus 5.5)
+
+The previous entry says the README needed `http://localhost:5173/**` in Supabase's Redirect URLs. I showed the AI my real list (the Vercel URL, plus `/reset-password` for both localhost and Vercel), which already worked. The AI had guessed that my live project had the same gap without checking it, which was wrong. Exact URLs are stricter than a wildcard, so the README now lists exact URLs: `http://localhost:5173/reset-password` locally (step 4 and Troubleshooting), and `https://<your-app>.vercel.app` plus `https://<your-app>.vercel.app/reset-password` for production (Deploy).
